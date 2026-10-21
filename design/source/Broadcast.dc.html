@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Broadcast — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1080px; display: flex; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827; overflow: hidden">
+<dc-import name="Sidebar" active="broadcast" h="1080" hint-size="248px,1080px"></dc-import>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<dc-import name="Topbar" w="1192" hint-size="1192px,64px"></dc-import>
+<div style="padding: 24px 32px 0 32px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 10px">Broadcast</h1>
+<div style="font-size: 13.5px; color: #6B7280">Kirim pesan ke kelompok customer lewat WhatsApp. Balasan mereka tetap dijawab Adiva.</div>
+</div>
+<a href="BroadcastNew.dc.html" style="height: 36px; padding: 0 14px; border-radius: 8px; border: none; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Buat kampanye</a>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; padding: 22px 32px 24px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+<section aria-label="Angka utama" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #E5E7EB; border-radius: 10px; background: #FFFFFF">
+<div style="padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 12.5px; font-weight: 500; color: #6B7280">Terkirim bulan ini</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums">386</div><div style="font-size: 12.5px; color: #6B7280">dari 395 target · 9 gagal</div></div>
+</div>
+<div style="border-left: 1px solid #E5E7EB; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 12.5px; font-weight: 500; color: #6B7280">Tingkat balas</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums">17,6%</div><div style="font-size: 12.5px; color: #6B7280">68 customer membalas</div></div>
+</div>
+<div style="border-left: 1px solid #E5E7EB; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 12.5px; font-weight: 500; color: #6B7280">Order dari broadcast</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums">19</div><div style="font-size: 12.5px; color: #6B7280">Rp6,4 jt · dalam 7 hari setelah kirim</div></div>
+</div>
+<div style="border-left: 1px solid #E5E7EB; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 12.5px; font-weight: 500; color: #6B7280">Opt-out</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums">0,8%</div><div style="font-size: 12.5px; color: #6B7280">3 orang balas STOP · otomatis dikecualikan</div></div>
+</div>
+</section>
+
+<section style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 18px; min-width: 0">
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden">
+<div style="padding: 14px 18px; border-bottom: 1px solid #F3F4F6; display: flex; align-items: center; gap: 8px">
+<h2 style="margin: 0; font-size: 14.5px; font-weight: 600; flex-grow: 1">Kampanye</h2>
+<select aria-label="Filter status" style="height: 34px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 8px; font-size: 12.5px; background: #FFFFFF; color: #111827"><option>Semua status</option><option>Draf</option><option>Terjadwal</option><option>Mengirim</option><option>Selesai</option></select>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.7fr) 72px 118px 110px 100px; gap: 10px; padding: 10px 18px; font-size: 12px; font-weight: 500; color: #6B7280; background: #F9FAFB; border-bottom: 1px solid #F3F4F6">
+<span>Kampanye · penerima</span><span style="text-align: right">Target</span><span>Status</span><span>Balas · order</span><span>Jadwal</span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<button onClick="{{r.pick}}" style="{{r.style}}">
+<span style="display: flex; flex-direction: column; gap: 3px; min-width: 0; text-align: left">
+<span style="font-size: 13.5px; font-weight: 600">{{r.nama}}</span>
+<span style="font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.seg}}</span>
+</span>
+<span style="font-size: 13px; font-weight: 600; text-align: right">{{r.target}}</span>
+<span style="display: flex; flex-direction: column; gap: 5px; align-items: flex-start">
+<span style="{{r.chip}}"><span style="{{r.dot}}"></span>{{r.st}}</span>
+<sc-if value="{{r.sending}}" hint-placeholder-val="{{false}}">
+<span style="width: 100px; height: 3px; border-radius: 2px; background: #E5E7EB; display: flex"><span style="{{r.prog}}"></span></span>
+</sc-if>
+</span>
+<span style="font-size: 12.5px; text-align: left">{{r.hasil}}</span>
+<span style="font-size: 12px; color: #4B5563; text-align: left">{{r.jadwal}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 14.5px; font-weight: 600">Aturan kirim aman</h2><span style="font-size: 12.5px; color: #6B7280">berlaku untuk semua kampanye</span></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 20px">
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Jeda antar pesan</span><span style="font-size: 13px; font-weight: 500">acak 15–45 dtk</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Batas harian</span><span style="font-size: 13px; font-weight: 500">300 pesan / hari</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Jam kirim</span><span style="font-size: 13px; font-weight: 500">08.00–20.00 WIB</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Selalu dikecualikan</span><span style="font-size: 13px; font-weight: 500">opt-out · sedang dijeda</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Rem otomatis</span><span style="font-size: 13px; font-weight: 500">jeda jika 5 gagal beruntun</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B7280">Kata kunci berhenti</span><span style="font-size: 13px; font-weight: 500">STOP → ditandai opt-out</span></div>
+</div>
+</div>
+</div>
+
+<aside aria-label="Laporan kampanye" style="align-self: start; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: auto">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 12.5px; font-weight: 500; color: #6B7280">Laporan kampanye</div>
+<h2 style="margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em">{{c.nama}}</h2>
+<div style="font-size: 12.5px; color: #6B7280">{{c.seg}}</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 9px">
+<sc-for list="{{c.funnel}}" as="f" hint-placeholder-count="5">
+<div title="{{f.tip}}" style="display: grid; grid-template-columns: 74px minmax(0, 1fr) 64px; gap: 10px; align-items: center">
+<span style="font-size: 12.5px; color: #374151">{{f.label}}</span>
+<span style="height: 8px; background: #F1F2F4; border-radius: 2px; display: flex"><span style="{{f.bar}}"></span></span>
+<span style="font-size: 12.5px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums">{{f.n}}</span>
+</div>
+</sc-for>
+</div>
+<div style="font-size: 12px; color: #6B7280; line-height: 1.45">{{c.note}}</div>
+<div style="height: 1px; background: #F3F4F6"></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13.5px; font-weight: 600">Dampak ke pipeline</div>
+<div style="display: flex; gap: 32px">
+<div><div style="font-size: 12px; color: #6B7280">Naik tahap</div><div style="font-size: 17px; font-weight: 600">{{c.naik}}</div></div>
+<div><div style="font-size: 12px; color: #6B7280">Jadi HOT</div><div style="font-size: 17px; font-weight: 600">{{c.hot}}</div></div>
+<div><div style="font-size: 12px; color: #6B7280">Opt-out</div><div style="font-size: 17px; font-weight: 600">{{c.stop}}</div></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13.5px; font-weight: 600">Balasan terbaru <span style="font-weight: 400; color: #6B7280">· dijawab Adiva</span></div>
+<sc-for list="{{c.replies}}" as="r" hint-placeholder-count="3">
+<a href="Inbox.dc.html" style="display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid #F1F2F4; padding: 8px 0; text-decoration: none; color: #111827">
+<span style="display: flex; gap: 6px; align-items: center"><span style="font-size: 13px; font-weight: 600; flex-grow: 1">{{r.n}}</span><span style="font-size: 11px; color: #6B7280">{{r.t}}</span></span>
+<span style="font-size: 12.5px; color: #374151">{{r.x}}</span>
+</a>
+</sc-for>
+</div>
+<div style="display: flex; gap: 8px; border-top: 1px solid #F3F4F6; padding-top: 14px">
+<button style="flex-grow: 1; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12.5px; font-weight: 600; cursor: pointer">Duplikat</button>
+<button style="flex-grow: 1; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12.5px; font-weight: 600; cursor: pointer">Kirim ulang ke yang gagal</button>
+<button style="flex-grow: 1; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12.5px; font-weight: 600; cursor: pointer">Ekspor penerima</button>
+</div>
+</aside>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0 };
+  }
+  renderVals() {
+    var self = this;
+    var K = [
+      { nama: 'Restock Kripca untuk reseller', seg: 'Reseller yang pernah order atau tanya harga · minat Kripca · Malang Raya', target: 38, st: 'Selesai', kind: 'done', hasil: '11 · 5 order', jadwal: '27 Sep 10:00', f: [38, 37, 30, 11, 5], naik: 8, hot: 5, stop: 1,
+        note: '1 gagal: nomor tidak aktif. Pengiriman 10.00–10.21 dengan jeda acak 15–45 detik.',
+        replies: [['Maya Kusuma', '10:42', 'Kak aku ambil Kripca 1,8 kg 20 ya, yg pedas 10'], ['Toko Sumber Rejeki', '11:05', 'Harga 30 pcs masih sama kak?'], ['Andika Putra', '11:31', 'STOP']] },
+      { nama: 'Promo Molreng kantin sekolah', seg: 'Reseller yang jualan di kantin/sekolah · minat Molreng', target: 48, st: 'Mengirim 62%', kind: 'sending', pct: 62, hasil: '6 · 1 order', jadwal: 'Hari ini 13:00', f: [48, 30, 22, 6, 1], naik: 4, hot: 2, stop: 0,
+        note: 'Sedang berjalan · 18 pesan tersisa · estimasi selesai 13:52 · tetap patuh batas 300/hari.',
+        replies: [['Salsa Billa', '13:22', 'Kak minimal order berapa ya untuk harga reseller?'], ['Kopma UB', '13:30', 'Ada paket campur varian?']] },
+      { nama: 'Win-back: 60 hari tidak order', seg: 'Retail yang pernah order · tidak chat lebih dari 60 hari', target: 57, st: 'Terjadwal', kind: 'sched', hasil: '—', jadwal: '30 Sep 09:00', f: [57, 0, 0, 0, 0], naik: 0, hot: 0, stop: 0,
+        note: 'Belum dikirim. Jumlah penerima dihitung ulang saat mulai (yang opt-out atau sedang dijeda dikeluarkan).', replies: [] },
+      { nama: 'Info libur Maulid Nabi', seg: 'Semua customer aktif 30 hari · mengikuti kalender libur', target: 205, st: 'Draf', kind: 'draft', hasil: '—', jadwal: '—', f: [205, 0, 0, 0, 0], naik: 0, hot: 0, stop: 0,
+        note: 'Draf. Tinjau pesan dan kirim uji ke nomor supervisor sebelum dijadwalkan.', replies: [] },
+      { nama: 'Paket reseller pemula', seg: 'Calon reseller baru · modal di bawah Rp2 jt', target: 41, st: 'Dijeda', kind: 'paused', hasil: '3 · 0 order', jadwal: '26 Sep 15:00', f: [41, 17, 13, 3, 0], naik: 2, hot: 1, stop: 1,
+        note: 'Dijeda otomatis: 5 kiriman gagal beruntun (WAHA terputus). Lanjutkan setelah sesi WhatsApp tersambung.',
+        replies: [['Dewi Anggraini', '15:40', 'Paket A isinya apa aja kak?']] },
+      { nama: 'Harga karyawan Oktober', seg: 'Karyawan terverifikasi', target: 12, st: 'Selesai', kind: 'done', hasil: '9 · 7 order', jadwal: '25 Sep 08:00', f: [12, 12, 12, 9, 7], naik: 7, hot: 7, stop: 0,
+        note: 'Order karyawan diteruskan ke Bu Sarah seperti biasa (potong gaji).', replies: [['Yoga', '08:12', 'Basreng 4 pack mbak']] }
+    ];
+    var sel = this.state.sel;
+    var chipC = { done: ['#15803D', '#16A34A'], sending: ['#1D4ED8', '#3B82F6'], sched: ['#6D28D9', '#8B5CF6'], draft: ['#4B5563', '#9CA3AF'], paused: ['#B45309', '#F59E0B'] };
+    var rows = K.map(function (k, i) {
+      var on = i === sel;
+      var c = chipC[k.kind];
+      return {
+        nama: k.nama, seg: k.seg, target: k.target.toLocaleString('id-ID'), st: k.st, hasil: k.hasil, jadwal: k.jadwal,
+        sending: k.kind === 'sending',
+        prog: 'width: ' + (k.pct || 0) + '%; height: 3px; border-radius: 2px; background: #2563EB;',
+        chip: 'display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: ' + c[0] + '; white-space: nowrap;', dot: 'width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: ' + c[1] + ';',
+        pick: function () { self.setState({ sel: i }); },
+        style: 'width: 100%; display: grid; grid-template-columns: minmax(0, 1.7fr) 72px 118px 110px 100px; gap: 10px; align-items: center; padding: 12px 18px; border: none; border-bottom: 1px solid #F3F4F6; cursor: pointer; font-family: inherit; color: #111827; background: ' + (on ? '#F5F8FF' : '#FFFFFF') + '; box-shadow: ' + (on ? 'inset 2px 0 0 #2563EB' : 'none') + ';'
+      };
+    });
+    var k = K[sel];
+    var labels = ['Target', 'Terkirim', 'Dibaca', 'Dibalas', 'Order'];
+    var funnel = k.f.map(function (v, i) {
+      var pct = Math.round(v / k.f[0] * 100);
+      return {
+        label: labels[i], n: v.toLocaleString('id-ID'), tip: labels[i] + ' · ' + v + ' (' + pct + '%)',
+        bar: 'width: ' + Math.max(pct, v > 0 ? 2 : 0) + '%; height: 8px; border-radius: 2px; background: ' + (i === 0 ? '#D1D5DB' : '#2563EB') + ';'
+      };
+    });
+    var c = {
+      nama: k.nama, seg: k.seg, note: k.note, funnel: funnel, naik: k.naik, hot: k.hot, stop: k.stop,
+      replies: k.replies.map(function (r) { return { n: r[0], t: r[1], x: r[2] }; })
+    };
+    return { rows: rows, c: c };
+  }
+}
+</script>
+</body>
+</html>

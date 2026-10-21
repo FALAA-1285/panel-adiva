@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Pesanan — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+button:disabled{cursor:not-allowed}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1124px; display: flex; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827; overflow: hidden">
+<dc-import name="Sidebar" active="orders" h="1124" hint-size="248px,1124px"></dc-import>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<dc-import name="Topbar" w="1192" hint-size="1192px,64px"></dc-import>
+<div style="padding: 24px 32px 0 32px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 10px">Pesanan</h1>
+<div style="font-size: 13.5px; color: #6B7280">Setiap tombol di sini sama dengan perintah admin di WhatsApp, dengan urutan yang sama</div>
+</div>
+<button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>Ekspor CSV</button>
+<a href="OrderNew.dc.html" style="height: 36px; padding: 0 14px; border-radius: 8px; border: none; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Catat order manual</a>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px 32px 24px 32px; box-sizing: border-box">
+<div role="tablist" aria-label="Filter status" style="display: flex; gap: 22px; flex-wrap: nowrap; border-bottom: 1px solid #E5E7EB; margin-top: -4px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="9">
+<button role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}} <span style="{{t.countStyle}}">{{t.n}}</span></button>
+</sc-for>
+</div>
+<div style="flex-grow: 1; min-height: 0; display: flex; gap: 20px">
+
+<section aria-label="Daftar pesanan" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<div style="flex-grow: 1; min-height: 0; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column">
+<div style="display: grid; grid-template-columns: 132px minmax(0, 1fr) 132px 128px; gap: 12px; padding: 12px 16px; font-size: 12px; font-weight: 500; color: #6B7280; border-bottom: 1px solid #F3F4F6; background: #F9FAFB">
+<span>Order</span><span>Customer &amp; item</span><span style="text-align: right">Total · bayar</span><span>Status</span>
+</div>
+<div style="flex-grow: 1; overflow: auto">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<button onClick="{{r.pick}}" style="{{r.style}}">
+<span style="display: flex; flex-direction: column; gap: 3px; text-align: left">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12.5px; font-weight: 600">{{r.id}}</span>
+<span style="font-size: 11.5px; color: #6B7280">{{r.tgl}}</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 3px; min-width: 0; text-align: left">
+<span style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.nama}} <span style="font-size: 12px; font-weight: 400; color: #6B7280">· {{r.tipeL}}</span></span>
+<span style="font-size: 12px; color: #4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.ringkas}}</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 3px; min-width: 0; align-items: flex-end; text-align: right">
+<span style="font-size: 13.5px; font-weight: 600; white-space: nowrap">{{r.total}}</span>
+<span style="font-size: 11.5px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{r.metodeShort}}</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start">
+<span style="{{r.chip}}"><span style="{{r.dot}}"></span>{{r.stLabel}}</span>
+<sc-if value="{{r.bukti}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 500; color: #15803D; white-space: nowrap; padding-left: 12px">Bukti transfer masuk</span></sc-if>
+<sc-if value="{{r.dobel}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 500; color: #B45309; white-space: nowrap; padding-left: 12px">Mungkin dobel</span></sc-if>
+</span>
+</button>
+</sc-for>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<div style="padding: 40px; text-align: center; font-size: 13px; color: #6B7280">Tidak ada pesanan di status ini.</div>
+</sc-if>
+</div>
+</div>
+</section>
+
+<aside aria-label="Detail pesanan" style="width: 420px; flex-shrink: 0; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 16px 18px 12px 18px; border-bottom: 1px solid #F3F4F6; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-family: 'Geist Mono', monospace; font-size: 15px; font-weight: 600; flex-grow: 1">{{d.id}}</span>
+<span style="{{d.chip}}"><span style="{{d.dot}}"></span>{{d.stLabel}}</span>
+</div>
+<div style="font-size: 13px; color: #4B5563"><a href="Customer.dc.html" style="font-weight: 600; text-decoration: none">{{d.nama}}</a> · {{d.tipeL}} · dibuat {{d.tgl}} · <a href="OrderDetail.dc.html" style="font-weight: 500; text-decoration: none">Detail</a></div>
+<div style="display: flex; gap: 4px; padding-top: 4px">
+<sc-for list="{{d.steps}}" as="s" hint-placeholder-count="5">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 5px">
+<span style="{{s.bar}}"></span>
+<span style="{{s.txt}}">{{s.label}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="flex-grow: 1; overflow: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12.5px; font-weight: 600; color: #111827">Item</div>
+<sc-for list="{{d.items}}" as="it" hint-placeholder-count="2">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 44px 92px; gap: 8px; font-size: 13px">
+<span>{{it.nama}}</span><span style="color: #4B5563; text-align: right">×{{it.qty}}</span><span style="text-align: right; font-weight: 600">{{it.sub}}</span>
+</div>
+</sc-for>
+<div style="height: 1px; background: #F3F4F6; margin: 4px 0"></div>
+<div style="display: flex; font-size: 13px; color: #4B5563"><span style="flex-grow: 1">Total produk</span><span>{{d.produk}}</span></div>
+<div style="display: flex; font-size: 13px; color: #4B5563"><span style="flex-grow: 1">Ongkir · {{d.kurir}}</span><span>{{d.ongkir}}</span></div>
+<div style="display: flex; font-size: 15px; font-weight: 600"><span style="flex-grow: 1">Total tagihan</span><span>{{d.total}}</span></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px">
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Penerima</span><span style="font-size: 13px; font-weight: 600">{{d.penerima}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">No. HP</span><span style="font-size: 13px; font-weight: 600; font-family: 'Geist Mono', monospace">{{d.hp}}</span></div>
+<div style="grid-column: span 2; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Alamat</span><span style="font-size: 13px; line-height: 1.45">{{d.alamat}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Metode bayar</span><span style="font-size: 13px; font-weight: 600">{{d.metode}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Berat</span><span style="font-size: 13px; font-weight: 600">{{d.berat}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Invoice</span><span style="font-size: 13px; font-weight: 600; font-family: 'Geist Mono', monospace">{{d.inv}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">No. resi</span><span style="font-size: 13px; font-weight: 600; font-family: 'Geist Mono', monospace">{{d.resi}}</span></div>
+</div>
+
+<sc-if value="{{d.hasInv}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 8px">
+<a href="OrderDetail.dc.html" style="flex-grow: 1; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Lihat invoice PDF</a>
+<button style="flex-grow: 1; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12.5px; font-weight: 600; cursor: pointer">Kirim ulang ke customer</button>
+</div>
+</sc-if>
+
+<sc-if value="{{d.bukti}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 12px; align-items: center; border: 1px solid #E5E7EB; background: #FFFFFF; border-radius: 8px; padding: 10px">
+<div style="width: 64px; height: 64px; border-radius: 6px; background: #F3F4F6; color: #6B7280; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 12.5px">
+<span style="font-weight: 600; color: #15803D">Bukti transfer diterima</span>
+<span style="color: #374151">Foto dari customer · diteruskan ke supervisor. Order ini tidak dibatalkan otomatis oleh batas bayar.</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{d.dobel}}" hint-placeholder-val="{{false}}">
+<div style="border: 1px solid #FDE68A; background: #FFFBEB; border-radius: 8px; padding: 10px; font-size: 12.5px; color: #374151"><strong style="color: #92400E; font-weight: 600">Mungkin dobel.</strong> Isinya sama persis dengan order yang sudah dibayar sebelumnya. Cek dengan customer sebelum ACC.</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12.5px; font-weight: 600; color: #111827">Riwayat</div>
+<sc-for list="{{d.log}}" as="l" hint-placeholder-count="3">
+<div style="display: flex; gap: 10px; font-size: 12.5px"><span style="width: 44px; color: #6B7280; flex-shrink: 0">{{l.t}}</span><span style="color: #374151">{{l.x}}</span></div>
+</sc-for>
+</div>
+
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12.5px; font-weight: 600; color: #111827">Catatan, nomor resi, atau alasan</span>
+<input type="text" placeholder="Mis. nomor resi untuk KIRIM, atau alasan TOLAK" style="height: 40px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 12px; font-size: 13px; color: #111827">
+</label>
+</div>
+
+<div style="padding: 12px 18px 16px 18px; border-top: 1px solid #F3F4F6; display: flex; flex-direction: column; gap: 8px; background: #F9FAFB">
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{d.actions}}" as="a" hint-placeholder-count="7">
+<button onClick="{{a.run}}" disabled="{{a.disabled}}" title="{{a.why}}" style="{{a.style}}">{{a.label}}</button>
+</sc-for>
+</div>
+<div style="font-size: 11.5px; color: #6B7280">{{d.hint}}</div>
+</div>
+</aside>
+</div>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1124}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var O = function (id, tgl, nama, tipe, items, ongkir, metode, kurir, status, extra) {
+      var o = { id: id, tgl: tgl, nama: nama, tipe: tipe, items: items, ongkir: ongkir, metode: metode, kurir: kurir, status: status, pickup: false, bukti: false, dobel: false, inv: '—', resi: '—', hp: '0812-••••-••••', alamat: '', berat: '—', log: [] };
+      for (var k in (extra || {})) { o[k] = extra[k]; }
+      return o;
+    };
+    this.state = {
+      tab: 'ALL', sel: 'ORD-260928-014',
+      orders: [
+        O('ORD-260928-014', '28 Sep 13:06', 'Rina Maharani', 'RESELLER', [['Molreng Reguler Bawang Original', 40, 16500], ['Basreng Pedas Daun Jeruk', 30, 19500]], 38000, 'TRANSFER', 'JNE REG', 'MENUNGGU_KONFIRMASI',
+          { hp: '0812-3345-••81', alamat: 'Jl. Kalpataru 18, Kel. Dinoyo, Kec. Lowokwaru, Kota Malang, Jawa Timur 65144', berat: '1,6 kg', log: [['13:06', 'Dicatat Adiva dari chat · supervisor dikabari dengan tombol ACC']] }),
+        O('ORD-260928-012', '28 Sep 11:40', 'Anisa Putri', 'RETAIL', [['Kripca 1,8 kg Original', 1, 90000]], 0, 'BAYAR DI TEMPAT (PICKUP)', 'AMBIL SENDIRI - Toko Sawojajar', 'MENUNGGU_KONFIRMASI',
+          { pickup: true, dobel: true, alamat: 'Ambil di Toko Sawojajar', berat: '1,8 kg', log: [['11:40', 'Dicatat Adiva · sama persis dengan ORD-260926-015 yang sudah lunas']] }),
+        O('ORD-260928-011', '28 Sep 10:31', 'Yoga', 'KARYAWAN', [['Basreng Original (harga karyawan)', 4, 24000]], 0, 'POTONG GAJI', 'Diambil di pabrik', 'KARYAWAN',
+          { pickup: true, alamat: 'Diambil sesuai info grup “Anak Bang Bana”', log: [['10:31', 'Order karyawan dicatat · diteruskan ke Bu Sarah']] }),
+        O('ORD-260927-031', '27 Sep 19:12', 'Dimas Pratama', 'RESELLER', [['Seblak Kering Pedas', 24, 18750]], 36000, 'TRANSFER', 'SiCepat REG', 'DIACC',
+          { bukti: true, inv: 'INV/2026/09/138', hp: '0821-7788-••15', alamat: 'Perum Griya Asri B-7, Kel. Sukun, Kec. Sukun, Kota Malang, Jawa Timur 65147', berat: '2,4 kg', log: [['19:20', 'ACC oleh Falah · invoice PDF terkirim'], ['08:14', 'Bukti transfer masuk · ditandai BUKTI MASUK']] }),
+        O('ORD-260927-027', '27 Sep 16:02', 'Laras Ayu', 'RETAIL', [['Makaroni Bantat Balado', 6, 18000]], 22000, 'TRANSFER', 'J&T EZ', 'DIACC',
+          { inv: 'INV/2026/09/136', alamat: 'Jl. Sultan Agung 4, Kel. Pesanggrahan, Kec. Batu, Kota Batu, Jawa Timur 65313', berat: '0,6 kg', log: [['16:30', 'ACC oleh Falah · invoice PDF terkirim'], ['—', 'Batas bayar 5 jam kerja (BATAS_BAYAR_JAM) · sisa 2 jam kerja']] }),
+        O('ORD-260927-019', '27 Sep 10:15', 'Toko Sumber Rejeki', 'RESELLER', [['Kripca 1,8 kg Original', 30, 90000], ['Kripca 1,8 kg Pedas', 30, 90000]], 0, 'TRANSFER (PICKUP)', 'AMBIL SENDIRI - Pabrik Lawang', 'LUNAS',
+          { pickup: true, inv: 'INV/2026/09/131', alamat: 'Ambil di Pabrik Lawang', berat: '108 kg', log: [['10:40', 'ACC · invoice terkirim'], ['13:05', 'LUNAS oleh Falah']] }),
+        O('ORD-260926-008', '26 Sep 20:44', 'Bayu Saputra', 'RETAIL', [['Usus Crispy Pedas', 5, 19000]], 18000, 'TRANSFER', 'JNE REG', 'LUNAS',
+          { inv: 'INV/2026/09/127', alamat: 'Jl. Gajayana 50, Kel. Ketawanggede, Kec. Lowokwaru, Kota Malang 65145', berat: '0,5 kg', log: [['21:00', 'ACC · invoice terkirim'], ['09:12', 'LUNAS oleh staf Dina']] }),
+        O('ORD-260925-004', '25 Sep 14:20', 'Maya Kusuma', 'RESELLER', [['Kentang Balado', 20, 18000]], 30000, 'TRANSFER', 'JNE REG', 'DIKIRIM',
+          { inv: 'INV/2026/09/119', resi: 'CGK0028819300', alamat: 'Jl. Raya Tlogomas 9, Kota Malang 65144', berat: '2,0 kg', log: [['14:40', 'ACC'], ['16:02', 'LUNAS'], ['09:30', 'KIRIM · resi dikirim ke customer']] }),
+        O('ORD-260921-006', '21 Sep 09:02', 'Bu Wati', 'RETAIL', [['Seblak Kering Original', 10, 18600]], 0, 'BAYAR DI TEMPAT (PICKUP)', 'AMBIL SENDIRI - Toko Sawojajar', 'SELESAI',
+          { pickup: true, inv: 'INV/2026/09/101', alamat: 'Ambil di Toko Sawojajar', log: [['22 Sep', 'SELESAI · bot minta ulasan (LINK_ULASAN) · CRM → REPEAT']] }),
+        O('ORD-260926-010', '26 Sep 11:11', 'Fikri Ramadhan', 'RETAIL', [['Kerupuk Rujak', 8, 12000]], 20000, 'TRANSFER', 'SiCepat REG', 'DIBATALKAN',
+          { inv: 'INV/2026/09/124', log: [['12:00', 'BATAL · customer minta batal sebelum bayar']] }),
+        O('ORD-260924-002', '24 Sep 08:50', 'Sinta', 'RETAIL', [['Basreng Original', 3, 19500]], 15000, 'TRANSFER', 'JNE REG', 'BATAL OTOMATIS',
+          { inv: 'INV/2026/09/110', log: [['25 Sep', 'Lewat batas bayar · tertutup otomatis (masih bisa di-LUNAS-kan ≤ 3 hari bila dana masuk)']] })
+      ]
+    };
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var rp = function (n) { return 'Rp' + Number(n).toLocaleString('id-ID'); };
+    var label = { MENUNGGU_KONFIRMASI: 'Menunggu ACC', DIACC: 'Menunggu bayar', LUNAS: 'Lunas', DIKIRIM: 'Dikirim', SELESAI: 'Selesai', KARYAWAN: 'Karyawan', DITOLAK: 'Ditolak', DIBATALKAN: 'Dibatalkan', 'BATAL OTOMATIS': 'Batal otomatis' };
+    var colors = { MENUNGGU_KONFIRMASI: ['#B45309', '#F59E0B'], DIACC: ['#1D4ED8', '#3B82F6'], LUNAS: ['#15803D', '#16A34A'], DIKIRIM: ['#6D28D9', '#8B5CF6'], SELESAI: ['#4B5563', '#9CA3AF'], KARYAWAN: ['#4B5563', '#9CA3AF'], DITOLAK: ['#B91C1C', '#DC2626'], DIBATALKAN: ['#B91C1C', '#DC2626'], 'BATAL OTOMATIS': ['#B91C1C', '#DC2626'] };
+    var chip = function (s) { var c = colors[s]; return 'display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: ' + c[0] + '; white-space: nowrap;'; };
+    var dotOf = function (s) { var c = colors[s]; return 'width: 6px; height: 6px; border-radius: 50%; background: ' + c[1] + '; flex-shrink: 0;'; };
+    var cap = function (t) { t = String(t || '').replace(/_/g, ' ').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
+    var tabDefs = [
+      ['ALL', 'Semua', function () { return true; }],
+      ['MK', 'Menunggu ACC', function (o) { return o.status === 'MENUNGGU_KONFIRMASI'; }],
+      ['DA', 'Menunggu bayar', function (o) { return o.status === 'DIACC'; }],
+      ['BK', 'Bukti masuk', function (o) { return o.bukti; }],
+      ['LN', 'Lunas', function (o) { return o.status === 'LUNAS'; }],
+      ['DK', 'Dikirim', function (o) { return o.status === 'DIKIRIM'; }],
+      ['KY', 'Karyawan', function (o) { return o.status === 'KARYAWAN'; }],
+      ['SL', 'Selesai', function (o) { return o.status === 'SELESAI'; }],
+      ['BT', 'Batal / tolak', function (o) { return ['DITOLAK', 'DIBATALKAN', 'BATAL OTOMATIS'].indexOf(o.status) >= 0; }]
+    ];
+    var tabs = tabDefs.map(function (t) {
+      var on = st.tab === t[0];
+      var n = st.orders.filter(t[2]).length;
+      return {
+        label: t[1], n: n, sel: on ? 'true' : 'false',
+        pick: function () { self.setState({ tab: t[0] }); },
+        style: 'height: 40px; padding: 0 2px; margin-bottom: -1px; border: none; border-bottom: 2px solid ' + (on ? '#2563EB' : 'transparent') + '; background: transparent; font-size: 13.5px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-family: inherit; ' + (on ? 'color: #111827; font-weight: 600;' : 'color: #4B5563; font-weight: 500;'),
+        countStyle: 'font-size: 12px; font-weight: 500; color: ' + (on ? '#1D4ED8' : '#6B7280') + ';'
+      };
+    });
+    var filt = tabDefs.filter(function (t) { return t[0] === st.tab; })[0][2];
+    var list = st.orders.filter(filt);
+    var sum = function (o) { return o.items.reduce(function (a, it) { return a + it[1] * it[2]; }, 0); };
+    var rows = list.map(function (o) {
+      var on = o.id === st.sel;
+      return {
+        id: o.id, tgl: o.tgl, nama: o.nama, tipe: o.tipe, total: rp(sum(o) + o.ongkir), metode: o.metode, kurir: o.kurir, metodeShort: ({ 'TRANSFER': 'Transfer', 'BAYAR DI TEMPAT (PICKUP)': 'Bayar di tempat', 'TRANSFER (PICKUP)': 'Transfer · ambil sendiri', 'POTONG GAJI': 'Potong gaji' })[o.metode] || o.metode,
+        ringkas: o.items.map(function (it) { return it[0] + ' ×' + it[1]; }).join(', ') + ' · ' + o.kurir,
+        stLabel: label[o.status], chip: chip(o.status), dot: dotOf(o.status), tipeL: cap(o.tipe), bukti: o.bukti, dobel: o.dobel,
+        pick: function () { self.setState({ sel: o.id }); },
+        style: 'width: 100%; display: grid; grid-template-columns: 132px minmax(0, 1fr) 132px 128px; gap: 12px; align-items: center; padding: 12px 16px; border: none; border-bottom: 1px solid #F3F4F6; cursor: pointer; font-family: inherit; color: #111827; background: ' + (on ? '#F5F8FF' : '#FFFFFF') + '; box-shadow: ' + (on ? 'inset 2px 0 0 #2563EB' : 'none') + ';'
+      };
+    });
+    var o = st.orders.filter(function (x) { return x.id === st.sel; })[0] || st.orders[0];
+    var izin = { ACC: ['MENUNGGU_KONFIRMASI'], TOLAK: ['MENUNGGU_KONFIRMASI', 'DIACC', 'KARYAWAN'], BATAL: ['MENUNGGU_KONFIRMASI', 'DIACC', 'KARYAWAN'], LUNAS: ['DIACC', 'KARYAWAN', 'BATAL OTOMATIS'], KIRIM: ['LUNAS'], SIAP: ['LUNAS', 'DIACC', 'KARYAWAN'], SELESAI: ['DIKIRIM', 'LUNAS'] };
+    var next = { ACC: 'DIACC', TOLAK: 'DITOLAK', BATAL: 'DIBATALKAN', LUNAS: 'LUNAS', KIRIM: 'DIKIRIM', SELESAI: 'SELESAI' };
+    var desc = { ACC: 'invoice PDF dibuat & dikirim', TOLAK: 'customer dikabari', BATAL: 'dibatalkan atas permintaan customer', LUNAS: 'pembayaran dikonfirmasi', KIRIM: 'resi dikirim ke customer', SIAP: 'customer dikabari alamat & jam ambil', SELESAI: 'bot minta ulasan · CRM → REPEAT' };
+    var actions = ['ACC', 'LUNAS', 'SIAP', 'KIRIM', 'SELESAI', 'BATAL', 'TOLAK'].map(function (a) {
+      var ok = izin[a].indexOf(o.status) >= 0;
+      var why = '';
+      if (a === 'SIAP' && !o.pickup) { ok = false; why = 'SIAP hanya untuk pesanan ambil sendiri'; }
+      if (a === 'KIRIM' && o.pickup) { ok = false; why = 'Pesanan ambil sendiri tidak dikirim kurir'; }
+      if (a === 'SIAP' && o.pickup && o.status === 'DIACC' && o.metode.indexOf('BAYAR DI TEMPAT') < 0) { ok = false; why = 'SIAP butuh LUNAS atau bayar di tempat'; }
+      if (!ok && !why) { why = a + ' tidak berlaku untuk status ' + o.status; }
+      var primary = ok && (a === 'ACC' || a === 'LUNAS' || a === 'KIRIM' || a === 'SIAP' || a === 'SELESAI');
+      var danger = a === 'TOLAK' || a === 'BATAL';
+      var style = 'height: 36px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; ';
+      if (!ok) { style += 'border: 1px solid #EEF0F2; background: #F9FAFB; color: #9CA3AF; cursor: not-allowed;'; }
+      else if (primary) { style += 'border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF;'; }
+      else if (danger) { style += 'border: 1px solid #D1D5DB; background: #FFFFFF; color: #B91C1C;'; }
+      return {
+        label: a, disabled: !ok, why: ok ? a + ' → ' + desc[a] : why, style: style,
+        run: function () {
+          if (!ok) { return; }
+          var now = '13:4' + Math.floor(Math.random() * 10);
+          var orders = st.orders.map(function (x) {
+            if (x.id !== o.id) { return x; }
+            var y = Object.assign({}, x);
+            y.log = x.log.concat([[now, a + ' dari panel · ' + desc[a]]]);
+            if (next[a]) { y.status = next[a]; }
+            if (a === 'ACC') { y.inv = 'INV/2026/09/142'; }
+            if (a === 'KIRIM') { y.resi = 'CGK0029104455'; }
+            if (a === 'SIAP') { y.kurir = x.kurir + ' · siap diambil'; }
+            return y;
+          });
+          self.setState({ orders: orders });
+        }
+      };
+    });
+    var flow = o.status === 'KARYAWAN' ? ['Karyawan', 'Lunas (gaji)', 'Selesai'] : (o.pickup ? ['Menunggu ACC', 'Invoice', 'Lunas', 'Diambil', 'Selesai'] : ['Menunggu ACC', 'Invoice', 'Lunas', 'Dikirim', 'Selesai']);
+    var idx = { MENUNGGU_KONFIRMASI: 0, DIACC: 1, LUNAS: 2, DIKIRIM: 3, SELESAI: 4, KARYAWAN: 0 }[o.status];
+    if (o.status === 'SELESAI' && flow.length === 3) { idx = 2; }
+    if (o.status === 'LUNAS' && flow.length === 3) { idx = 1; }
+    var dead = idx === undefined;
+    var steps = flow.map(function (lb, i) {
+      var done = !dead && i <= idx;
+      return {
+        label: lb,
+        bar: 'height: 3px; border-radius: 2px; background: ' + (dead ? '#FECACA' : (done ? '#2563EB' : '#E5E7EB')) + ';',
+        txt: 'font-size: 11.5px; font-weight: ' + (done && i === idx ? '600' : '500') + '; color: ' + (done ? '#111827' : '#6B7280') + ';'
+      };
+    });
+    var d = {
+      id: o.id, nama: o.nama, tipe: o.tipe, tipeL: cap(o.tipe), tgl: o.tgl, stLabel: label[o.status], chip: chip(o.status), dot: dotOf(o.status), steps: steps,
+      items: o.items.map(function (it) { return { nama: it[0], qty: it[1], sub: rp(it[1] * it[2]) }; }),
+      produk: rp(sum(o)), ongkir: rp(o.ongkir), total: rp(sum(o) + o.ongkir), kurir: o.kurir,
+      penerima: o.nama, hp: o.hp, alamat: o.alamat || '—', metode: o.metode, berat: o.berat, inv: o.inv, resi: o.resi,
+      hasInv: o.inv !== '—', bukti: o.bukti, dobel: o.dobel,
+      log: o.log.map(function (l) { return { t: l[0], x: l[1] }; }),
+      actions: actions,
+      hint: 'Urutan sama dengan workflow: LUNAS setelah ACC, KIRIM setelah LUNAS, SIAP hanya untuk ambil sendiri. Tombol abu-abu belum berlaku — arahkan kursor untuk alasannya.'
+    };
+    return { tabs: tabs, rows: rows, empty: rows.length === 0, d: d };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Percakapan — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1080px; display: flex; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827; overflow: hidden">
+<dc-import name="Sidebar" active="inbox" h="1080" hint-size="248px,1080px"></dc-import>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<dc-import name="Topbar" w="1192" hint-size="1192px,64px"></dc-import>
+<div style="padding: 24px 32px 0 32px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 10px">Percakapan</h1>
+<div style="font-size: 13.5px; color: #6B7280">Pantau jawaban Adiva secara langsung, ambil alih kapan saja</div>
+</div>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: #15803D; white-space: nowrap; padding-bottom: 4px"><span style="width: 6px; height: 6px; border-radius: 50%; background: #16A34A"></span>Tersambung ke WAHA · 2 nomor bot</span>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; margin: 20px 32px 24px 32px; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden;">
+
+<section aria-label="Daftar chat" style="width: 290px; flex-shrink: 0; border-right: 1px solid #E5E7EB; background: #FFFFFF; display: flex; flex-direction: column">
+<div style="padding: 14px 16px 10px 16px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #F3F4F6">
+<label style="display: flex; align-items: center; gap: 8px; height: 40px; box-sizing: border-box; padding: 0 12px; border: 1px solid #E5E7EB; border-radius: 10px; color: #6B7280">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<input type="search" aria-label="Cari chat" placeholder="Cari nama atau nomor" style="border: none; outline: none; font-size: 13.5px; flex-grow: 1; color: #111827; background: transparent">
+</label>
+<div style="display: flex; gap: 6px">
+<button style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0">Semua 38</button>
+<button style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0">Butuh admin 6</button>
+<button style="height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0">Dijeda 3</button>
+</div>
+</div>
+<div style="flex-grow: 1; overflow: auto">
+<sc-for list="{{convs}}" as="c" hint-placeholder-count="5">
+<button onClick="{{c.pick}}" style="{{c.rowStyle}}">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: #F3F4F6; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0">{{c.init}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left">
+<span style="display: flex; align-items: center; gap: 6px">
+<span style="font-size: 14px; font-weight: 600; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<span style="font-size: 11.5px; color: #6B7280">{{c.time}}</span>
+</span>
+<span style="font-size: 12.5px; color: #4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.preview}}</span>
+<span style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-top: 1px">
+<span style="{{c.skorStyle}}">{{c.skor}}</span><span style="color: #D1D5DB; font-size: 12px">·</span>
+<span style="font-size: 12px; color: #6B7280; white-space: nowrap">{{c.tahapL}}</span><span style="color: #D1D5DB; font-size: 12px">·</span>
+<span style="{{c.flagStyle}}">{{c.flag}}</span>
+</span>
+</span>
+</button>
+</sc-for>
+</div>
+</section>
+
+<section aria-label="Isi percakapan" style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; background: #F9FAFB">
+<div style="height: 68px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 12px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB; flex-shrink: 0">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: #F3F4F6; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">{{cur.init}}</span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<div style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cur.name}}</div>
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="font-size: 12px; color: #6B7280; font-family: 'Geist Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{cur.phone}}</span><span style="{{cur.statusStyle}}">{{cur.status}}</span></div>
+</div>
+<sc-if value="{{cur.paused}}" hint-placeholder-val="{{false}}">
+<button style="height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0">Lanjutkan bot</button>
+</sc-if>
+<sc-if value="{{cur.active}}" hint-placeholder-val="{{true}}">
+<a href="Jeda.dc.html" style="height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M10 9v6M14 9v6"></path></svg>Jeda bot</a>
+</sc-if>
+<button aria-label="Reset memori chat" title="Reset memori chat — mulai sesi ingatan AI baru (mem_gen +1)" style="width: 38px; height: 38px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 21v-5h5"></path></svg></button>
+<a href="Customer.dc.html" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 9px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; flex-shrink: 0">Profil</a>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: auto; padding: 18px 24px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{cur.msgs}}" as="m" hint-placeholder-count="6">
+<sc-if value="{{m.isS}}" hint-placeholder-val="{{false}}">
+<div style="align-self: center; max-width: 560px; font-size: 12px; color: #6B7280; padding: 2px 12px; white-space: nowrap; text-align: center">{{m.text}}</div>
+</sc-if>
+<sc-if value="{{m.isC}}" hint-placeholder-val="{{true}}">
+<div style="align-self: flex-start; max-width: 460px; display: flex; flex-direction: column; gap: 4px">
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px 12px 12px 4px; padding: 10px 12px; font-size: 13.5px; line-height: 1.5; white-space: pre-line">{{m.text}}</div>
+<span style="font-size: 11px; color: #6B7280">{{m.time}}</span>
+</div>
+</sc-if>
+<sc-if value="{{m.isOut}}" hint-placeholder-val="{{false}}">
+<div style="align-self: flex-end; max-width: 480px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end">
+<span style="{{m.labelStyle}}">{{m.who}}</span>
+<div style="{{m.bubbleStyle}}">
+<sc-if value="{{m.hasImg}}" hint-placeholder-val="{{false}}">
+<div style="width: 240px; height: 150px; border-radius: 8px; background: #E5E7EB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #4B5563; margin-bottom: 8px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg>
+<span style="font-size: 12px; font-weight: 500; text-align: center; padding: 0 18px">{{m.img}}</span>
+</div>
+</sc-if>
+<div style="white-space: pre-line">{{m.text}}</div>
+</div>
+<sc-if value="{{m.hasBtns}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; gap: 6px">
+<sc-for list="{{m.btns}}" as="bt" hint-placeholder-count="2">
+<span style="font-size: 12.5px; font-weight: 500; color: #1D4ED8; background: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 8px; padding: 5px 11px; white-space: nowrap">{{bt}}</span>
+</sc-for>
+</div>
+</sc-if>
+<span style="font-size: 11px; color: #6B7280">{{m.time}}</span>
+</div>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="padding: 12px 20px 16px 20px; background: #FFFFFF; border-top: 1px solid #E5E7EB; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4B5563">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+<span style="flex-grow: 1">{{cur.composerHint}}</span>
+
+</div>
+<div style="display: flex; align-items: flex-end; gap: 8px">
+<button aria-label="Lampirkan gambar produk" style="width: 42px; height: 42px; border-radius: 10px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></button>
+<button style="height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; white-space: nowrap; flex-shrink: 0">Template</button>
+<textarea aria-label="Tulis balasan admin" rows="2" placeholder="Tulis balasan sebagai admin…" style="flex-grow: 1; resize: none; border: 1px solid #D1D5DB; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.4; color: #111827; outline: none"></textarea>
+<button style="height: 42px; padding: 0 16px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; white-space: nowrap; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4z"></path></svg>Kirim</button>
+</div>
+</div>
+</section>
+
+<aside aria-label="Penilaian AI" style="width: 300px; flex-shrink: 0; border-left: 1px solid #E5E7EB; background: #FFFFFF; overflow: auto; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 13.5px; font-weight: 600; color: #111827">Penilaian Adiva terakhir</div>
+<div style="font-size: 13px; line-height: 1.5; color: #374151">{{cur.ringkasan}}</div>
+</div>
+<sc-if value="{{cur.needAdmin}}" hint-placeholder-val="{{false}}">
+<div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px">
+<div style="font-size: 12.5px; font-weight: 600; color: #92400E">Butuh admin</div>
+<div style="font-size: 12.5px; color: #4B5563">{{cur.alasan}}</div>
+</div>
+</sc-if>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{cur.fields}}" as="f" hint-placeholder-count="8">
+<div style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 11.5px; color: #6B7280">{{f.k}}</span>
+<span style="font-size: 13px; font-weight: 500">{{f.v}}</span>
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #F3F4F6"></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center">
+<span style="font-size: 13.5px; font-weight: 600; flex-grow: 1">Catatan tetap</span>
+<button style="height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0">Ubah</button>
+</div>
+<div style="min-height: 56px; box-sizing: border-box; border: 1px solid #E5E7EB; background: #FFFFFF; border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.45; color: #111827">{{cur.catatan}}</div>
+<span style="font-size: 11.5px; color: #6B7280">Ditulis admin, tidak pernah ditimpa sistem. Adiva ikut membacanya.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13.5px; font-weight: 600">Pesanan customer ini</span>
+<sc-for list="{{cur.orders}}" as="o" hint-placeholder-count="1">
+<a href="OrderDetail.dc.html" style="display: flex; flex-direction: column; gap: 6px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 12px; text-decoration: none; color: #111827">
+<span style="display: flex; align-items: center; gap: 8px"><span style="font-family: 'Geist Mono', monospace; font-size: 12px; flex-grow: 1; white-space: nowrap">{{o.id}}</span><span style="font-size: 12.5px; font-weight: 600; white-space: nowrap">{{o.total}}</span></span>
+<span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: #B45309; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B"></span>{{o.st}}</span>
+</a>
+</sc-for>
+<sc-if value="{{cur.noOrders}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12.5px; color: #6B7280">Belum ada pesanan.</span>
+</sc-if>
+</div>
+</aside>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0 };
+  }
+  renderVals() {
+    var self = this;
+    var data = [
+      {
+        name: 'Rina Maharani', init: 'RM', phone: '0812-3345-••81', time: '13:06', preview: 'JNE aja kak', skor: 'HOT', tahap: 'ORDER_DIBUAT', flag: 'Menunggu ACC', flagKind: 'warn', mode: 'bot',
+        ringkasan: 'Reseller pemula untuk kantin sekolah, modal ±1,5 jt. Sudah pilih Molreng 40 & Basreng 30, kirim JNE REG ke Dinoyo. Order diteruskan ke admin.',
+        fields: [['Tipe', 'RESELLER'], ['Tahap', 'ORDER_DIBUAT'], ['Skor', 'HOT'], ['Kota', 'Malang'], ['Minat produk', 'Molreng, Basreng'], ['Lokasi jualan', 'Kantin sekolah'], ['Estimasi modal', 'Rp1.500.000'], ['Nomor bot', 'Nomor Utama']],
+        catatan: 'Guru SD, ambil barang tiap awal bulan.',
+        orders: [['ORD-260928-014', 'Rp1.283.000', 'Menunggu ACC']],
+        msgs: [
+          ['c', 'kak mau tanya paket reseller buat kantin sekolah\nmodal sekitar 1,5jt\nyg laris apa ya', '13:02'],
+          ['s', '3 pesan beruntun digabung · buffer 8 detik'],
+          ['b', 'Halo kak Rina, salam kenal ya. Untuk kantin sekolah dengan modal sekitar 1,5 juta, yang paling cepat habis biasanya Molreng Reguler dan Basreng Pedas Daun Jeruk. Mau Adiva kirimkan foto dan harga bertingkatnya?', '13:03', '', ['Mau, kirim foto', 'Lihat paket reseller']],
+          ['c', 'Mau, kirim foto', '13:03'],
+          ['b', 'Molreng Reguler Bawang Original — harga turun di pembelian 10+ dan 50+ pcs ya kak.', '13:03', 'Foto produk · Molreng Reguler Bawang Original'],
+          ['c', 'ok aku ambil molreng 40, basreng 30. kirim ke Dinoyo Lowokwaru ya', '13:05'],
+          ['s', 'Tool dipakai: Cari_Produk_per_Kategori · Cek_Ongkir_Mengantar'],
+          ['b', 'Siap kak. Ongkir dari Sawojajar ke Dinoyo (±1,6 kg):\n• JNE REG Rp38.000 (2–3 hari)\n• SiCepat REG Rp35.000\n• GoSend Instant Rp27.000\nMau pakai kurir yang mana?', '13:05'],
+          ['c', 'JNE aja kak', '13:06'],
+          ['b', 'Ringkasan pesanan kak Rina:\n• Molreng Reguler Bawang Original × 40\n• Basreng Pedas Daun Jeruk × 30\nTotal produk Rp1.245.000 + ongkir Rp38.000\nPesanan sudah diteruskan ke admin untuk dicek, invoice menyusul ya kak.', '13:06'],
+          ['s', 'ORD-260928-014 dicatat · supervisor dikabari untuk ACC']
+        ]
+      },
+      {
+        name: 'Pak Hendra', init: 'PH', phone: '0857-2210-••09', time: '12:48', preview: 'kalau ambil 200 pcs bisa harga distributor?', skor: 'HOT', tahap: 'NEGO', flag: 'Butuh admin', flagKind: 'alert', mode: 'bot', needAdmin: true, alasan: 'Nego harga khusus: minta harga distributor untuk 200 pcs basreng.',
+        ringkasan: 'Pemilik toko oleh-oleh di Batu. Minta harga distributor untuk 200 pcs basreng, rutin tiap bulan.',
+        fields: [['Tipe', 'RESELLER'], ['Tahap', 'NEGO'], ['Skor', 'HOT'], ['Kota', 'Batu'], ['Minat produk', 'Basreng'], ['Lokasi jualan', 'Toko oleh-oleh'], ['Nomor bot', 'Nomor Utama'], ['Sapaan ulang', '22:48 bila diam']],
+        catatan: '', orders: [],
+        msgs: [
+          ['c', 'sore kak, saya punya toko oleh2 di Batu', '12:46'],
+          ['c', 'kalau ambil 200 pcs basreng bisa harga distributor?', '12:47'],
+          ['s', '2 pesan beruntun digabung · buffer 8 detik'],
+          ['b', 'Sore Pak Hendra, terima kasih sudah menghubungi Bang Bana. Untuk pembelian 200 pcs rutin, harga khususnya ditentukan langsung oleh admin kami ya Pak. Adiva sudah teruskan, admin akan segera menghubungi Bapak.', '12:48'],
+          ['s', 'butuh_admin = true · notifikasi terkirim ke supervisor (ADMIN_WA)']
+        ]
+      },
+      {
+        name: 'Bu Wati', init: 'BW', phone: '0813-5566-••42', time: '11:52', preview: 'iya mbak ditunggu kabarnya', skor: 'WARM', tahap: 'TANYA_HARGA', flag: 'Dijeda s/d 14:30', flagKind: 'pause', mode: 'pause',
+        ringkasan: 'Komplain kemasan bocor pada pesanan minggu lalu. Ditangani manual oleh Falah.',
+        fields: [['Tipe', 'RETAIL'], ['Tahap', 'TANYA_HARGA'], ['Skor', 'WARM'], ['Kota', 'Malang'], ['Minat produk', 'Seblak kering'], ['Nomor bot', 'Nomor Lawang'], ['Dijeda oleh', 'Falah'], ['Sampai', '14:30 (2 jam)']],
+        catatan: 'Pernah komplain kemasan, beri kompensasi jika repeat.',
+        orders: [['ORD-260921-006', 'Rp186.000', 'Selesai']],
+        msgs: [
+          ['c', 'mbak seblak yg kemarin bungkusnya bocor 2', '10:01'],
+          ['b', 'Mohon maaf sekali atas ketidaknyamanannya, Bu Wati. Adiva sudah teruskan ke admin agar segera ditangani ya.', '10:02'],
+          ['s', 'Bot dijeda oleh Falah · 10:05 s/d 14:30 · alasan: komplain kemasan'],
+          ['a', 'Bu Wati, saya Falah dari Bang Bana. Mohon maaf ya Bu, kami ganti 2 bungkus di pengiriman berikutnya tanpa biaya.', '10:07'],
+          ['c', 'iya mbak ditunggu kabarnya', '11:52'],
+          ['s', 'Customer sedang dijeda — bot diam, supervisor diberi tahu ada chat baru']
+        ]
+      },
+      {
+        name: 'Yoga (Karyawan)', init: 'YG', phone: '0896-1200-••77', time: '10:31', preview: 'potong gaji aja ya mbak', skor: 'HOT', tahap: 'ORDER_DIBUAT', flag: 'Ke Bu Sarah', flagKind: 'info', mode: 'bot',
+        ringkasan: 'Karyawan terverifikasi (tabel KARYAWAN). Pesan 4 pack basreng harga karyawan, bayar potong gaji. Order diteruskan ke Bu Sarah.',
+        fields: [['Tipe', 'KARYAWAN'], ['Tahap', 'ORDER_DIBUAT'], ['Skor', 'HOT'], ['Kota', 'Malang'], ['Minat produk', 'Basreng'], ['Pembayaran', 'Potong gaji'], ['PJ program', 'Bu Sarah'], ['Nomor bot', 'Nomor Utama']],
+        catatan: '', orders: [['ORD-260928-011', 'Rp96.000', 'Order karyawan · potong gaji']],
+        msgs: [
+          ['c', 'mbak aku karyawan produksi, mau ambil basreng 4 pack harga karyawan', '10:29'],
+          ['s', 'Tool dipakai: KB_Harga_Karyawan · nomor cocok dengan tabel KARYAWAN'],
+          ['b', 'Siap mas Yoga. 4 pack Basreng Original harga karyawan totalnya Rp96.000, dibayar lewat potong gaji ya. Info pengambilan nanti diumumkan di grup Anak Bang Bana.', '10:30', '', ['Ya, konfirmasi', 'Ubah pesanan']],
+          ['c', 'potong gaji aja ya mbak', '10:31'],
+          ['s', 'ORD-260928-011 dicatat · diteruskan ke Bu Sarah (SARAH_WA)']
+        ]
+      },
+      {
+        name: '+62 878-••••-5120', init: '?', phone: 'ID @lid → nomor ditemukan', time: '09:14', preview: 'P', skor: 'COLD', tahap: 'BARU', flag: 'Bot aktif', flagKind: 'ok', mode: 'bot',
+        ringkasan: 'Baru menyapa, belum menyebut kebutuhan.',
+        fields: [['Tipe', 'BELUM_JELAS'], ['Tahap', 'BARU'], ['Skor', 'COLD'], ['Kota', '—'], ['Minat produk', '—'], ['Lokasi jualan', '—'], ['Nomor bot', 'Nomor Utama'], ['Sapaan ulang', '19:14 bila diam']],
+        catatan: '', orders: [],
+        msgs: [
+          ['s', 'Nomor HP asli dicari dari ID @lid (Cari Nomor dari LID)'],
+          ['c', 'P', '09:13'],
+          ['c', 'kak', '09:13'],
+          ['b', 'Halo kak, dengan Adiva dari Bang Bana. Camilannya mau untuk dijual lagi atau dinikmati sendiri?', '09:14', '', ['Untuk dijual lagi', 'Untuk sendiri']]
+        ]
+      }
+    ];
+    var sel = this.state.sel;
+    var human = function (v) { v = String(v); if (/^(HOT|WARM|COLD)$/.test(v) || !/^[A-Z_]+$/.test(v)) { return v; } v = v.replace(/_/g, ' ').toLowerCase(); return v.charAt(0).toUpperCase() + v.slice(1); };
+    var skorStyle = function (s) {
+      var c = s === 'HOT' ? '#B91C1C' : (s === 'WARM' ? '#B45309' : '#6B7280');
+      return 'font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; color: ' + c + '; white-space: nowrap;';
+    };
+    var flagStyle = function (k) {
+      var m = { warn: '#B45309', alert: '#B91C1C', pause: '#4B5563', info: '#4B5563', ok: '#1D4ED8' }[k];
+      return 'font-size: 12px; font-weight: 500; color: ' + m + '; white-space: nowrap;';
+    };
+    var convs = data.map(function (d, i) {
+      var on = i === sel;
+      return {
+        name: d.name, init: d.init, time: d.time, preview: d.preview, skor: d.skor, tahap: d.tahap, tahapL: human(d.tahap), flag: d.flag,
+        skorStyle: skorStyle(d.skor), flagStyle: flagStyle(d.flagKind),
+        pick: function () { self.setState({ sel: i }); },
+        rowStyle: 'width: 100%; display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: none; border-bottom: 1px solid #F3F4F6; cursor: pointer; font-family: inherit; color: #111827; background: ' + (on ? '#F5F8FF' : '#FFFFFF') + '; box-shadow: ' + (on ? 'inset 2px 0 0 #2563EB' : 'none') + ';'
+      };
+    });
+    var d = data[sel];
+    var paused = d.mode === 'pause';
+    var msgs = d.msgs.map(function (m) {
+      var t = m[0];
+      var isBot = t === 'b';
+      return {
+        isS: t === 's', isC: t === 'c', isOut: t === 'b' || t === 'a',
+        text: m[1], time: m[2] || '', img: m[3] || '', hasImg: !!m[3], btns: m[4] || [], hasBtns: !!(m[4] && m[4].length),
+        who: isBot ? 'Adiva · AI' : 'Admin · Falah',
+        labelStyle: 'font-size: 11.5px; font-weight: 600; color: ' + (isBot ? '#1D4ED8' : '#6D28D9') + ';',
+        bubbleStyle: 'background: ' + (isBot ? '#EEF3FE' : '#F4F2FD') + '; border: 1px solid ' + (isBot ? '#DCE6FB' : '#E7E2FA') + '; border-radius: 12px 12px 4px 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.5;'
+      };
+    });
+    var st = paused ? ['Dijeda admin', '', '#4B5563'] : (d.needAdmin ? ['Butuh admin', '', '#B45309'] : ['Dijawab Adiva', '', '#1D4ED8']);
+    var cur = {
+      name: d.name, init: d.init, phone: d.phone, ringkasan: d.ringkasan, catatan: d.catatan || 'Belum ada catatan.',
+      needAdmin: !!d.needAdmin, alasan: d.alasan || '',
+      paused: paused, active: !paused,
+      status: st[0], statusStyle: 'font-size: 12px; font-weight: 500; color: ' + st[2] + '; white-space: nowrap; flex-shrink: 0;',
+      composerHint: paused ? 'Bot sedang dijeda — balasan Anda dikirim langsung lewat WAHA.' : 'Membalas manual akan menjeda Adiva untuk customer ini selama 2 jam.',
+      fields: d.fields.map(function (f) { return { k: f[0], v: human(f[1]) }; }),
+      orders: d.orders.map(function (o) { return { id: o[0], total: o[1], st: o[2] }; }),
+      noOrders: d.orders.length === 0,
+      msgs: msgs
+    };
+    return { convs: convs, cur: cur };
+  }
+}
+</script>
+</body>
+</html>

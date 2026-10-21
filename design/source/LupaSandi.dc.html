@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Lupa kata sandi — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#9CA3AF}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; overflow: hidden; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827">
+<main style="width: 560px; height: 900px; box-sizing: border-box; background: #FFFFFF; display: flex; flex-direction: column; padding: 40px 80px 32px 80px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 8px; background: #1D4ED8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; letter-spacing: -0.02em">BB</span>
+<span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 600">Bang Bana</span><span style="font-size: 12.5px; color: #6B7280">Panel admin Adiva</span></span>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center">
+<div style="width: 400px; display: flex; flex-direction: column">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px"><div style="display: flex; flex-direction: column; gap: 6px"><span style="{{sb0}}"></span><span style="{{st0}}">Nomor WhatsApp</span></div><div style="display: flex; flex-direction: column; gap: 6px"><span style="{{sb1}}"></span><span style="{{st1}}">Kode</span></div><div style="display: flex; flex-direction: column; gap: 6px"><span style="{{sb2}}"></span><span style="{{st2}}">Sandi baru</span></div></div><sc-if value="{{s0}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column">
+<a href="Login.dc.html" style="margin-top: 22px; align-self: flex-start; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 500; color: #4B5563; text-decoration: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Kembali ke halaman masuk</a>
+<h1 style="margin: 14px 0 6px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">Atur ulang kata sandi</h1>
+<p style="margin: 0; font-size: 14.5px; line-height: 1.5; color: #6B7280">Masukkan nomor WhatsApp yang terdaftar. Kode reset dikirim ke sana, bukan ke email.</p>
+<div style="margin-top: 24px; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; align-items: baseline"><label for="wa" style="font-size: 13px; font-weight: 600; color: #111827; flex-grow: 1">Nomor WhatsApp</label></div><div style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 8px; background: #FFFFFF; color: #6B7280; padding: 0 12px 0 5px"><span style="height: 32px; display: flex; align-items: center; padding: 0 9px; border-radius: 6px; background: #F3F4F6; color: #374151; font-size: 13px; font-weight: 600">+62</span><input id="wa" type="tel" placeholder="812 xxxx xxxx" autocomplete="tel-national" style="flex-grow: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 14px; color: #111827; font-family: inherit"></div></div>
+<button onClick="{{go1}}" style="margin-top: 20px; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit">Kirim kode reset</button>
+<p style="margin: 16px 0 0 0; font-size: 12.5px; line-height: 1.5; color: #6B7280">Tidak pegang nomor itu lagi? Supervisor bisa mengganti nomor Anda di Tim &amp; akses, lalu coba lagi.</p>
+</div>
+</sc-if><sc-if value="{{s1}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column">
+<button onClick="{{go0}}" style="margin-top: 22px; align-self: flex-start; display: flex; align-items: center; gap: 4px; border: none; background: transparent; padding: 0; cursor: pointer; font-size: 13px; font-weight: 500; color: #4B5563"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Ganti nomor</button>
+<h1 style="margin: 14px 0 6px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">Cek WhatsApp Anda</h1>
+<p style="margin: 0; font-size: 14.5px; line-height: 1.5; color: #6B7280">Kode reset dikirim ke <strong style="color: #111827; font-weight: 600">+62 812-••••-••07</strong>. Berlaku 5 menit.</p>
+<div role="group" aria-label="Kode verifikasi" style="margin-top: 24px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{otp}}" as="d" hint-placeholder-count="6">
+<input type="text" inputmode="numeric" maxlength="1" aria-label="{{d.label}}" value="{{d.v}}" onChange="{{d.set}}" style="{{d.style}}">
+</sc-for>
+</div>
+<div style="margin-top: 12px; font-size: 13px; color: #6B7280">Kirim ulang dalam <strong style="color: #111827; font-weight: 600">0:52</strong> · sisa 2 percobaan</div>
+<button onClick="{{go2}}" style="margin-top: 22px; {{nextStyle}}">Lanjut</button>
+</div>
+</sc-if><sc-if value="{{s2}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column">
+<h1 style="margin: 22px 0 6px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">Buat kata sandi baru</h1>
+<p style="margin: 0; font-size: 14.5px; line-height: 1.5; color: #6B7280">Untuk akun <strong style="color: #111827; font-weight: 600">falah@bangbana.id</strong>.</p>
+<div style="margin-top: 24px; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; align-items: baseline"><label for="pw" style="font-size: 13px; font-weight: 600; color: #111827; flex-grow: 1">Kata sandi baru</label></div><div style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 8px; background: #FFFFFF; color: #6B7280; padding: 0 4px 0 12px">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+<input id="pw" type="{{pwType}}" placeholder="Minimal 8 karakter" autocomplete="new-password" style="flex-grow: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 14px; color: #111827; font-family: inherit">
+<button aria-label="{{pwLabel}}" onClick="{{togglePw}}" style="width: 36px; height: 36px; border-radius: 7px; border: none; background: transparent; color: #6B7280; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<sc-if value="{{pwHidden}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+<sc-if value="{{pwShown}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"></path><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg></sc-if>
+</button>
+</div></div>
+<div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; align-items: baseline"><label for="pw2" style="font-size: 13px; font-weight: 600; color: #111827; flex-grow: 1">Ulangi kata sandi</label></div><div style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 8px; background: #FFFFFF; color: #6B7280; padding: 0 12px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><input id="pw2" type="password" placeholder="Ketik ulang" autocomplete="new-password" style="flex-grow: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 14px; color: #111827; font-family: inherit"></div></div>
+<label style="margin-top: 14px; display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; color: #374151; cursor: pointer">
+<input type="checkbox" checked="{{t}}" style="width: 16px; height: 16px; margin: 1px 0 0 0; accent-color: #2563EB; flex-shrink: 0">Keluarkan akun ini dari semua perangkat lain
+</label>
+<a href="Login.dc.html" style="margin-top: 20px; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit">Simpan &amp; masuk lagi</a>
+</div>
+</sc-if>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #6B7280"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><span>Keluar otomatis setelah 12 jam tidak aktif</span></div>
+</main>
+<aside aria-label="Tentang panel" style="width: 880px; height: 900px; box-sizing: border-box; background: #1D4ED8; color: #FFFFFF; padding: 64px 88px 48px 88px; display: flex; flex-direction: column">
+<div style="font-size: 13px; font-weight: 500; color: #BFDBFE">Pemulihan akun</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center">
+<h2 style="margin: 0; width: 640px; font-size: 44px; line-height: 1.1; font-weight: 600; letter-spacing: -0.03em; color: #FFFFFF">Kode reset hanya dikirim ke WhatsApp yang terdaftar.</h2>
+<p style="margin: 20px 0 36px 0; width: 560px; font-size: 16px; line-height: 1.55; color: #DBEAFE">Panel ini memegang data order dan pelanggan. Karena itu reset tidak lewat email yang bisa dibaca siapa saja, tapi lewat nomor yang sudah diverifikasi supervisor.</p>
+<div style="width: 640px; display: flex; flex-direction: column; border-bottom: 1px solid rgba(255,255,255,0.18)">
+<div style="border-top: 1px solid rgba(255,255,255,0.18); padding: 16px 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; align-items: baseline">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: #BFDBFE">5 MENIT</span>
+<span style="font-size: 15px; line-height: 1.5; color: #FFFFFF">Masa berlaku setiap kode. Kode lama otomatis hangus saat Anda minta yang baru.</span>
+</div>
+<div style="border-top: 1px solid rgba(255,255,255,0.18); padding: 16px 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; align-items: baseline">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: #BFDBFE">3 PERCOBAAN</span>
+<span style="font-size: 15px; line-height: 1.5; color: #FFFFFF">Setelah tiga kali salah, reset dikunci 15 menit dan supervisor dikabari.</span>
+</div>
+<div style="border-top: 1px solid rgba(255,255,255,0.18); padding: 16px 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; align-items: baseline">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: #BFDBFE">LOG</span>
+<span style="font-size: 15px; line-height: 1.5; color: #FFFFFF">Reset tercatat di Log aktivitas beserta perangkat dan waktunya.</span>
+</div>
+</div>
+</div>
+<div style="font-size: 12.5px; line-height: 1.55; color: #BFDBFE">Butuh bantuan? Hubungi supervisor toko.</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 0, show: false, code: ['7', '1', '0', '5', '9', '3'] };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var bar = function (i) { return 'height: 3px; border-radius: 2px; background: ' + (i <= s.step ? '#2563EB' : '#E5E7EB') + ';'; };
+    var lbl = function (i) { return 'font-size: 12.5px; white-space: nowrap; ' + (i === s.step ? 'color: #111827; font-weight: 600;' : 'color: #6B7280; font-weight: 500;'); };
+    var firstEmpty = s.code.indexOf('');
+    var otp = s.code.map(function (v, i) {
+      var focus = i === firstEmpty;
+      return {
+        v: v, label: 'Digit ' + (i + 1),
+        set: function (e) { var c = s.code.slice(); c[i] = String(e.target.value || '').replace(/[^0-9]/g, '').slice(-1); self.setState({ code: c }); },
+        style: 'height: 52px; width: 100%; box-sizing: border-box; text-align: center; font-size: 21px; font-weight: 600; font-family: inherit; color: #111827; border-radius: 8px; outline: none; background: #FFFFFF; border: ' + (focus ? '2px solid #2563EB' : (v ? '1px solid #93C5FD' : '1px solid #D1D5DB')) + ';'
+      };
+    });
+    var complete = firstEmpty === -1;
+    return {
+      t: true,
+      s0: s.step === 0, s1: s.step === 1, s2: s.step === 2,
+      sb0: bar(0), sb1: bar(1), sb2: bar(2), st0: lbl(0), st1: lbl(1), st2: lbl(2),
+      pwType: s.show ? 'text' : 'password',
+      pwLabel: s.show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi',
+      pwHidden: !s.show, pwShown: s.show,
+      togglePw: function () { self.setState({ show: !s.show }); },
+      go0: function () { self.setState({ step: 0 }); },
+      go1: function () { self.setState({ step: 1 }); },
+      go2: function () { self.setState({ step: 2 }); },
+      otp: otp,
+      nextStyle: 'height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit;' + (complete ? '' : ' opacity: 0.45;')
+    };
+  }
+}
+</script>
+</body>
+</html>

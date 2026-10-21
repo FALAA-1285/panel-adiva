@@ -1,0 +1,24 @@
+<?php
+
+use App\Support\Demo;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote');
+
+// a campaign whose sending chain was lost (queue cleared, worker down) carries on
+Schedule::command('broadcast:lanjutkan')->everyFiveMinutes()->withoutOverlapping();
+
+// Otomasi and Monitoring follow n8n: workflows switched on or off, and every finished run.
+// Not in demo mode: the frozen clock would file today's runs on 28 Sep.
+Schedule::command('n8n:sinkron')->everyMinute()->withoutOverlapping()->skip(fn () => Demo::aktif());
+
+// the supervisor's short WhatsApp for each notification n8n writes (docs/kontrak-n8n.md §9)
+Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapping()->skip(fn () => Demo::aktif());
+
+// the daily reminder of who the bot is still paused for (BOT_DRIVER=lokal; n8n did this at 09:00)
+Schedule::command('jeda:ingatkan')->dailyAt('09:00')
+    ->skip(fn () => Demo::aktif() || config('services.bot.driver') !== 'lokal');

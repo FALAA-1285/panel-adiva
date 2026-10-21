@@ -1,0 +1,755 @@
+import { Head, Link, router, usePage, usePoll } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
+import { Button, ButtonLink } from '@/components/ui/button';
+import { Input } from '@/components/ui/form';
+import { Ikon } from '@/components/ui/ikon';
+import { DaftarTab, PageHeader } from '@/components/ui/page-header';
+import { Status } from '@/components/ui/status';
+import type { Nada } from '@/components/ui/status';
+import { sedangMengetik } from '@/components/ui/topbar';
+import { cocok, LAYAR } from '@/hooks/use-layar';
+import { cn } from '@/lib/utils';
+import { pelanggan, pesanan } from '@/routes';
+import {
+    aksi as perintah,
+    catat,
+    detail as halamanDetail,
+    ekspor,
+    kirimUlangInvoice,
+} from '@/routes/pesanan';
+
+type StatusOrder = { label: string; nada: Nada };
+
+type Baris = {
+    id: string;
+    tanggal: string;
+    nama: string;
+    tipe: string | null;
+    ringkas: string;
+    total: string;
+    bayar: string | null;
+    status: StatusOrder;
+    bukti: boolean;
+    dobel: boolean;
+};
+
+type Aksi = {
+    kode: string;
+    boleh: boolean;
+    /** ACC on an order already ACC'd: on once a new shipping cost is typed (revisi ongkir) */
+    bolehDenganOngkir: boolean;
+    /** The tooltip: what the command does, or why it does not apply. */
+    judul: string;
+    gaya: 'utama' | 'bahaya';
+};
+
+type Detail = {
+    id: string;
+    status: StatusOrder;
+    nama: string;
+    tipe: string | null;
+    dibuat: string;
+    customerId: number | null;
+    langkah: {
+        label: string;
+        selesai: boolean;
+        kini: boolean;
+        mati: boolean;
+    }[];
+    item: { nama: string; qty: number; subtotal: string }[];
+    produk: string;
+    ongkir: string;
+    kurir: string | null;
+    total: string;
+    penerima: string;
+    hp: string;
+    alamat: string;
+    metode: string;
+    berat: string;
+    invoice: string;
+    resi: string;
+    adaInvoice: boolean;
+    bukti: boolean;
+    buktiUrl: string | null;
+    dobel: boolean;
+    riwayat: { waktu: string; teks: string }[];
+    aksi: Aksi[];
+    /** "Lainnya": TUTUP, BATAL KIRIM */
+    lainnya: Aksi[];
+};
+
+type Props = {
+    tab: { kode: string; label: string; n: number }[];
+    aktifTab: string;
+    baris: Baris[];
+    detail: Detail | null;
+};
+
+const KOLOM = 'grid-cols-[132px_minmax(0,1fr)_132px_128px]';
+
+/** Query string for the open tab and order ("semua" is the default tab). */
+const query = (tab: string, order?: string) => ({
+    tab: tab === 'semua' ? undefined : tab,
+    order,
+});
+
+export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
+    const [dipilih, setDipilih] = useState(detail?.id);
+    // below 1280px the list and the order take turns (?order= opens the order)
+    const lihatDetail = new URLSearchParams(
+        usePage().url.split('?')[1] ?? '',
+    ).has('order');
+
+    // orders from the chatbot and status changes from WhatsApp appear by themselves
+    usePoll(10000, { only: ['tab', 'baris', 'detail', 'panel'] });
+
+    const pilih = (id: string) => {
+        setDipilih(id);
+        router.get(
+            pesanan.url({ query: query(aktifTab, id) }),
+            {},
+            {
+                only: ['detail'],
+                preserveState: true,
+                preserveScroll: true,
+                // small screens: opening an order is a step the browser's Back undoes
+                replace: cocok(LAYAR.lebar),
+            },
+        );
+    };
+
+    const keDaftar = () =>
+        router.get(
+            pesanan.url({ query: query(aktifTab) }),
+            {},
+            { only: ['detail'], preserveState: true, preserveScroll: true },
+        );
+
+    // J / K: next or previous order
+    useEffect(() => {
+        const tekan = (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+
+            if (
+                sedangMengetik(e.target) ||
+                e.metaKey ||
+                e.ctrlKey ||
+                e.altKey ||
+                (key !== 'j' && key !== 'k')
+            ) {
+                return;
+            }
+
+            const sekarang = dipilih ?? detail?.id;
+            const i = baris.findIndex((b) => b.id === sekarang);
+            const ke =
+                baris[
+                    Math.min(
+                        baris.length - 1,
+                        Math.max(0, i + (key === 'j' ? 1 : -1)),
+                    )
+                ];
+
+            if (ke && ke.id !== sekarang) {
+                e.preventDefault();
+                pilih(ke.id);
+            }
+        };
+
+        document.addEventListener('keydown', tekan);
+
+        return () => document.removeEventListener('keydown', tekan);
+    });
+
+    return (
+        <AppLayout active="orders" penuhLayar>
+            <Head title="Pesanan" />
+            <PageHeader
+                rapat
+                judul="Pesanan"
+                sub="Setiap tombol di sini sama dengan perintah admin di WhatsApp, dengan urutan yang sama"
+                aksi={
+                    <>
+                        <Button
+                            className="px-3"
+                            onClick={() =>
+                                window.location.assign(
+                                    ekspor.url({ query: query(aktifTab) }),
+                                )
+                            }
+                        >
+                            <Ikon nama="unduh" ukuran={15} tebal={2} />
+                            Ekspor CSV
+                        </Button>
+                        <ButtonLink
+                            href={catat.url()}
+                            varian="primary"
+                            className="border-0"
+                        >
+                            <Ikon nama="tambah" ukuran={15} tebal={2} />
+                            Catat order manual
+                        </ButtonLink>
+                    </>
+                }
+            />
+            <IsiHalaman className="gap-4 pb-6">
+                <DaftarTab
+                    label="Filter status"
+                    className="-mt-1 gap-[22px]"
+                    tab={tab.map((t) => ({
+                        label: t.label,
+                        n: t.n,
+                        aktif: t.kode === aktifTab,
+                        // the selected order stays open, as in the design
+                        onClick: () =>
+                            router.get(
+                                pesanan.url({
+                                    query: query(t.kode, detail?.id),
+                                }),
+                                {},
+                                { preserveScroll: true },
+                            ),
+                    }))}
+                />
+                <div className="flex min-h-0 grow gap-5">
+                    <section
+                        aria-label="Daftar pesanan"
+                        className={cn(
+                            'flex min-w-0 grow flex-col',
+                            lihatDetail && 'max-xl:hidden',
+                        )}
+                    >
+                        <div className="flex min-h-0 grow flex-col overflow-hidden rounded-card border border-line bg-surface">
+                            <div
+                                className={cn(
+                                    'grid gap-3 border-b border-line-softer bg-subtle px-4 py-3 text-caption font-medium text-muted max-md:hidden',
+                                    KOLOM,
+                                )}
+                            >
+                                <span>Order</span>
+                                <span>Customer &amp; item</span>
+                                <span className="text-right">
+                                    Total · bayar
+                                </span>
+                                <span>Status</span>
+                            </div>
+                            <div className="grow overflow-auto">
+                                {baris.map((b) => (
+                                    <BarisPesanan
+                                        key={b.id}
+                                        baris={b}
+                                        dipilih={
+                                            b.id === (dipilih ?? detail?.id)
+                                        }
+                                        onPilih={() => pilih(b.id)}
+                                    />
+                                ))}
+                                {baris.length === 0 && (
+                                    <div className="p-10 text-center text-body text-muted">
+                                        Tidak ada pesanan di status ini.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+                    {detail && (
+                        <PanelDetail
+                            key={detail.id}
+                            detail={detail}
+                            tampil={lihatDetail}
+                            onKembali={keDaftar}
+                        />
+                    )}
+                </div>
+            </IsiHalaman>
+        </AppLayout>
+    );
+}
+
+function BarisPesanan({
+    baris,
+    dipilih,
+    onPilih,
+}: {
+    baris: Baris;
+    dipilih: boolean;
+    onPilih: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onPilih}
+            aria-pressed={dipilih}
+            className={cn(
+                'grid w-full cursor-pointer items-center gap-3 border-0 border-b border-line-softer px-4 py-3 text-ink',
+                KOLOM,
+                // phones: order + total on top, customer and status under them
+                'max-md:grid-cols-[minmax(0,1fr)_auto] max-md:gap-y-1.5',
+                dipilih
+                    ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                    : 'bg-surface hover:bg-subtle',
+                'motion-safe:transition-colors motion-safe:duration-150',
+            )}
+        >
+            <span className="flex flex-col gap-[3px] text-left">
+                <span className="font-mono text-caption font-semibold">
+                    {baris.id}
+                </span>
+                <span className="text-tag text-muted">{baris.tanggal}</span>
+            </span>
+            <span className="flex min-w-0 flex-col gap-[3px] text-left max-md:order-3 max-md:col-span-2">
+                <span className="truncate text-body font-semibold">
+                    {baris.nama}{' '}
+                    {baris.tipe && (
+                        <span className="text-caption font-normal text-muted">
+                            · {baris.tipe}
+                        </span>
+                    )}
+                </span>
+                <span className="truncate text-caption text-ink-3">
+                    {baris.ringkas}
+                </span>
+            </span>
+            <span className="flex min-w-0 flex-col items-end gap-[3px] text-right max-md:order-2">
+                <span className="text-body font-semibold whitespace-nowrap">
+                    {baris.total}
+                </span>
+                <span className="max-w-full truncate text-tag text-muted">
+                    {baris.bayar}
+                </span>
+            </span>
+            <span className="flex flex-col items-start gap-1 max-md:order-4 max-md:col-span-2 max-md:flex-row max-md:flex-wrap max-md:items-center">
+                <Status nada={baris.status.nada}>{baris.status.label}</Status>
+                {baris.bukti && (
+                    <span className="pl-3 text-caption font-medium whitespace-nowrap text-green-text">
+                        Bukti transfer masuk
+                    </span>
+                )}
+                {baris.dobel && (
+                    <span className="pl-3 text-caption font-medium whitespace-nowrap text-amber-text">
+                        Mungkin dobel
+                    </span>
+                )}
+            </span>
+        </button>
+    );
+}
+
+const kelasAksi = (a: Aksi, boleh: boolean) =>
+    cn(
+        'h-9 cursor-pointer rounded-control border text-caption font-semibold whitespace-nowrap',
+        !boleh
+            ? 'cursor-not-allowed border-line-quiet bg-subtle text-faint'
+            : a.gaya === 'utama'
+              ? 'border-primary bg-primary text-white hover:border-primary-ink hover:bg-primary-ink'
+              : 'border-line-strong bg-surface text-red-text hover:bg-note-red-bg',
+        'motion-safe:transition-colors motion-safe:duration-150',
+    );
+
+/**
+ * The grid's eighth button: TUTUP and BATAL KIRIM, once WhatsApp commands only. Opens
+ * upwards; closes on a click outside or Esc.
+ */
+function MenuLainnya({
+    aksi,
+    onPilih,
+}: {
+    aksi: Aksi[];
+    onPilih: (kode: string) => void;
+}) {
+    const [buka, setBuka] = useState(false);
+    const wadah = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!buka) {
+            return;
+        }
+
+        const tutup = (e: MouseEvent | KeyboardEvent) => {
+            if (
+                e instanceof KeyboardEvent
+                    ? e.key === 'Escape'
+                    : !wadah.current?.contains(e.target as Node)
+            ) {
+                setBuka(false);
+            }
+        };
+
+        document.addEventListener('mousedown', tutup);
+        document.addEventListener('keydown', tutup);
+
+        return () => {
+            document.removeEventListener('mousedown', tutup);
+            document.removeEventListener('keydown', tutup);
+        };
+    }, [buka]);
+
+    return (
+        <div ref={wadah} className="relative">
+            <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={buka}
+                onClick={() => setBuka(!buka)}
+                className="flex h-9 w-full cursor-pointer items-center justify-center gap-1 rounded-control border border-line-strong bg-surface text-caption font-semibold whitespace-nowrap text-ink hover:bg-subtle motion-safe:transition-colors"
+            >
+                Lainnya
+                <Ikon nama="turun" ukuran={14} />
+            </button>
+            {buka && (
+                <div
+                    role="menu"
+                    className="absolute right-0 bottom-11 z-10 flex w-64 flex-col rounded-control border border-line bg-surface py-1 motion-safe:animate-[muncul_120ms_ease-out]"
+                >
+                    {aksi.map((a) => (
+                        <button
+                            key={a.kode}
+                            type="button"
+                            role="menuitem"
+                            disabled={!a.boleh}
+                            onClick={() => {
+                                setBuka(false);
+                                onPilih(a.kode);
+                            }}
+                            className="flex w-full cursor-pointer flex-col gap-0.5 border-none bg-transparent px-3 py-2 text-left hover:bg-subtle disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        >
+                            <span
+                                className={cn(
+                                    'text-caption font-semibold',
+                                    a.boleh ? 'text-red-text' : 'text-faint',
+                                )}
+                            >
+                                {a.kode}
+                            </span>
+                            <span className="text-tag text-muted">
+                                {a.judul}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+const kelasTombolInvoice =
+    'flex h-9 grow cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-caption font-semibold text-ink no-underline hover:bg-subtle motion-safe:transition-colors';
+
+function PanelDetail({
+    detail,
+    tampil,
+    onKembali,
+}: {
+    detail: Detail;
+    /** below 1280px: the order is open (else the list shows) */
+    tampil: boolean;
+    onKembali: () => void;
+}) {
+    const [catatan, setCatatan] = useState('');
+    const [mengirimInvoice, setMengirimInvoice] = useState(false);
+    const [galatInvoice, setGalatInvoice] = useState<string | null>(null);
+
+    // n8n sends the same invoice PDF again, from the customer's bot number
+    const kirimInvoice = () => {
+        if (mengirimInvoice) {
+            return;
+        }
+
+        router.post(
+            kirimUlangInvoice.url(detail.id),
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setMengirimInvoice(true),
+                onFinish: () => setMengirimInvoice(false),
+                onSuccess: () => setGalatInvoice(null),
+                onError: (e) => setGalatInvoice(e.invoice ?? null),
+            },
+        );
+    };
+
+    const jalankan = (kode: string) =>
+        router.post(
+            perintah.url(detail.id),
+            { aksi: kode, catatan },
+            { preserveScroll: true, onSuccess: () => setCatatan('') },
+        );
+
+    return (
+        <aside
+            aria-label="Detail pesanan"
+            className={cn(
+                'box-content flex w-[420px] shrink-0 flex-col overflow-hidden rounded-card border border-line bg-surface',
+                'max-xl:w-auto max-xl:min-w-0 max-xl:grow',
+                !tampil && 'max-xl:hidden',
+            )}
+        >
+            <div className="flex flex-col gap-2 border-b border-line-softer px-[18px] pt-4 pb-3">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        aria-label="Kembali ke daftar pesanan"
+                        onClick={onKembali}
+                        className="-ml-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-ink-2 hover:bg-line-softer xl:hidden"
+                    >
+                        <Ikon nama="kembali" ukuran={18} />
+                    </button>
+                    <span className="grow font-mono text-panel font-semibold">
+                        {detail.id}
+                    </span>
+                    <Status nada={detail.status.nada}>
+                        {detail.status.label}
+                    </Status>
+                </div>
+                <div className="text-body text-ink-3">
+                    <Link
+                        href={pelanggan.url({
+                            query: { pilih: detail.customerId ?? undefined },
+                        })}
+                        className="font-semibold no-underline"
+                    >
+                        {detail.nama}
+                    </Link>
+                    {detail.tipe && ` · ${detail.tipe}`} · dibuat{' '}
+                    {detail.dibuat} ·{' '}
+                    <Link
+                        href={halamanDetail.url(detail.id)}
+                        className="font-medium no-underline"
+                    >
+                        Detail
+                    </Link>
+                </div>
+                <div className="flex gap-1 pt-1">
+                    {detail.langkah.map((l) => (
+                        <div
+                            key={l.label}
+                            className="flex grow flex-col gap-[5px]"
+                        >
+                            <span
+                                className={cn(
+                                    'h-[3px] rounded-[2px]',
+                                    l.mati
+                                        ? 'bg-note-red-line'
+                                        : l.selesai
+                                          ? 'bg-primary'
+                                          : 'bg-line',
+                                )}
+                            />
+                            <span
+                                className={cn(
+                                    'text-tag',
+                                    l.kini ? 'font-semibold' : 'font-medium',
+                                    l.selesai ? 'text-ink' : 'text-muted',
+                                )}
+                            >
+                                {l.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="flex grow flex-col gap-4 overflow-auto px-[18px] py-3.5">
+                <div className="flex flex-col gap-1.5">
+                    <div className="text-caption font-semibold text-ink">
+                        Item
+                    </div>
+                    {detail.item.map((it, i) => (
+                        <div
+                            key={i}
+                            className="grid grid-cols-[minmax(0,1fr)_44px_92px] gap-2 text-body"
+                        >
+                            <span>{it.nama}</span>
+                            <span className="text-right text-ink-3">
+                                ×{it.qty}
+                            </span>
+                            <span className="text-right font-semibold">
+                                {it.subtotal}
+                            </span>
+                        </div>
+                    ))}
+                    <div className="my-1 h-px bg-line-softer" />
+                    <div className="flex text-body text-ink-3">
+                        <span className="grow">Total produk</span>
+                        <span>{detail.produk}</span>
+                    </div>
+                    <div className="flex text-body text-ink-3">
+                        <span className="grow">Ongkir · {detail.kurir}</span>
+                        <span>{detail.ongkir}</span>
+                    </div>
+                    <div className="flex text-panel font-semibold">
+                        <span className="grow">Total tagihan</span>
+                        <span>{detail.total}</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-3.5 gap-y-2.5">
+                    <Info label="Penerima">{detail.penerima}</Info>
+                    <Info label="No. HP" mono>
+                        {detail.hp}
+                    </Info>
+                    <Info label="Alamat" lebar>
+                        {detail.alamat}
+                    </Info>
+                    <Info label="Metode bayar">{detail.metode}</Info>
+                    <Info label="Berat">{detail.berat}</Info>
+                    <Info label="Invoice" mono>
+                        {detail.invoice}
+                    </Info>
+                    <Info label="No. resi" mono>
+                        {detail.resi}
+                    </Info>
+                </div>
+
+                {detail.adaInvoice && (
+                    <div className="flex gap-2">
+                        <Link
+                            href={halamanDetail.url(detail.id)}
+                            className={kelasTombolInvoice}
+                        >
+                            Lihat invoice PDF
+                        </Link>
+                        <button
+                            type="button"
+                            className={kelasTombolInvoice}
+                            aria-disabled={mengirimInvoice}
+                            onClick={kirimInvoice}
+                        >
+                            Kirim ulang ke customer
+                        </button>
+                    </div>
+                )}
+                {galatInvoice && (
+                    <span role="alert" className="text-caption text-red-text">
+                        {galatInvoice}
+                    </span>
+                )}
+
+                {detail.bukti && (
+                    <div className="flex items-center gap-3 rounded-control border border-line bg-surface p-2.5">
+                        <div className="flex size-16 shrink-0 items-center justify-center rounded-chip bg-line-softer text-muted">
+                            <Ikon nama="gambar" ukuran={22} />
+                        </div>
+                        <div className="flex flex-col gap-0.5 text-caption">
+                            <span className="font-semibold text-green-text">
+                                Bukti transfer diterima
+                            </span>
+                            <span className="text-ink-2">
+                                Foto dari customer · cek lalu tekan LUNAS. Order
+                                ini tidak dibatalkan otomatis oleh batas bayar.
+                            </span>
+                            {detail.buktiUrl && (
+                                <a
+                                    href={detail.buktiUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-semibold no-underline hover:underline"
+                                >
+                                    Buka foto
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {detail.dobel && (
+                    <div className="rounded-control border border-note-amber-line bg-note-amber-bg p-2.5 text-caption text-ink-2">
+                        <strong className="font-semibold text-[#92400E]">
+                            Mungkin dobel.
+                        </strong>{' '}
+                        Isinya sama persis dengan order yang sudah dibayar
+                        sebelumnya. Cek dengan customer sebelum ACC.
+                    </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                    <div className="text-caption font-semibold text-ink">
+                        Riwayat
+                    </div>
+                    {detail.riwayat.map((r, i) => (
+                        <div key={i} className="flex gap-2.5 text-caption">
+                            <span className="w-11 shrink-0 text-muted">
+                                {r.waktu}
+                            </span>
+                            <span className="text-ink-2">{r.teks}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <label className="flex flex-col gap-1.5">
+                    <span className="text-caption font-semibold text-ink">
+                        Catatan, nomor resi, atau alasan
+                    </span>
+                    <Input
+                        type="text"
+                        placeholder="Mis. nomor resi untuk KIRIM, alasan TOLAK, atau ongkir untuk ACC"
+                        className="h-10 rounded-[9px] px-3 text-body"
+                        value={catatan}
+                        onChange={(e) => setCatatan(e.target.value)}
+                    />
+                </label>
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-line-softer bg-subtle px-[18px] pt-3 pb-4">
+                <div className="grid grid-cols-4 gap-1.5">
+                    {detail.aksi.map((a) => {
+                        // the note carries the receipt (KIRIM; none = n8n books Mengantar),
+                        // the shipping cost (ACC), or the reason (TOLAK, BATAL)
+                        const boleh =
+                            a.boleh ||
+                            (a.bolehDenganOngkir && catatan.trim() !== '');
+
+                        return (
+                            <button
+                                key={a.kode}
+                                type="button"
+                                disabled={!boleh}
+                                title={a.judul}
+                                onClick={() => jalankan(a.kode)}
+                                className={kelasAksi(a, boleh)}
+                            >
+                                {a.kode}
+                            </button>
+                        );
+                    })}
+                    <MenuLainnya aksi={detail.lainnya} onPilih={jalankan} />
+                </div>
+                <div className="text-tag text-muted">
+                    Urutan sama dengan workflow: LUNAS setelah ACC, KIRIM
+                    setelah LUNAS, SIAP hanya untuk ambil sendiri. Tombol
+                    abu-abu belum berlaku — arahkan kursor untuk alasannya.
+                </div>
+            </div>
+        </aside>
+    );
+}
+
+function Info({
+    label,
+    mono = false,
+    lebar = false,
+    children,
+}: {
+    label: string;
+    mono?: boolean;
+    /** Alamat: the full width, normal weight. */
+    lebar?: boolean;
+    children: ReactNode;
+}) {
+    return (
+        <div className={cn('flex flex-col gap-0.5', lebar && 'col-span-2')}>
+            <span className="text-tag text-muted">{label}</span>
+            <span
+                className={cn(
+                    'text-body',
+                    lebar ? 'leading-[1.45]' : 'font-semibold',
+                    mono && 'font-mono',
+                )}
+            >
+                {children}
+            </span>
+        </div>
+    );
+}

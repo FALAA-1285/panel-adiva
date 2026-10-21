@@ -1,0 +1,206 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+/*
+ * Token desain Panel Adiva — diambil dari design/source/*.dc.html.
+ * Tempel ke resources/css/app.css (Tailwind CSS 4) setelah `@import "tailwindcss";`.
+ * Aturan: pakai HANYA token ini. Nilai lain boleh dipakai (mis. `w-[248px]`)
+ * hanya kalau angkanya tertulis di design/source halaman yang sedang dibuat.
+ */
+
+@theme {
+    /* ---- font (muat dari Google Fonts, lihat komponen.md) */
+    /* fallbacks as in design/source ('Geist', sans-serif): glyphs Geist lacks, like →, come from the same font */
+    --font-sans: 'Geist', sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+
+    /* ---- teks & garis (abu) */
+    --color-ink: #111827; /* teks utama, judul */
+    --color-ink-2: #374151; /* teks isi sekunder, ikon nav */
+    --color-ink-3: #4b5563; /* teks isi tersier */
+    --color-muted: #6b7280; /* label, sub-judul, meta */
+    --color-faint: #9ca3af; /* placeholder, dot abu */
+    --color-line: #e5e7eb; /* border panel, pemisah utama */
+    --color-line-strong: #d1d5db; /* border input & tombol sekunder */
+    --color-line-soft: #f1f2f4; /* garis antar baris tabel/list */
+    --color-line-softer: #f3f4f6; /* pemisah halus, latar tag */
+    --color-line-quiet: #eef0f2; /* border kotak pratinjau pesan */
+
+    /* ---- permukaan */
+    --color-surface: #ffffff;
+    --color-subtle: #f9fafb; /* sidebar, header tabel, field read-only */
+    --color-selected: #f5f8ff; /* baris terpilih (+ garis kiri 2px primary) */
+    --color-unread: #fafbff; /* notifikasi belum dibaca */
+    --color-wa-bg: #efeae2; /* latar pratinjau WhatsApp */
+
+    /* ---- biru utama */
+    --color-primary: #2563eb;
+    --color-primary-ink: #1d4ed8; /* teks biru, hover link, nav aktif */
+    --color-primary-soft: #eff6ff; /* latar pilihan aktif (segmented) */
+    --color-primary-line: #bfdbfe;
+    --color-nav-active: #eaf1ff; /* latar item sidebar aktif */
+    --color-brand: #1d4ed8; /* kotak logo "BB" */
+
+    /* ---- nada status: teks / titik */
+    --color-blue-text: #1d4ed8;
+    --color-blue-dot: #3b82f6;
+    --color-amber-text: #b45309;
+    --color-amber-dot: #f59e0b;
+    --color-green-text: #15803d;
+    --color-green-dot: #16a34a;
+    --color-red-text: #b91c1c;
+    --color-red-dot: #dc2626;
+    --color-gray-text: #4b5563;
+    --color-gray-dot: #9ca3af;
+    --color-violet-text: #6d28d9;
+    --color-violet-dot: #8b5cf6;
+
+    /* ---- kotak catatan (note): latar / border / teks */
+    --color-note-gray-bg: #f9fafb;
+    --color-note-gray-line: #e5e7eb;
+    --color-note-gray-text: #374151;
+    --color-note-blue-bg: #eff6ff;
+    --color-note-blue-line: #bfdbfe;
+    --color-note-blue-text: #1e3a8a;
+    --color-note-amber-bg: #fffbeb;
+    --color-note-amber-line: #fde68a;
+    --color-note-amber-text: #78350f;
+    --color-note-red-bg: #fef2f2;
+    --color-note-red-line: #fecaca;
+    --color-note-red-text: #7f1d1d;
+    --color-ok-bg: #f0fdf4;
+    --color-ok-line: #bbf7d0;
+    --color-ok-text: #14532d;
+
+    /*
+     * ---- ukuran teks
+     * Skala utama 7 langkah: 11,5 · 12 · 13 · 14,5 · 17 · 22 · 24.
+     * Sebelumnya desain memakai 20 ukuran dengan jarak 0,5 px (13,5 / 14 / 14,5),
+     * yang tidak terbaca sebagai beda tingkat — lihat design/audit-kepadatan.md §1.1.
+     * Di luar skala utama hanya ada tiga kelompok yang memang beda keperluan:
+     * kunci CONFIG_TOKO (mono), lembar invoice (A4 diperkecil), dan panel kiri Masuk.
+     */
+    /* drop Tailwind's default sizes: they bring a --text-base--line-height of 1.5 */
+    --text-*: initial;
+    --text-nota-mini: 9.5px; /* lembar invoice: label kolom, catatan kaki */
+    --text-nota: 10px; /* lembar invoice: isi */
+    --text-key: 10.5px; /* kunci CONFIG_TOKO (mono) */
+    --text-tag: 11.5px; /* tag, badge angka */
+    --text-caption: 12px; /* label tabel, hint, grup sidebar, meta, status */
+    --text-body: 13px; /* isi, tombol md, nav, sub-judul halaman */
+    --text-panel: 14.5px; /* judul panel (h2), nama di daftar */
+    --text-judul: 17px; /* nama customer/kampanye, judul langkah formulir */
+    --text-page: 22px; /* judul halaman (h1), letter-spacing -0.015em */
+    --text-stat: 24px; /* angka di strip statistik */
+    --text-display-sm: 36px; /* panel kiri Masuk di bawah 1280 px */
+    --text-display: 44px; /* panel kiri Masuk */
+
+    /* ---- radius */
+    --radius-tag: 5px;
+    --radius-chip: 6px;
+    --radius-nav: 7px; /* item sidebar, segmented */
+    --radius-control: 8px; /* tombol, input, kotak kecil */
+    --radius-card: 10px; /* panel, strip statistik */
+}
+
+@layer base {
+    body {
+        margin: 0;
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+    }
+    a {
+        color: var(--color-primary);
+    }
+    a:hover {
+        color: var(--color-primary-ink);
+    }
+    button,
+    input,
+    select,
+    textarea {
+        font-family: inherit;
+    }
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-faint);
+    }
+
+    /*
+     * design/source runs on browser defaults. Undo the Tailwind preflight rules
+     * that change how those pages render: line-height 1.5 on html.
+     */
+    html {
+        line-height: normal;
+    }
+}
+
+/*
+ * Motion added for small screens and feedback (not in the design). Every use is
+ * behind motion-safe:, so "reduce motion" (and the visual test) sees none of it.
+ */
+@keyframes muncul {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+@keyframes pudar {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes putar {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* a button whose change is on its way (components/ui/umpan-balik.tsx) */
+[data-memuat] {
+    position: relative;
+    cursor: progress;
+    color: transparent !important;
+}
+
+[data-memuat]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 14px;
+    height: 14px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    border: 2px solid var(--color-line-strong);
+    border-top-color: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    [data-memuat]::after {
+        animation: putar 0.7s linear infinite;
+    }
+}
+
+/* "Cetak" on OrderDetail prints only the invoice sheet (data-cetak). */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    [data-cetak],
+    [data-cetak] * {
+        visibility: visible;
+    }
+
+    [data-cetak] {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}

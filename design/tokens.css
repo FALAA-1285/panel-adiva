@@ -1,0 +1,88 @@
+/*
+ * Token desain Panel Adiva — diambil dari design/source/*.dc.html.
+ * Tempel ke resources/css/app.css (Tailwind CSS 4) setelah `@import "tailwindcss";`.
+ * Aturan: pakai HANYA token ini. Nilai lain boleh dipakai (mis. `w-[248px]`)
+ * hanya kalau angkanya tertulis di design/source halaman yang sedang dibuat.
+ */
+
+@theme {
+  /* ---- font (muat dari Google Fonts, lihat komponen.md) */
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* ---- teks & garis (abu) */
+  --color-ink: #111827;          /* teks utama, judul */
+  --color-ink-2: #374151;        /* teks isi sekunder, ikon nav */
+  --color-ink-3: #4B5563;        /* teks isi tersier */
+  --color-muted: #6B7280;        /* label, sub-judul, meta */
+  --color-faint: #9CA3AF;        /* placeholder, dot abu */
+  --color-line: #E5E7EB;         /* border panel, pemisah utama */
+  --color-line-strong: #D1D5DB;  /* border input & tombol sekunder */
+  --color-line-soft: #F1F2F4;    /* garis antar baris tabel/list */
+  --color-line-softer: #F3F4F6;  /* pemisah halus, latar tag */
+  --color-line-quiet: #EEF0F2;   /* border kotak pratinjau pesan */
+
+  /* ---- permukaan */
+  --color-surface: #FFFFFF;
+  --color-subtle: #F9FAFB;       /* sidebar, header tabel, field read-only */
+  --color-selected: #F5F8FF;     /* baris terpilih (+ garis kiri 2px primary) */
+  --color-unread: #FAFBFF;       /* notifikasi belum dibaca */
+  --color-wa-bg: #EFEAE2;        /* latar pratinjau WhatsApp */
+
+  /* ---- biru utama */
+  --color-primary: #2563EB;
+  --color-primary-ink: #1D4ED8;  /* teks biru, hover link, nav aktif */
+  --color-primary-soft: #EFF6FF; /* latar pilihan aktif (segmented) */
+  --color-primary-line: #BFDBFE;
+  --color-nav-active: #EAF1FF;   /* latar item sidebar aktif */
+  --color-brand: #1D4ED8;        /* kotak logo "BB" */
+
+  /* ---- nada status: teks / titik */
+  --color-blue-text: #1D4ED8;   --color-blue-dot: #3B82F6;
+  --color-amber-text: #B45309;  --color-amber-dot: #F59E0B;
+  --color-green-text: #15803D;  --color-green-dot: #16A34A;
+  --color-red-text: #B91C1C;    --color-red-dot: #DC2626;
+  --color-gray-text: #4B5563;   --color-gray-dot: #9CA3AF;
+  --color-violet-text: #6D28D9; --color-violet-dot: #8B5CF6;
+
+  /* ---- kotak catatan (note): latar / border / teks */
+  --color-note-gray-bg: #F9FAFB;  --color-note-gray-line: #E5E7EB;  --color-note-gray-text: #374151;
+  --color-note-blue-bg: #EFF6FF;  --color-note-blue-line: #BFDBFE;  --color-note-blue-text: #1E3A8A;
+  --color-note-amber-bg: #FFFBEB; --color-note-amber-line: #FDE68A; --color-note-amber-text: #78350F;
+  --color-note-red-bg: #FEF2F2;   --color-note-red-line: #FECACA;   --color-note-red-text: #7F1D1D;
+  --color-ok-bg: #F0FDF4;         --color-ok-line: #BBF7D0;         --color-ok-text: #14532D;
+
+  /*
+   * ---- ukuran teks
+   * Skala utama 7 langkah: 11,5 · 12 · 13 · 14,5 · 17 · 22 · 24.
+   * Desain lama memakai 20 ukuran dengan jarak 0,5 px (13,5 / 14 / 14,5), yang
+   * tidak terbaca sebagai beda tingkat — lihat design/audit-kepadatan.md §1.1.
+   */
+  --text-nota-mini: 9.5px; /* lembar invoice: label kolom, catatan kaki */
+  --text-nota: 10px;       /* lembar invoice: isi */
+  --text-key: 10.5px;      /* kunci CONFIG_TOKO (mono) */
+  --text-tag: 11.5px;      /* tag, badge angka */
+  --text-caption: 12px;    /* label tabel, hint, grup sidebar, meta, status */
+  --text-body: 13px;       /* isi, tombol md, nav, sub-judul halaman */
+  --text-panel: 14.5px;    /* judul panel (h2), nama di daftar */
+  --text-judul: 17px;      /* nama customer/kampanye, judul langkah formulir */
+  --text-page: 22px;       /* judul halaman (h1), letter-spacing -0.015em */
+  --text-stat: 24px;       /* angka di strip statistik */
+  --text-display-sm: 36px; /* panel kiri Masuk di bawah 1280 px */
+  --text-display: 44px;    /* panel kiri Masuk */
+
+  /* ---- radius */
+  --radius-tag: 5px;
+  --radius-chip: 6px;
+  --radius-nav: 7px;       /* item sidebar, segmented */
+  --radius-control: 8px;   /* tombol, input, kotak kecil */
+  --radius-card: 10px;     /* panel, strip statistik */
+}
+
+@layer base {
+  body { margin: 0; background: var(--color-surface); color: var(--color-ink); font-family: var(--font-sans); }
+  a { color: var(--color-primary); }
+  a:hover { color: var(--color-primary-ink); }
+  button, input, select, textarea { font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--color-faint); }
+}

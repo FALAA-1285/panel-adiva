@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Profil pelanggan — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1184px; display: flex; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827; overflow: hidden">
+<dc-import name="Sidebar" active="customer" h="1184" hint-size="248px,1184px"></dc-import>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<dc-import name="Topbar" w="1192" hint-size="1192px,64px"></dc-import>
+<div style="padding: 24px 32px 0 32px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 10px">Pelanggan</h1>
+<div style="font-size: 13.5px; color: #6B7280">Profil, pesanan, dan riwayat interaksi tiap customer dalam satu tempat</div>
+</div>
+<button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>Ekspor CSV</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; gap: 20px; padding: 20px 32px 24px 32px; box-sizing: border-box">
+
+<section aria-label="Daftar pelanggan" style="width: 300px; flex-shrink: 0; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column">
+<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #F3F4F6">
+<label style="display: flex; align-items: center; gap: 8px; height: 40px; box-sizing: border-box; padding: 0 12px; border: 1px solid #D1D5DB; border-radius: 8px; color: #6B7280">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<input type="search" aria-label="Cari pelanggan" placeholder="Cari nama, nomor, kota" style="border: none; outline: none; font-size: 13.5px; flex-grow: 1; background: transparent; color: #111827">
+</label>
+<div style="display: flex; gap: 6px">
+<select aria-label="Tipe" style="flex-grow: 1; height: 36px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 8px; font-size: 12.5px; background: #FFFFFF; color: #111827"><option>Semua tipe</option><option>Reseller</option><option>Retail</option><option>Karyawan</option><option>Belum jelas</option></select>
+<select aria-label="Tahap" style="flex-grow: 1; height: 36px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 8px; font-size: 12.5px; background: #FFFFFF; color: #111827"><option>Semua tahap</option><option>Baru menyapa</option><option>Tanya produk</option><option>Tanya harga</option><option>Nego</option><option>Siap order</option><option>Order dibuat</option><option>Repeat</option><option>Tidak minat</option></select>
+</div>
+<div style="font-size: 12px; color: #6B7280">312 pelanggan · 205 aktif 30 hari</div>
+</div>
+<div style="flex-grow: 1; overflow: auto">
+<sc-for list="{{people}}" as="p" hint-placeholder-count="9">
+<div style="{{p.row}}">
+<span style="width: 34px; height: 34px; border-radius: 50%; background: #F3F4F6; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 600; flex-shrink: 0">{{p.init}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; gap: 6px; align-items: center"><span style="font-size: 13.5px; font-weight: 600; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.nama}}</span><span style="{{p.skorStyle}}">{{p.skor}}</span></span>
+<span style="font-size: 12px; color: #6B7280">{{p.tipe}} · {{p.tahapL}}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section aria-label="Profil" style="flex-grow: 1; min-width: 0; overflow: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; gap: 14px">
+<span style="width: 48px; height: 48px; border-radius: 50%; background: #F3F4F6; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; flex-shrink: 0">RM</span>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+<h2 style="margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em">Rina Maharani</h2>
+<span style="font-size: 13px; color: #6B7280">Reseller</span>
+<span style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; color: #B91C1C">HOT</span>
+</div>
+<div style="font-size: 12.5px; color: #4B5563; display: flex; gap: 14px; flex-wrap: wrap">
+<span style="font-family: 'Geist Mono', monospace">0812-3345-••81</span>
+<span>Malang</span>
+<span>Pelanggan sejak 28 Sep 2026</span>
+<span style="display: inline-flex; align-items: center; gap: 6px; color: #15803D"><span style="width: 6px; height: 6px; border-radius: 50%; background: #16A34A"></span>Dijawab Adiva</span>
+</div>
+</div>
+<div style="display: flex; gap: 8px">
+<a href="Inbox.dc.html" style="height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid #2563EB; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; flex-shrink: 0">Buka chat</a>
+<a href="Jeda.dc.html" style="height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; flex-shrink: 0">Jeda bot</a>
+<button aria-label="Aksi lain" style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="7">
+<div style="display: flex; flex-direction: column; gap: 5px">
+<span style="{{s.bar}}"></span>
+<span style="{{s.txt}}">{{s.label}}</span>
+<span style="font-size: 11px; color: #6B7280">{{s.when}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center"><h3 style="margin: 0; font-size: 14.5px; font-weight: 600; flex-grow: 1">Penilaian Adiva</h3><button style="height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0">Ubah</button></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px">
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="12">
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 11.5px; color: #6B7280">{{f.k}}</span>
+<span style="font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis">{{f.v}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #F1F2F4; padding-top: 12px">
+<span style="font-size: 12px; color: #6B7280">Ringkasan terakhir</span>
+<span style="font-size: 13px; line-height: 1.5">Reseller pemula untuk kantin sekolah, modal ±1,5 jt. Sudah pilih Molreng 40 &amp; Basreng 30, kirim JNE REG ke Dinoyo. Order diteruskan ke admin.</span>
+</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center"><h3 style="margin: 0; font-size: 14.5px; font-weight: 600; flex-grow: 1">Catatan tetap</h3><span style="font-size: 12px; color: #6B7280">Ditulis admin · dibaca Adiva</span></div>
+<div style="min-height: 60px; box-sizing: border-box; border: 1px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; font-size: 13px; line-height: 1.45; color: #111827">Guru SD, ambil barang tiap awal bulan. Suka dikirim foto produk baru.</div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding-top: 4px">
+<span style="font-size: 12px; color: #6B7280">Catatan sistem</span>
+<span style="font-size: 12.5px; color: #374151">28 Sep 13:06 · order dicatat dari chat · menunggu ACC</span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 14.5px; font-weight: 600">Pesanan</h3>
+<div style="display: flex; gap: 28px">
+<div><div style="font-size: 12px; color: #6B7280">Order</div><div style="font-size: 17px; font-weight: 600">1</div></div>
+<div><div style="font-size: 12px; color: #6B7280">Nilai order</div><div style="font-size: 17px; font-weight: 600">Rp1,28 jt</div></div>
+<div><div style="font-size: 12px; color: #6B7280">Sudah lunas</div><div style="font-size: 17px; font-weight: 600">Rp0</div></div>
+</div>
+<a href="OrderDetail.dc.html" style="display: flex; align-items: center; gap: 10px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 12px; text-decoration: none; color: #111827">
+<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<span style="font-family: 'Geist Mono', monospace; font-size: 12.5px; font-weight: 600">ORD-260928-014</span>
+<span style="font-size: 12px; color: #4B5563">Molreng ×40, Basreng ×30 · JNE REG</span>
+</span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><span style="font-size: 13px; font-weight: 600">Rp1.283.000</span><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #B45309; white-space: nowrap"><span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B"></span>Menunggu ACC</span></span>
+</a>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 14.5px; font-weight: 600">Sapaan otomatis</h3>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Sapaan ulang prospek</span><span style="font-size: 13px; font-weight: 600">Tidak berlaku</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Tanya kesan pesanan</span><span style="font-size: 13px; font-weight: 600">2 hari usai SELESAI</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 11.5px; color: #6B7280">Sudah disapa</span><span style="font-size: 13px; font-weight: 600">0 kali</span></div>
+</div>
+<div style="font-size: 12px; color: #4B5563; line-height: 1.45">Prospek (Baru menyapa sampai Siap order) yang berhenti membalas disapa sekali, 10 jam setelah chat terakhir. Setelah pesanan SELESAI, kesan ditanyakan sekali. Tidak ada pengingat restock; tahap Tidak minat, opt-out, dan customer yang dijeda tidak disapa.</div>
+<div style="display: flex; align-items: center; gap: 10px; border-top: 1px solid #F3F4F6; padding-top: 10px">
+<span style="font-size: 13px; font-weight: 600; flex-grow: 1">Status opt-out</span>
+<span style="font-size: 12px; color: #4B5563">Boleh dihubungi</span>
+<button aria-label="Tandai opt-out" aria-pressed="false" style="width: 36px; height: 20px; border-radius: 999px; border: none; padding: 0; background: #D1D5DB; position: relative; cursor: pointer"><span style="position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF"></span></button>
+</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 14.5px; font-weight: 600">Aktivitas</h3>
+<sc-for list="{{timeline}}" as="t" hint-placeholder-count="6">
+<div style="display: grid; grid-template-columns: 78px 10px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 12.5px">
+<span style="color: #6B7280">{{t.w}}</span>
+<span style="{{t.dot}}"></span>
+<span style="color: #374151; line-height: 1.4">{{t.x}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1184}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var skorStyle = function (s) {
+      var c = s === 'HOT' ? '#B91C1C' : (s === 'WARM' ? '#B45309' : '#6B7280');
+      return 'font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; color: ' + c + '; white-space: nowrap;';
+    };
+    var cap = function (t) { t = String(t || '').replace(/_/g, ' ').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1);
+    };
+    var P = [
+      ['RM', 'Rina Maharani', 'HOT', 'Reseller', 'ORDER_DIBUAT'], ['PH', 'Pak Hendra', 'HOT', 'Reseller', 'NEGO'], ['ML', 'Mega Lestari', 'HOT', 'Reseller', 'SIAP_ORDER'],
+      ['BW', 'Bu Wati', 'WARM', 'Retail', 'TANYA_HARGA'], ['SB', 'Salsa Billa', 'WARM', 'Reseller', 'TANYA_PRODUK'], ['MK', 'Maya Kusuma', 'WARM', 'Reseller', 'REPEAT'],
+      ['YG', 'Yoga', 'HOT', 'Karyawan', 'ORDER_DIBUAT'], ['AP', 'Andika Putra', 'WARM', 'Reseller', 'TANYA_HARGA'], ['DA', 'Dewi Anggraini', 'COLD', 'Belum jelas', 'BARU'],
+      ['FR', 'Fikri Ramadhan', 'COLD', 'Retail', 'TIDAK_MINAT']
+    ];
+    var people = P.map(function (p, i) {
+      return {
+        init: p[0], nama: p[1], skor: p[2], tipe: p[3], tahap: p[4], tahapL: cap(p[4]), skorStyle: skorStyle(p[2]),
+        row: 'display: flex; gap: 10px; align-items: center; padding: 11px 16px; border-bottom: 1px solid #F3F4F6; background: ' + (i === 0 ? '#F5F8FF' : '#FFFFFF') + '; box-shadow: ' + (i === 0 ? 'inset 2px 0 0 #2563EB' : 'none') + ';'
+      };
+    });
+    var S = [['Baru', '28 Sep 13:02'], ['Tanya produk', '13:03'], ['Tanya harga', '13:05'], ['Nego', 'dilewati'], ['Siap order', '13:05'], ['Order dibuat', '13:06'], ['Repeat', '—']];
+    var cur = 5;
+    var steps = S.map(function (s, i) {
+      var skipped = s[1] === 'dilewati';
+      var done = i <= cur && !skipped;
+      return {
+        label: s[0], when: s[1],
+        bar: 'height: 3px; border-radius: 2px; background: ' + (done ? '#2563EB' : (skipped ? '#DBEAFE' : '#E5E7EB')) + ';',
+        txt: 'font-size: 12px; font-weight: ' + (i === cur ? '600' : '500') + '; color: ' + (done || i === cur ? '#111827' : '#6B7280') + ';'
+      };
+    });
+    var F = [
+      ['Tipe', 'Reseller'], ['Tahap', 'Order dibuat'], ['Skor prospek', 'HOT'], ['Minat produk', 'Molreng, Basreng'],
+      ['Lokasi jualan', 'Kantin sekolah'], ['Estimasi modal', 'Rp1.500.000'], ['Kota', 'Malang'], ['Butuh admin', 'Tidak'],
+      ['Interaksi terakhir', '28 Sep 13:06'], ['Pesan terakhir', 'JNE aja kak'], ['ID chat', '62812334••81@c.us'], ['Sesi ingatan', 'ke-1'], ['Nomor bot', 'Nomor Utama'], ['Jumlah sapaan ulang', '0']
+    ];
+    var fields = F.map(function (f) { return { k: f[0], v: f[1] }; });
+    var T = [
+      ['13:06', 'Order ORD-260928-014 dicatat · supervisor dikabari', '#2563EB'],
+      ['13:06', 'Tahap → Order dibuat · skor HOT', '#2563EB'],
+      ['13:05', 'Ongkir dicek via Mengantar · pilih JNE REG', '#9CA3AF'],
+      ['13:03', 'Foto Molreng Reguler dikirim otomatis', '#9CA3AF'],
+      ['13:03', 'Dikenali sebagai reseller · kantin sekolah', '#15803D'],
+      ['13:02', 'Chat pertama · 3 pesan digabung', '#9CA3AF']
+    ];
+    var timeline = T.map(function (t) { return { w: t[0], x: t[1], dot: 'width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; background: ' + t[2] + ';' }; });
+    return { people: people, steps: steps, fields: fields, timeline: timeline };
+  }
+}
+</script>
+</body>
+</html>

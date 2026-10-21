@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Buat kampanye broadcast — Panel Adiva</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button,input,select,textarea{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1500px; display: flex; background: #FFFFFF; font-family: 'Geist', sans-serif; color: #111827; overflow: hidden">
+<dc-import name="Sidebar" active="broadcast" h="1500" hint-size="248px,1500px"></dc-import>
+
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<dc-import name="Topbar" w="1192" hint-size="1192px,64px"></dc-import>
+<div style="padding: 24px 32px 0 32px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 10px">Buat kampanye</h1>
+<div style="font-size: 13.5px; color: #6B7280"><a href="Broadcast.dc.html" style="text-decoration: none; font-weight: 500">Broadcast</a> <span style="color: #D1D5DB">/</span> Kampanye baru</div>
+</div>
+<button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v5h8"></path><path d="M8 21v-7h8v7"></path></svg>Simpan draf</button>
+<button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4z"></path></svg>Kirim uji ke supervisor</button>
+<button style="height: 36px; padding: 0 14px; border-radius: 8px; border: none; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none; white-space: nowrap; flex-shrink: 0">{{ctaLabel}}</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; padding: 20px 32px 24px 32px; box-sizing: border-box; display: flex; gap: 20px">
+
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<section aria-labelledby="aud" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 14.5px; font-weight: 600; color: #9CA3AF; width: 14px; font-variant-numeric: tabular-nums">1</span>
+<h2 id="aud" style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Penerima</h2>
+<span style="font-size: 12.5px; color: #6B7280">Perkiraan</span>
+<span style="font-size: 18px; font-weight: 600; color: #111827">{{count}}</span>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12.5px; font-weight: 600">Nama kampanye</span>
+<input type="text" value="Restock Kripca Oktober" style="height: 40px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 12px; font-size: 13.5px; color: #111827">
+</label>
+<div style="display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 12px 14px; align-items: center">
+<span style="font-size: 12.5px; font-weight: 600">Tipe customer</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{tipeChips}}" as="c" hint-placeholder-count="4"><button aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+</div>
+<span style="font-size: 12.5px; font-weight: 600">Tahap pipeline</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{tahapChips}}" as="c" hint-placeholder-count="8"><button aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+</div>
+<span style="font-size: 12.5px; font-weight: 600">Skor prospek</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{skorChips}}" as="c" hint-placeholder-count="3"><button aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+</div>
+<span style="font-size: 12.5px; font-weight: 600">Minat produk</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #2563EB; background: #EFF6FF; color: #1D4ED8; font-size: 13px; font-weight: 600">Keripik kaca</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Basreng</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Molreng</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Seblak</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Makaroni</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Kentang balado</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Kerupuk rujak</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 11px; border-radius: 7px; border: 1px solid #D1D5DB; font-size: 13px; font-weight: 500">Usus</span>
+</div>
+<span style="font-size: 12.5px; font-weight: 600">Kota &amp; interaksi</span>
+<div style="display: flex; gap: 8px">
+<select aria-label="Kota" style="height: 38px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #111827; flex-grow: 1"><option>Malang Raya (Malang, Batu, Kab. Malang)</option><option>Semua kota</option><option>Surabaya</option><option>Pasuruan</option></select>
+<select aria-label="Interaksi terakhir" style="height: 38px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #111827; flex-grow: 1"><option>Interaksi terakhir ≤ 90 hari</option><option>≤ 7 hari</option><option>≤ 30 hari</option><option>&gt; 90 hari (win-back)</option></select>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #F1F2F4; padding-top: 14px">
+<span style="font-size: 12.5px; font-weight: 600">Dikecualikan</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 13px">
+<label style="display: flex; align-items: center; gap: 8px; color: #4B5563"><input type="checkbox" checked="{{yes}}" disabled="{{yes}}" style="width: 16px; height: 16px; accent-color: #2563EB">Customer yang opt-out — selalu</label>
+<label style="display: flex; align-items: center; gap: 8px; color: #4B5563"><input type="checkbox" checked="{{yes}}" disabled="{{yes}}" style="width: 16px; height: 16px; accent-color: #2563EB">Sedang dijeda admin — selalu</label>
+<label style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked="{{opt.order}}" onChange="{{flip.order}}" style="width: 16px; height: 16px; accent-color: #2563EB">Punya order yang masih berjalan</label>
+<label style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked="{{opt.recent}}" onChange="{{flip.recent}}" style="width: 16px; height: 16px; accent-color: #2563EB">Sudah dapat broadcast 3 hari terakhir</label>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="psn" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 14.5px; font-weight: 600; color: #9CA3AF; width: 14px; font-variant-numeric: tabular-nums">2</span>
+<h2 id="psn" style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Pesan</h2>
+<select aria-label="Template" style="height: 36px; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #111827"><option>Template: Restock reseller</option><option>Promo produk baru</option><option>Win-back</option><option>Info libur</option><option>Kosong</option></select>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<textarea aria-label="Isi pesan" rows="6" value="{{msg}}" onChange="{{onMsg}}" style="resize: none; border: 1px solid #D1D5DB; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.5; color: #111827; outline: none"></textarea>
+<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+<span style="font-size: 12px; color: #4B5563">Sisipkan variabel:</span>
+<sc-for list="{{vars}}" as="v" hint-placeholder-count="3"><button onClick="{{v.add}}" style="height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid #E5E7EB; background: #F9FAFB; color: #111827; font-family: 'Geist Mono', monospace; font-size: 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0">{{v.label}}</button></sc-for>
+<span style="flex-grow: 1"></span>
+<span style="font-size: 12px; color: #6B7280">{{chars}} karakter</span>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12.5px; font-weight: 600">Gambar produk</span>
+<div style="display: flex; gap: 8px">
+<sc-for list="{{imgs}}" as="g" hint-placeholder-count="3">
+<button aria-pressed="{{g.on}}" onClick="{{g.pick}}" style="{{g.style}}"><span style="font-size: 11.5px; font-weight: 500; line-height: 1.3; text-align: center">{{g.label}}</span></button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12.5px; font-weight: 600">Tombol balasan (maks. 3)</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="height: 32px; display: flex; align-items: center; padding: 0 12px; border-radius: 7px; border: 1px solid #D1D5DB; color: #111827; font-size: 13px; font-weight: 500">Mau order</span>
+<span style="height: 32px; display: flex; align-items: center; padding: 0 12px; border-radius: 7px; border: 1px solid #D1D5DB; color: #111827; font-size: 13px; font-weight: 500">Lihat harga</span>
+<button style="height: 32px; padding: 0 12px; border-radius: 7px; border: 1px dashed #D1D5DB; background: #FFFFFF; color: #4B5563; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0">+ Tombol</button>
+</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #F3F4F6; padding-top: 12px">
+<label style="display: flex; align-items: center; gap: 8px; font-size: 13px"><input type="checkbox" checked="{{opt.stop}}" onChange="{{flip.stop}}" style="width: 16px; height: 16px; accent-color: #2563EB">Tambahkan “Balas STOP bila tidak ingin menerima info lagi”</label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 13px"><input type="checkbox" checked="{{opt.ctx}}" onChange="{{flip.ctx}}" style="width: 16px; height: 16px; accent-color: #2563EB">Balasan customer dijawab Adiva dengan konteks kampanye ini</label>
+</div>
+</section>
+
+<section aria-labelledby="jdw" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 14.5px; font-weight: 600; color: #9CA3AF; width: 14px; font-variant-numeric: tabular-nums">3</span>
+<h2 id="jdw" style="margin: 0; font-size: 16px; font-weight: 600">Jadwal &amp; kecepatan</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12.5px; font-weight: 600">Waktu kirim</span>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2"><button aria-pressed="{{m.on}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+</div>
+<sc-if value="{{scheduled}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 8px">
+<input type="date" aria-label="Tanggal" value="2026-09-30" style="flex-grow: 1; height: 38px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 10px; font-size: 13px; color: #111827">
+<input type="time" aria-label="Jam" value="09:00" style="width: 110px; height: 38px; box-sizing: border-box; border: 1px solid #D1D5DB; border-radius: 9px; padding: 0 10px; font-size: 13px; color: #111827">
+</div>
+</sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12.5px; font-weight: 600">Kecepatan</span>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{speeds}}" as="s" hint-placeholder-count="2"><button aria-pressed="{{s.on}}" onClick="{{s.pick}}" style="{{s.style}}">{{s.label}}</button></sc-for>
+</div>
+<span style="font-size: 12px; color: #4B5563">{{durasi}}</span>
+</div>
+<div style="grid-column: span 2; display: flex; align-items: flex-start; gap: 12px; border-top: 1px solid #F1F2F4; padding-top: 12px"><div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12.5px; font-weight: 600">Kirim lewat nomor bot</span><span style="font-size: 12px; color: #6B7280; line-height: 1.45">Setiap customer dikirimi dari nomor yang terakhir ia pakai (kolom sesi_wa), sama seperti balasan dan invoice. Customer tanpa riwayat memakai SESI_UTAMA.</span></div><select aria-label="Nomor bot" style="height: 34px; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 8px; font-size: 12.5px; background: #FFFFFF; color: #111827"><option>Ikuti nomor customer</option><option>Nomor Utama saja</option><option>Nomor Lawang saja</option></select></div>
+</div>
+</section>
+
+</div>
+
+<aside aria-label="Pratinjau" style="width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column">
+<div style="padding: 12px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #F3F4F6">
+<span style="font-size: 13.5px; font-weight: 600; flex-grow: 1">Pratinjau di WhatsApp</span>
+<select aria-label="Pratinjau untuk" style="height: 32px; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 8px; font-size: 12.5px; background: #FFFFFF; color: #111827"><option>Untuk: Rina Maharani</option><option>Untuk: Maya Kusuma</option></select>
+</div>
+<div style="background: #EAE3D8; padding: 16px 14px 18px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 420px">
+<div style="display: flex; align-items: center; gap: 8px; padding-bottom: 6px">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #1D4ED8; color: #FFFFFF; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">BB</span>
+<span style="font-size: 13px; font-weight: 600">Bang Bana</span>
+</div>
+<div style="align-self: flex-start; max-width: 290px; background: #FFFFFF; border-radius: 4px 14px 14px 14px; padding: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.06)">
+<sc-if value="{{hasImg}}" hint-placeholder-val="{{true}}">
+<div style="height: 150px; border-radius: 8px; background: #E5E7EB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #4B5563">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg>
+<span style="font-size: 12px; font-weight: 500">Foto · {{imgLabel}}</span>
+</div>
+</sc-if>
+<div style="font-size: 13.5px; line-height: 1.5; white-space: pre-line; padding: 0 4px">{{preview}}</div>
+<div style="font-size: 12px; color: #6B7280; padding: 0 4px">Balas STOP bila tidak ingin menerima info lagi</div>
+</div>
+<div style="align-self: flex-start; display: flex; flex-direction: column; gap: 6px; width: 290px">
+<span style="height: 36px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border-radius: 8px; color: #1D4ED8; font-size: 13px; font-weight: 500">Mau order</span>
+<span style="height: 36px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border-radius: 8px; color: #1D4ED8; font-size: 13px; font-weight: 500">Lihat harga</span>
+</div>
+</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13.5px; font-weight: 600">Ringkasan</span>
+<div style="display: flex; font-size: 13px"><span style="flex-grow: 1; color: #4B5563">Penerima</span><strong>{{count}}</strong></div>
+<div style="display: flex; font-size: 13px"><span style="flex-grow: 1; color: #4B5563">Mulai</span><strong>{{mulai}}</strong></div>
+<div style="display: flex; font-size: 13px"><span style="flex-grow: 1; color: #4B5563">Estimasi durasi</span><strong>{{durasiPendek}}</strong></div>
+<div style="display: flex; font-size: 13px"><span style="flex-grow: 1; color: #4B5563">Kuota harian tersisa</span><strong>300</strong></div>
+<div style="font-size: 12px; color: #6B7280; line-height: 1.45; border-top: 1px solid #F3F4F6; padding-top: 8px">Daftar penerima dikunci saat kampanye mulai. Customer yang tiba-tiba dijeda atau opt-out di tengah jalan otomatis dilewati.</div>
+</div>
+</aside>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tipe: { RESELLER: true }, tahap: { TANYA_HARGA: true, REPEAT: true }, skor: { HOT: true, WARM: true },
+      msg: 'Halo kak {nama}, stok Kripca 1,8 kg Original & Pedas sudah ready lagi minggu ini.\nUntuk reseller di {kota}, harga 30 pcs ke atas tetap sama seperti bulan lalu.\nMau Adiva siapkan pesanannya?',
+      img: 0, mode: 'now', speed: 'aman', opt: { order: true, recent: true, stop: true, ctx: true }
+    };
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var chip = function (on) { return 'height: 32px; padding: 0 11px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit; ' + (on ? 'border: 1px solid #2563EB; background: #EFF6FF; color: #1D4ED8; font-weight: 600;' : 'border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827;'); };
+    var multi = function (key, defs) {
+      return defs.map(function (d) {
+        var on = !!st[key][d[0]];
+        return { label: d[1], on: on ? 'true' : 'false', style: chip(on), pick: function () { var o = Object.assign({}, st[key]); o[d[0]] = !on; var n = {}; n[key] = o; self.setState(n); } };
+      });
+    };
+    var tipeW = { RESELLER: 119, RETAIL: 152, KARYAWAN: 18, BELUM_JELAS: 23 };
+    var tahapW = { BARU: 42, TANYA_PRODUK: 58, TANYA_HARGA: 37, NEGO: 9, SIAP_ORDER: 11, ORDER_DIBUAT: 14, REPEAT: 26, TIDAK_MINAT: 8 };
+    var skorW = { HOT: 0.28, WARM: 0.45, COLD: 0.27 };
+    var sumSel = function (sel, w, tot) { var s = 0; for (var k in sel) { if (sel[k]) { s += w[k]; } } return tot ? s / tot : s; };
+    var n = Math.round(sumSel(st.tipe, tipeW) * sumSel(st.tahap, tahapW, 205) * sumSel(st.skor, skorW) * 0.9);
+    var perMsg = st.speed === 'aman' ? 30 : 14;
+    var mins = Math.max(1, Math.round(n * perMsg / 60));
+    var dur = mins >= 60 ? Math.floor(mins / 60) + ' jam ' + (mins % 60) + ' mnt' : mins + ' mnt';
+    var imgs = ['Kripca 1,8 kg Original', 'Kripca 1,8 kg Pedas', 'Tanpa gambar'].map(function (l, i) {
+      var on = st.img === i;
+      return {
+        label: l, on: on ? 'true' : 'false', pick: function () { self.setState({ img: i }); },
+        style: 'width: 96px; height: 72px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; font-family: inherit; color: #374151; background: ' + (i === 2 ? '#FFFFFF' : '#F3F4F6') + '; border: ' + (on ? '2px solid #2563EB' : '1px solid #D1D5DB') + ';'
+      };
+    });
+    var vars = ['{nama}', '{minat_produk}', '{kota}'].map(function (v) { return { label: v, add: function () { self.setState({ msg: st.msg + ' ' + v }); } }; });
+    var preview = st.msg.split('{nama}').join('Rina').split('{kota}').join('Malang').split('{minat_produk}').join('Molreng, Basreng');
+    var modes = [['now', 'Kirim sekarang'], ['sched', 'Jadwalkan']].map(function (m) {
+      var on = st.mode === m[0];
+      return { label: m[1], on: on ? 'true' : 'false', style: chip(on) + ' height: 36px;', pick: function () { self.setState({ mode: m[0] }); } };
+    });
+    var speeds = [['aman', 'Aman · jeda 15–45 dtk'], ['normal', 'Normal · 8–20 dtk']].map(function (m) {
+      var on = st.speed === m[0];
+      return { label: m[1], on: on ? 'true' : 'false', style: chip(on) + ' height: 36px;', pick: function () { self.setState({ speed: m[0] }); } };
+    });
+    var flip = {};
+    ['order', 'recent', 'stop', 'ctx'].forEach(function (k) { flip[k] = function () { var o = Object.assign({}, st.opt); o[k] = !o[k]; self.setState({ opt: o }); }; });
+    return {
+      yes: true, opt: st.opt, flip: flip,
+      tipeChips: multi('tipe', [['RESELLER', 'Reseller'], ['RETAIL', 'Retail'], ['KARYAWAN', 'Karyawan'], ['BELUM_JELAS', 'Belum jelas']]),
+      tahapChips: multi('tahap', [['BARU', 'Baru menyapa'], ['TANYA_PRODUK', 'Tanya produk'], ['TANYA_HARGA', 'Tanya harga'], ['NEGO', 'Nego'], ['SIAP_ORDER', 'Siap order'], ['ORDER_DIBUAT', 'Order dibuat'], ['REPEAT', 'Repeat'], ['CART_DITINGGAL', 'Keranjang ditinggal'], ['TIDAK_MINAT', 'Tidak minat']]),
+      skorChips: multi('skor', [['HOT', 'HOT'], ['WARM', 'WARM'], ['COLD', 'COLD']]),
+      count: n.toLocaleString('id-ID') + ' orang',
+      msg: st.msg, chars: st.msg.length,
+      onMsg: function (e) { self.setState({ msg: e.target.value }); },
+      vars: vars, imgs: imgs, hasImg: st.img !== 2, imgLabel: ['Kripca 1,8 kg Original', 'Kripca 1,8 kg Pedas', ''][st.img],
+      preview: preview, modes: modes, speeds: speeds, scheduled: st.mode === 'sched',
+      durasi: 'Estimasi ' + dur + ' untuk ' + n + ' penerima · hanya dikirim 08.00–20.00',
+      durasiPendek: dur, mulai: st.mode === 'sched' ? '30 Sep 2026, 09.00' : 'Segera setelah disetujui',
+      ctaLabel: st.mode === 'sched' ? 'Jadwalkan kampanye' : 'Kirim sekarang'
+    };
+  }
+}
+</script>
+</body>
+</html>
