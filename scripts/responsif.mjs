@@ -1,7 +1,8 @@
-// Cek tampilan di layar yang lebih kecil dari desain (desain hanya 1440 px).
+// Cek tampilan di layar sempit: tidak ada yang meluber ke samping.
 // Pakai:  npm run responsif                 -> semua halaman, lebar 1280 1024 768 390
 //         npm run responsif -- Inbox Orders -> hanya halaman itu
 // Env:    APP_URL (default http://127.0.0.1:8000), LEBAR="390 768"
+// Daftar halamannya ada di scripts/halaman.json (kode, nama, rute).
 // Hasil:  visual-diff/responsif/<Kode>-<lebar>.png (seluruh isi halaman)
 // Gagal bila: dokumen (atau wadah gulir halaman) bisa digeser ke samping, atau ada elemen yang keluar dari layar
 // di luar wadah yang memang bisa digeser ke samping (tabel, tab, kanban).
@@ -13,11 +14,9 @@ const APP = (process.env.APP_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const LEBAR = (process.env.LEBAR || '1280 1024 768 390').split(/\s+/).map(Number);
 const OUT = 'visual-diff/responsif';
 const only = process.argv.slice(2);
-const pages = JSON.parse(fs.readFileSync('design/halaman.json', 'utf8')).filter(
-    (p) => p.rute && !p.rute.startsWith('/_demo') && (!only.length || only.includes(p.kode)),
+const todo = JSON.parse(fs.readFileSync('scripts/halaman.json', 'utf8')).filter(
+    (p) => !only.length || only.includes(p.kode),
 );
-// one shot per route (Daftar_2, LupaSandi_2 … are steps of the same page)
-const todo = pages.filter((p, i) => pages.findIndex((q) => q.rute === p.rute) === i);
 fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();

@@ -63,10 +63,12 @@ test('the list shows who wrote, latest message first, with what needs attention'
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('percakapan')
-            ->where('jumlah', ['semua' => 5, 'butuh-admin' => 2, 'dijeda' => 1])
+            ->where('jumlah.status', ['semua' => 5, 'belum-dibalas' => 4, 'butuh-admin' => 2, 'dijeda' => 1])
+            ->where('jumlah.tipe', ['RESELLER' => 0, 'RETAIL' => 0, 'KARYAWAN' => 1, 'BELUM_JELAS' => 4])
+            ->where('muat', ['batas' => 200, 'tampil' => 5, 'total' => 5])
             ->where('daftar.0', [
                 'id' => $rina->id, 'inisial' => 'RM', 'nama' => 'Rina Maharani', 'waktu' => '13:06', 'pratinjau' => 'JNE aja kak',
-                'skor' => 'HOT', 'tahap' => 'Order dibuat', 'tanda' => ['teks' => 'Menunggu ACC', 'nada' => 'amber'],
+                'skor' => 'HOT', 'tahap' => 'Order dibuat', 'menunggu' => 1, 'tanda' => ['teks' => 'Menunggu ACC', 'nada' => 'amber'],
             ])
             ->where('daftar.1.waktu', '12:48')
             ->where('daftar.1.pratinjau', 'bisa harga distributor?')
@@ -76,7 +78,7 @@ test('the list shows who wrote, latest message first, with what needs attention'
             ->where('daftar.3.tanda', ['teks' => 'Ke Bu Sarah', 'nada' => 'gray'])
             ->where('daftar.4', [
                 'id' => $lama->id, 'inisial' => '?', 'nama' => '+62 878-••••-5120', 'waktu' => '26 Sep', 'pratinjau' => 'kak',
-                'skor' => 'COLD', 'tahap' => 'Baru', 'tanda' => ['teks' => 'Bot aktif', 'nada' => 'blue'],
+                'skor' => 'COLD', 'tahap' => 'Baru', 'menunggu' => 1, 'tanda' => ['teks' => 'Bot aktif', 'nada' => 'blue'],
             ])
             ->where('percakapan.id', $rina->id));
 

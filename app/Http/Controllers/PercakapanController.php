@@ -63,28 +63,38 @@ class PercakapanController extends Controller
     /**
      * @var list<string>
      */
-    private const TAB = ['semua', 'butuh-admin', 'dijeda'];
+    private const TAB = ['semua', 'belum-dibalas', 'butuh-admin', 'dijeda'];
+
+    /**
+     * How many chats the list loads at once. Everything older is reached by searching;
+     * without a ceiling the page builds a row for every customer who ever wrote.
+     */
+    private const BATAS = 200;
 
     public function index(Request $request): Response
     {
         $tab = in_array($request->query('tab'), self::TAB, true) ? (string) $request->query('tab') : 'semua';
+        $tipe = TipeCustomer::tryFrom((string) $request->query('tipe'));
         $jeda = JedaBot::query()->aktif()->orderBy('sejak')->get()->keyBy('chat_id');
-        $daftar = fn () => $this->daftar($request, $tab, $jeda);
+        $menunggu = $this->belumDibalas();
+        $daftar = fn () => $this->daftar($request, $tab, $tipe, $jeda, $menunggu);
 
         return Inertia::render('percakapan', [
-            'filter' => ['cari' => (string) $request->query('cari'), 'tab' => $tab],
+            'filter' => ['cari' => (string) $request->query('cari'), 'tab' => $tab, 'tipe' => $tipe?->value],
             'waha' => $this->waha(),
-            'jumlah' => fn () => [
-                'semua' => CrmCustomer::query()->whereHas('pesan', fn (Builder $q) => $q->where('pengirim', PengirimPesan::Customer))->count(),
-                'butuh-admin' => CrmCustomer::query()->where('butuh_admin', true)->count(),
-                'dijeda' => $jeda->count(),
-            ],
-            'daftar' => fn () => $this->barisDaftar($daftar(), $jeda),
+            'jumlah' => fn () => $this->jumlah($tab, $tipe, $jeda, $menunggu),
+            'muat' => function () use ($request, $tab, $tipe, $jeda, $menunggu) {
+                $total = $this->kueri($request, $tab, $tipe, $jeda, $menunggu)->count();
+
+                return ['batas' => self::BATAS, 'tampil' => min(self::BATAS, $total), 'total' => $total];
+            },
+            'daftar' => fn () => $this->barisDaftar($daftar(), $jeda, $menunggu),
             // the "Template" and "Lampirkan gambar produk" menus by the reply box
             'template' => fn () => TemplateBalasan::query()->latest('id')->get(['id', 'teks']),
             'gambar' => fn () => GambarProduk::query()->adaFile()->orderBy('title')->get(['id', 'title'])
                 ->map(fn (GambarProduk $g) => ['id' => $g->id, 'judul' => $g->title]),
             'percakapan' => function () use ($request, $daftar, $jeda) {
+                // nothing picked: the thread pane shows its empty state, as in the design
                 $customer = $request->filled('pilih')
                     ? CrmCustomer::query()->find($request->integer('pilih'))
                     : $daftar()->first();
@@ -230,31 +240,109 @@ class PercakapanController extends Controller
      * @param  SupportCollection<string, JedaBot>  $jeda
      * @return Collection<int, CrmCustomer>
      */
-    private function daftar(Request $request, string $tab, SupportCollection $jeda): Collection
+    /**
+     * How many customer messages at the end of each chat nobody has answered yet. It is
+     * the closest thing the panel has to "unread": Adiva marks messages read in WhatsApp,
+     * so an unanswered tail is what actually waits for someone.
+     *
+     * @return SupportCollection<int, int>
+     */
+    private function belumDibalas(): SupportCollection
+    {
+        return Pesan::query()->toBase()
+            ->where('pengirim', PengirimPesan::Customer->value)
+            // only a real reply ends the wait: a SISTEM note ("Dijeda…") answers nobody
+            ->whereRaw('waktu > coalesce((select max(q.waktu) from pesan q where q.crm_customer_id = pesan.crm_customer_id and q.pengirim in (?, ?)), to_timestamp(0))', [PengirimPesan::Adiva->value, PengirimPesan::Admin->value])
+            ->whereNotNull('crm_customer_id')
+            ->groupBy('crm_customer_id')
+            ->selectRaw('crm_customer_id, count(*) as n')
+            ->pluck('n', 'crm_customer_id')
+            ->map(fn ($n) => (int) $n);
+    }
+
+    /**
+     * The chats the filters leave, newest message first.
+     *
+     * @param  SupportCollection<string, JedaBot>  $jeda
+     * @param  SupportCollection<int, int>  $menunggu
+     * @return Builder<CrmCustomer>
+     */
+    private function kueri(Request $request, string $tab, ?TipeCustomer $tipe, SupportCollection $jeda, SupportCollection $menunggu): Builder
     {
         $cari = trim((string) $request->query('cari'));
         $kata = '%'.addcslashes($cari, '%_\\').'%';
         $angka = preg_replace('/\D/', '', $cari) ?? '';
 
         return CrmCustomer::query()
-            ->withMax('pesan as pesan_terakhir_at', 'waktu')
+            // "Semua" is the chats; the other tabs also show someone flagged without one
             ->when($tab === 'semua', fn (Builder $q) => $q->whereHas('pesan', fn (Builder $p) => $p->where('pengirim', PengirimPesan::Customer)))
+            ->when($tab === 'belum-dibalas', fn (Builder $q) => $q->whereIn('id', $menunggu->keys()))
             ->when($tab === 'butuh-admin', fn (Builder $q) => $q->where('butuh_admin', true))
             ->when($tab === 'dijeda', fn (Builder $q) => $q->whereIn('chat_id', $jeda->keys()))
+            ->when($tipe !== null, fn (Builder $q) => $q->where('tipe_customer', $tipe))
             ->when($cari !== '', fn (Builder $q) => $q->where(fn (Builder $q) => $q
                 ->where('nama', 'ilike', $kata)
-                ->when(strlen($angka) >= 3, fn (Builder $q) => $q->orWhere('nomor_wa', 'like', '%'.ltrim($angka, '0').'%'))))
+                ->when(strlen($angka) >= 3, fn (Builder $q) => $q->orWhere('nomor_wa', 'like', '%'.ltrim($angka, '0').'%'))));
+    }
+
+    /**
+     * @param  SupportCollection<string, JedaBot>  $jeda
+     * @param  SupportCollection<int, int>  $menunggu
+     * @return Collection<int, CrmCustomer>
+     */
+    private function daftar(Request $request, string $tab, ?TipeCustomer $tipe, SupportCollection $jeda, SupportCollection $menunggu): Collection
+    {
+        return $this->kueri($request, $tab, $tipe, $jeda, $menunggu)
+            ->withMax('pesan as pesan_terakhir_at', 'waktu')
             ->orderByRaw('coalesce((select max(p.waktu) from pesan p where p.crm_customer_id = crm_customer.id), tgl_interaksi_terakhir) desc nulls last')
             ->orderBy('id')
+            ->limit(self::BATAS)
             ->get();
+    }
+
+    /**
+     * The two filter groups beside the list. Each group counts with the other group's
+     * choice applied, so the numbers always say what picking that item would give.
+     *
+     * @param  SupportCollection<string, JedaBot>  $jeda
+     * @param  SupportCollection<int, int>  $menunggu
+     * @return array{status: array<string, int>, tipe: array<string, int>}
+     */
+    private function jumlah(string $tab, ?TipeCustomer $tipe, SupportCollection $jeda, SupportCollection $menunggu): array
+    {
+        $dasar = fn () => CrmCustomer::query()->when($tipe !== null, fn (Builder $q) => $q->where('tipe_customer', $tipe));
+        $punyaChat = fn (Builder $q) => $q->whereHas('pesan', fn (Builder $p) => $p->where('pengirim', PengirimPesan::Customer));
+
+        $perTipe = CrmCustomer::query()->toBase()
+            ->when($tab === 'semua', fn ($q) => $q->whereExists(fn ($s) => $s->selectRaw('1')->from('pesan')->whereColumn('pesan.crm_customer_id', 'crm_customer.id')->where('pengirim', PengirimPesan::Customer->value)))
+            ->when($tab === 'belum-dibalas', fn ($q) => $q->whereIn('id', $menunggu->keys()))
+            ->when($tab === 'butuh-admin', fn ($q) => $q->where('butuh_admin', true))
+            ->when($tab === 'dijeda', fn ($q) => $q->whereIn('chat_id', $jeda->keys()))
+            ->groupBy('tipe_customer')
+            ->selectRaw('tipe_customer, count(*) as n')
+            ->pluck('n', 'tipe_customer');
+
+        return [
+            'status' => [
+                'semua' => $punyaChat($dasar())->count(),
+                'belum-dibalas' => $dasar()->whereIn('id', $menunggu->keys())->count(),
+                'butuh-admin' => $dasar()->where('butuh_admin', true)->count(),
+                'dijeda' => $dasar()->whereIn('chat_id', $jeda->keys())->count(),
+            ],
+            'tipe' => array_combine(
+                array_map(fn (TipeCustomer $t) => $t->value, TipeCustomer::cases()),
+                array_map(fn (TipeCustomer $t) => (int) ($perTipe[$t->value] ?? 0), TipeCustomer::cases()),
+            ),
+        ];
     }
 
     /**
      * @param  Collection<int, CrmCustomer>  $customer
      * @param  SupportCollection<string, JedaBot>  $jeda
+     * @param  SupportCollection<int, int>  $menunggu
      * @return list<array<string, mixed>>
      */
-    private function barisDaftar(Collection $customer, SupportCollection $jeda): array
+    private function barisDaftar(Collection $customer, SupportCollection $jeda, SupportCollection $menunggu): array
     {
         $id = $customer->modelKeys();
         $pratinjau = Pesan::query()
@@ -266,7 +354,7 @@ class PercakapanController extends Controller
         $order = LogOrder::query()->whereIn('crm_customer_id', $id)->whereIn('status_order', StatusOrder::berjalan())->orderBy('tanggal')->get()->keyBy('crm_customer_id');
         $pj = User::pjKaryawan()->name ?? null;
 
-        return array_values($customer->map(function (CrmCustomer $c) use ($pratinjau, $order, $jeda, $pj) {
+        return array_values($customer->map(function (CrmCustomer $c) use ($pratinjau, $order, $jeda, $pj, $menunggu) {
             $terakhir = $c->getAttribute('pesan_terakhir_at');
             $waktu = $terakhir ? Carbon::parse($terakhir)->timezone((string) config('app.timezone')) : $c->tgl_interaksi_terakhir;
 
@@ -278,6 +366,7 @@ class PercakapanController extends Controller
                 'pratinjau' => $pratinjau->get($c->id)->teks ?? $c->pesan_terakhir_customer,
                 'skor' => $c->skor_prospek->value,
                 'tahap' => $c->tahap_funnel->labelSingkat(),
+                'menunggu' => $menunggu[$c->id] ?? 0,
                 'tanda' => $this->tanda($c, $order->get($c->id), $jeda->get($c->chat_id), $pj),
             ];
         })->all());

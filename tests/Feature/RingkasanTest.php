@@ -217,3 +217,100 @@ test('the period picker and the export', function () {
         ->toContain('2026-09-28,1,0,0,0,0')
         ->not->toContain('2026-09-21');
 });
+
+test('the revenue chart counts money on the day it came in, not the day of the order', function () {
+    // paid today, ordered long before: it belongs to today
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['tanggal' => '2026-09-01 10:00', 'lunas_at' => '2026-09-28 09:00', 'total_produk' => 1_200_000, 'ongkir' => 38_000]);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['tanggal' => '2026-09-28 08:00', 'lunas_at' => '2026-09-28 11:00', 'total_produk' => 800_000, 'ongkir' => 0]);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['tanggal' => '2026-09-20 08:00', 'lunas_at' => '2026-09-20 08:30', 'total_produk' => 2_000_000, 'ongkir' => 0]);
+    // never paid, and paid before the 30-day window: neither shows
+    LogOrder::factory()->create(['tanggal' => '2026-09-28 12:00', 'total_produk' => 9_000_000]);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['tanggal' => '2026-08-01 08:00', 'lunas_at' => '2026-08-01 09:00', 'total_produk' => 7_000_000]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('omzet.hari', 30)
+            ->where('omzet.sub', 'Rp4,04 jt dari 3 order · rata-rata Rp1,35 jt per order')
+            ->where('omzet.hari.0', ['label' => '30 Agu', 'nilai' => 0, 'order' => 0])
+            ->where('omzet.hari.21', ['label' => '20 Sep', 'nilai' => 2_000_000, 'order' => 1])
+            ->where('omzet.hari.29', ['label' => '28 Sep', 'nilai' => 2_038_000, 'order' => 2]));
+});
+
+test('the best sellers add up every line of a product and skip cancelled orders', function () {
+    $jual = function (string $tanggal, StatusOrder $status, array $item) {
+        $order = LogOrder::factory()->status($status)->create(['tanggal' => $tanggal]);
+
+        foreach ($item as $i => [$nama, $qty, $subtotal]) {
+            $order->items()->create(['urutan' => $i + 1, 'nama_produk' => $nama, 'qty' => $qty, 'harga_satuan' => intdiv($subtotal, $qty), 'subtotal' => $subtotal]);
+        }
+    };
+    // today: Molreng on two orders, Basreng on one
+    $jual('2026-09-28 09:00', StatusOrder::Lunas, [['Molreng', 40, 660_000], ['Basreng', 30, 585_000]]);
+    $jual('2026-09-28 10:00', StatusOrder::Diacc, [['Molreng', 10, 165_000]]);
+    // cancelled today: not a sale
+    $jual('2026-09-28 11:00', StatusOrder::Dibatalkan, [['Kripca', 99, 9_000_000]]);
+    // yesterday, for the comparison: Molreng was bigger, Basreng did not sell
+    $jual('2026-09-27 09:00', StatusOrder::Lunas, [['Molreng', 100, 1_650_000]]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('produk.sub', '2 produk terjual · Rp1,41 jt total')
+            ->has('produk.baris', 2)
+            ->where('produk.baris.0', ['nama' => 'Molreng', 'qty' => 50, 'nilai' => 'Rp825.000', 'delta' => '-50%', 'deltaNada' => 'red'])
+            // no sale yesterday means no base to compare against
+            ->where('produk.baris.1', ['nama' => 'Basreng', 'qty' => 30, 'nilai' => 'Rp585.000', 'delta' => null, 'deltaNada' => null]));
+});
+
+test('a customer counts as new only when this is their first order ever', function () {
+    $lama = CrmCustomer::factory()->create();
+    $baru = CrmCustomer::factory()->create();
+    // the returning customer already ordered in August
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['crm_customer_id' => $lama->id, 'tanggal' => '2026-08-10 09:00', 'total_produk' => 500_000]);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['crm_customer_id' => $lama->id, 'tanggal' => '2026-09-28 09:00', 'total_produk' => 96_000]);
+    // the new one starts today, with two orders on the same day
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['crm_customer_id' => $baru->id, 'tanggal' => '2026-09-28 10:00', 'total_produk' => 1_000_000]);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['crm_customer_id' => $baru->id, 'tanggal' => '2026-09-28 11:00', 'total_produk' => 370_000]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('pelanggan.persen', 50)
+            ->where('pelanggan.sub', '2 pelanggan belanja · 50% pelanggan lama')
+            ->where('pelanggan.baris.0.label', 'Pelanggan baru')
+            ->where('pelanggan.baris.0.n', 1)
+            ->where('pelanggan.baris.0.nilai', 'Rp1,37 jt')
+            ->where('pelanggan.baris.1.label', 'Pelanggan lama')
+            ->where('pelanggan.baris.1.n', 1)
+            ->where('pelanggan.baris.1.nilai', 'Rp96.000'));
+});
+
+test('the lost orders are grouped by what happened to them', function () {
+    LogOrder::factory()->status(StatusOrder::Ditolak)->create(['tanggal' => '2026-09-28 09:00', 'total_produk' => 300_000, 'ongkir' => 20_000]);
+    LogOrder::factory()->status(StatusOrder::BatalOtomatis)->create(['tanggal' => '2026-09-28 10:00', 'total_produk' => 500_000]);
+    LogOrder::factory()->status(StatusOrder::BatalOtomatis)->create(['tanggal' => '2026-09-28 11:00', 'total_produk' => 180_000]);
+    // still running today, and a cancellation from yesterday: neither belongs here
+    LogOrder::factory()->create(['tanggal' => '2026-09-28 12:00', 'total_produk' => 9_000_000]);
+    LogOrder::factory()->status(StatusOrder::Ditolak)->create(['tanggal' => '2026-09-27 09:00', 'total_produk' => 7_000_000]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('hilang.jumlah', 3)
+            ->where('hilang.sub', '3 order · Rp1,00 jt tidak jadi masuk')
+            ->has('hilang.baris', 2)
+            ->where('hilang.baris.0', ['label' => 'Ditolak', 'n' => 1, 'nilai' => 'Rp320.000', 'nada' => 'red', 'tab' => 'batal'])
+            ->where('hilang.baris.1', ['label' => 'Batal otomatis', 'n' => 2, 'nilai' => 'Rp680.000', 'nada' => 'red', 'tab' => 'batal']));
+});
+
+test('an empty period says so instead of leaving the panels blank', function () {
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('produk.sub', '0 produk terjual')
+            ->has('produk.baris', 0)
+            ->where('pelanggan.sub', 'Belum ada yang belanja di rentang ini')
+            ->where('hilang.sub', '0 order batal')
+            ->has('hilang.baris', 0));
+});

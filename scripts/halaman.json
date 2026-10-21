@@ -1,0 +1,130 @@
+[
+  {
+    "kode": "Login",
+    "nama": "00a · Masuk",
+    "rute": "/masuk",
+    "login": false
+  },
+  {
+    "kode": "Daftar",
+    "nama": "00b · Daftar staf",
+    "rute": "/daftar",
+    "login": false
+  },
+  {
+    "kode": "LupaSandi",
+    "nama": "00c · Lupa kata sandi",
+    "rute": "/lupa-sandi",
+    "login": false
+  },
+  {
+    "kode": "Main",
+    "nama": "01 · Ringkasan",
+    "rute": "/"
+  },
+  {
+    "kode": "Inbox",
+    "nama": "02 · Percakapan",
+    "rute": "/percakapan"
+  },
+  {
+    "kode": "Orders",
+    "nama": "03 · Pesanan",
+    "rute": "/pesanan"
+  },
+  {
+    "kode": "OrderDetail",
+    "nama": "03a · Detail pesanan & invoice",
+    "rute": "/pesanan/ORD-260928-014"
+  },
+  {
+    "kode": "OrderNew",
+    "nama": "03b · Catat order manual",
+    "rute": "/pesanan/baru"
+  },
+  {
+    "kode": "Jeda",
+    "nama": "04 · Ambil alih chat",
+    "rute": "/jeda"
+  },
+  {
+    "kode": "Pipeline",
+    "nama": "05 · CRM Pipeline",
+    "rute": "/pipeline"
+  },
+  {
+    "kode": "Customer",
+    "nama": "06 · Pelanggan",
+    "rute": "/pelanggan"
+  },
+  {
+    "kode": "Broadcast",
+    "nama": "07 · Broadcast",
+    "rute": "/broadcast"
+  },
+  {
+    "kode": "BroadcastNew",
+    "nama": "08 · Buat kampanye",
+    "rute": "/broadcast/baru"
+  },
+  {
+    "kode": "Katalog",
+    "nama": "09 · Katalog — produk",
+    "rute": "/katalog"
+  },
+  {
+    "kode": "Paket",
+    "nama": "09a · Paket reseller",
+    "rute": "/katalog/paket"
+  },
+  {
+    "kode": "Gambar",
+    "nama": "09b · Gambar produk",
+    "rute": "/katalog/gambar"
+  },
+  {
+    "kode": "Kebijakan",
+    "nama": "09c · Kebijakan",
+    "rute": "/katalog/kebijakan"
+  },
+  {
+    "kode": "Karyawan",
+    "nama": "09d · Program karyawan",
+    "rute": "/katalog/karyawan"
+  },
+  {
+    "kode": "Prompt",
+    "nama": "10 · Prompt Adiva",
+    "rute": "/prompt"
+  },
+  {
+    "kode": "Otomasi",
+    "nama": "10a · Otomasi",
+    "rute": "/otomasi"
+  },
+  {
+    "kode": "Settings",
+    "nama": "11 · Pengaturan",
+    "rute": "/pengaturan"
+  },
+  {
+    "kode": "Monitoring",
+    "nama": "12 · Monitoring",
+    "rute": "/monitoring"
+  },
+  {
+    "kode": "Tim",
+    "nama": "13 · Tim & akses",
+    "rute": "/tim"
+  },
+  {
+    "kode": "Aktivitas",
+    "nama": "14 · Log aktivitas",
+    "rute": "/aktivitas"
+  },
+  {
+    "kode": "Notifikasi",
+    "nama": "15 · Notifikasi",
+    "rute": "/notifikasi"
+  }
+]

@@ -57,6 +57,8 @@ type Detail = {
         selesai: boolean;
         kini: boolean;
         mati: boolean;
+        /** when this step happened; null while it has not */
+        waktu: string | null;
     }[];
     item: { nama: string; qty: number; subtotal: string }[];
     produk: string;
@@ -202,6 +204,11 @@ export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
                         label: t.label,
                         n: t.n,
                         aktif: t.kode === aktifTab,
+                        // three groups: what waits for a decision, what is on its
+                        // way, and what is closed
+                        pisah: ['menunggu-acc', 'lunas', 'selesai'].includes(
+                            t.kode,
+                        ),
                         // the selected order stays open, as in the design
                         onClick: () =>
                             router.get(
@@ -339,9 +346,11 @@ function BarisPesanan({
 
 const kelasAksi = (a: Aksi, boleh: boolean) =>
     cn(
-        'h-9 cursor-pointer rounded-control border text-caption font-semibold whitespace-nowrap',
+        'h-9 min-w-[76px] cursor-pointer rounded-control border px-3 text-caption font-semibold whitespace-nowrap',
+        // a step that does not apply yet is drawn as an outline, not as a broken button,
+        // so the one that can be pressed is the only solid thing in the row
         !boleh
-            ? 'cursor-not-allowed border-line-quiet bg-subtle text-faint'
+            ? 'cursor-not-allowed border-dashed border-line-strong bg-transparent text-faint'
             : a.gaya === 'utama'
               ? 'border-primary bg-primary text-white hover:border-primary-ink hover:bg-primary-ink'
               : 'border-line-strong bg-surface text-red-text hover:bg-note-red-bg',
@@ -521,34 +530,60 @@ function PanelDetail({
                         Detail
                     </Link>
                 </div>
-                <div className="flex gap-1 pt-1">
-                    {detail.langkah.map((l) => (
-                        <div
+                {/* a trail, not tabs: a dot per step on one line, with when it happened */}
+                <ol className="m-0 flex list-none gap-1 p-0 pt-1.5">
+                    {detail.langkah.map((l, i) => (
+                        <li
                             key={l.label}
-                            className="flex grow flex-col gap-[5px]"
+                            aria-current={l.kini ? 'step' : undefined}
+                            className="flex min-w-0 grow flex-col gap-1.5"
                         >
-                            <span
-                                className={cn(
-                                    'h-[3px] rounded-[2px]',
-                                    l.mati
-                                        ? 'bg-note-red-line'
-                                        : l.selesai
-                                          ? 'bg-primary'
-                                          : 'bg-line',
+                            <span className="flex items-center gap-1">
+                                <span
+                                    className={cn(
+                                        'size-2 shrink-0 rounded-full',
+                                        l.mati
+                                            ? 'bg-red-dot'
+                                            : l.kini
+                                              ? 'bg-primary ring-2 ring-primary-line'
+                                              : l.selesai
+                                                ? 'bg-primary'
+                                                : 'bg-line-strong',
+                                    )}
+                                />
+                                {i < detail.langkah.length - 1 && (
+                                    <span
+                                        className={cn(
+                                            'h-px grow',
+                                            l.mati
+                                                ? 'bg-note-red-line'
+                                                : l.selesai
+                                                  ? 'bg-primary'
+                                                  : 'bg-line',
+                                        )}
+                                    />
                                 )}
-                            />
-                            <span
-                                className={cn(
-                                    'text-tag',
-                                    l.kini ? 'font-semibold' : 'font-medium',
-                                    l.selesai ? 'text-ink' : 'text-muted',
-                                )}
-                            >
-                                {l.label}
                             </span>
-                        </div>
+                            <span className="flex min-w-0 flex-col">
+                                <span
+                                    className={cn(
+                                        'truncate text-tag',
+                                        l.kini
+                                            ? 'font-semibold text-ink'
+                                            : l.selesai
+                                              ? 'font-medium text-ink-2'
+                                              : 'font-medium text-muted',
+                                    )}
+                                >
+                                    {l.label}
+                                </span>
+                                <span className="truncate text-tag text-faint tabular-nums">
+                                    {l.waktu ?? '—'}
+                                </span>
+                            </span>
+                        </li>
                     ))}
-                </div>
+                </ol>
             </div>
 
             <div className="flex grow flex-col gap-4 overflow-auto px-[18px] py-3.5">
@@ -585,8 +620,12 @@ function PanelDetail({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-3.5 gap-y-2.5">
-                    <Info label="Penerima">{detail.penerima}</Info>
+                <div className="flex flex-col gap-1.5">
+                    <div className="text-caption font-semibold text-ink">
+                        Pengiriman &amp; pembayaran
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3.5 gap-y-2.5">
+                        <Info label="Penerima">{detail.penerima}</Info>
                     <Info label="No. HP" mono>
                         {detail.hp}
                     </Info>
@@ -601,6 +640,7 @@ function PanelDetail({
                     <Info label="No. resi" mono>
                         {detail.resi}
                     </Info>
+                    </div>
                 </div>
 
                 {detail.adaInvoice && (
@@ -678,48 +718,86 @@ function PanelDetail({
                     ))}
                 </div>
 
+            </div>
+
+            <div className="flex flex-col gap-2.5 border-t border-line-softer bg-subtle px-[18px] pt-3 pb-4">
+                {/* the note carries the receipt (KIRIM; none = n8n books Mengantar),
+                    the shipping cost (ACC), or the reason (TOLAK, BATAL) */}
+                {/* the note sits with the buttons that read it, not above the fold of
+                    a panel that scrolls: KIRIM and TOLAK are unusable without it */}
                 <label className="flex flex-col gap-1.5">
-                    <span className="text-caption font-semibold text-ink">
+                    <span className="text-tag font-semibold tracking-[0.04em] text-muted uppercase">
                         Catatan, nomor resi, atau alasan
                     </span>
                     <Input
                         type="text"
-                        placeholder="Mis. nomor resi untuk KIRIM, alasan TOLAK, atau ongkir untuk ACC"
-                        className="h-10 rounded-[9px] px-3 text-body"
+                        placeholder="Mis. JNE999, ongkir 25000, atau alasan tolak"
+                        className="h-9 rounded-control bg-surface px-3 text-body"
                         value={catatan}
                         onChange={(e) => setCatatan(e.target.value)}
                     />
                 </label>
-            </div>
+                {(() => {
+                    const bisa = (a: Aksi) =>
+                        a.boleh ||
+                        (a.bolehDenganOngkir && catatan.trim() !== '');
+                    const maju = detail.aksi.filter((a) => a.gaya === 'utama');
+                    const bahaya = detail.aksi.filter(
+                        (a) => a.gaya === 'bahaya',
+                    );
 
-            <div className="flex flex-col gap-2 border-t border-line-softer bg-subtle px-[18px] pt-3 pb-4">
-                <div className="grid grid-cols-4 gap-1.5">
-                    {detail.aksi.map((a) => {
-                        // the note carries the receipt (KIRIM; none = n8n books Mengantar),
-                        // the shipping cost (ACC), or the reason (TOLAK, BATAL)
-                        const boleh =
-                            a.boleh ||
-                            (a.bolehDenganOngkir && catatan.trim() !== '');
-
-                        return (
-                            <button
-                                key={a.kode}
-                                type="button"
-                                disabled={!boleh}
-                                title={a.judul}
-                                onClick={() => jalankan(a.kode)}
-                                className={kelasAksi(a, boleh)}
-                            >
-                                {a.kode}
-                            </button>
-                        );
-                    })}
-                    <MenuLainnya aksi={detail.lainnya} onPilih={jalankan} />
-                </div>
-                <div className="text-tag text-muted">
-                    Urutan sama dengan workflow: LUNAS setelah ACC, KIRIM
-                    setelah LUNAS, SIAP hanya untuk ambil sendiri. Tombol
-                    abu-abu belum berlaku — arahkan kursor untuk alasannya.
+                    return (
+                        <>
+                            <div className="flex flex-col gap-1.5">
+                                <span className="text-tag font-semibold tracking-[0.04em] text-muted uppercase">
+                                    Langkah berikutnya
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {maju.map((a) => (
+                                        <button
+                                            key={a.kode}
+                                            type="button"
+                                            disabled={!bisa(a)}
+                                            title={a.judul}
+                                            onClick={() => jalankan(a.kode)}
+                                            className={kelasAksi(a, bisa(a))}
+                                        >
+                                            {a.kode}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="h-px bg-line-softer" />
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="mr-auto text-tag font-semibold tracking-[0.04em] text-muted uppercase">
+                                    Hentikan order
+                                </span>
+                                {bahaya.map((a) => (
+                                    <button
+                                        key={a.kode}
+                                        type="button"
+                                        disabled={!bisa(a)}
+                                        title={a.judul}
+                                        onClick={() => jalankan(a.kode)}
+                                        className={kelasAksi(a, bisa(a))}
+                                    >
+                                        {a.kode}
+                                    </button>
+                                ))}
+                                <MenuLainnya
+                                    aksi={detail.lainnya}
+                                    onPilih={jalankan}
+                                />
+                            </div>
+                        </>
+                    );
+                })()}
+                <div className="text-tag leading-[1.5] text-muted">
+                    Nomor resi untuk KIRIM · ongkir untuk ACC · alasan untuk
+                    TOLAK dan BATAL. Urutannya sama dengan workflow: LUNAS
+                    setelah ACC, KIRIM setelah LUNAS, SIAP hanya untuk ambil
+                    sendiri. Tombol bergaris putus belum berlaku — arahkan
+                    kursor untuk alasannya.
                 </div>
             </div>
         </aside>

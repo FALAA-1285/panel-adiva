@@ -179,7 +179,8 @@ function TabItem({ tab }: { tab: Tab }) {
 
 type DaftarTabProps = {
     label: string;
-    tab: (Tab & { onClick: () => void })[];
+    /** `pisah` draws a divider before the tab: it starts a new group. */
+    tab: (Tab & { onClick: () => void; pisah?: boolean })[];
     className?: string;
 };
 
@@ -197,19 +198,26 @@ export function DaftarTab({ label, tab, className }: DaftarTabProps) {
             )}
         >
             {tab.map((t) => (
-                <button
-                    key={t.label}
-                    type="button"
-                    role="tab"
-                    aria-selected={t.aktif ?? false}
-                    onClick={t.onClick}
-                    className={cn(
-                        kelasTab(t.aktif),
-                        'cursor-pointer bg-transparent px-0.5',
+                <Fragment key={t.label}>
+                    {t.pisah && (
+                        <span
+                            aria-hidden="true"
+                            className="my-2.5 w-px shrink-0 self-stretch bg-line"
+                        />
                     )}
-                >
-                    <IsiTab tab={t} />
-                </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={t.aktif ?? false}
+                        onClick={t.onClick}
+                        className={cn(
+                            kelasTab(t.aktif),
+                            'cursor-pointer bg-transparent px-0.5',
+                        )}
+                    >
+                        <IsiTab tab={t} />
+                    </button>
+                </Fragment>
             ))}
         </div>
     );

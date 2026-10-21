@@ -4,15 +4,13 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 /*
- * Token desain Panel Adiva — diambil dari design/source/*.dc.html.
- * Tempel ke resources/css/app.css (Tailwind CSS 4) setelah `@import "tailwindcss";`.
- * Aturan: pakai HANYA token ini. Nilai lain boleh dipakai (mis. `w-[248px]`)
- * hanya kalau angkanya tertulis di design/source halaman yang sedang dibuat.
+ * Token desain Panel Adiva — satu-satunya sumber token sejak folder design/ dihapus.
+ * Aturan: pakai nama token ini, bukan nilai arbitrary, kecuali memang perlu.
  */
 
 @theme {
     /* ---- font (muat dari Google Fonts, lihat komponen.md) */
-    /* fallbacks as in design/source ('Geist', sans-serif): glyphs Geist lacks, like →, come from the same font */
+    /* fallback 'Geist', sans-serif: glyphs Geist lacks, like →, come from the same font */
     --font-sans: 'Geist', sans-serif;
     --font-mono: 'Geist Mono', monospace;
 
@@ -78,7 +76,7 @@
      * ---- ukuran teks
      * Skala utama 7 langkah: 11,5 · 12 · 13 · 14,5 · 17 · 22 · 24.
      * Sebelumnya desain memakai 20 ukuran dengan jarak 0,5 px (13,5 / 14 / 14,5),
-     * yang tidak terbaca sebagai beda tingkat — lihat design/audit-kepadatan.md §1.1.
+     * yang tidak terbaca sebagai beda tingkat — lihat docs/audit-kepadatan.md §1.1.
      * Di luar skala utama hanya ada tiga kelompok yang memang beda keperluan:
      * kunci CONFIG_TOKO (mono), lembar invoice (A4 diperkecil), dan panel kiri Masuk.
      */
@@ -130,7 +128,7 @@
     }
 
     /*
-     * design/source runs on browser defaults. Undo the Tailwind preflight rules
+     * The design relied on browser defaults. Undo the Tailwind preflight rules
      * that change how those pages render: line-height 1.5 on html.
      */
     html {

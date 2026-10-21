@@ -16,6 +16,7 @@ import { AppLayout } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import type { NamaIkon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
@@ -29,7 +30,7 @@ import { catatan as ubahCatatan } from '@/routes/pelanggan';
 import { balas, jawab, kirimUlang, resetMemori } from '@/routes/percakapan';
 import { detail as detailPesanan } from '@/routes/pesanan';
 
-type Filter = { cari: string; tab: string };
+type Filter = { cari: string; tab: string; tipe: string | null };
 
 type Baris = {
     id: number;
@@ -39,6 +40,8 @@ type Baris = {
     pratinjau: string | null;
     skor: string;
     tahap: string;
+    /** customer lines at the end of the chat that nobody has answered yet */
+    menunggu: number;
     tanda: { teks: string; nada: Nada };
 };
 
@@ -83,17 +86,27 @@ type Percakapan = {
 type Props = {
     filter: Filter;
     waha: { teks: string; tersambung: boolean };
-    jumlah: Record<string, number>;
+    jumlah: { status: Record<string, number>; tipe: Record<string, number> };
+    muat: { batas: number; tampil: number; total: number };
     daftar: Baris[];
     percakapan: Percakapan | null;
     template: TemplateBalasan[];
     gambar: FotoProduk[];
 };
 
-const TAB = [
-    ['semua', 'Semua'],
-    ['butuh-admin', 'Butuh admin'],
-    ['dijeda', 'Dijeda'],
+/** The filter rail beside the list: two groups that narrow each other. */
+const STATUS = [
+    ['semua', 'Semua', 'percakapan'],
+    ['belum-dibalas', 'Belum dibalas', 'riwayat'],
+    ['butuh-admin', 'Butuh admin', 'pengguna'],
+    ['dijeda', 'Dijeda', 'jeda'],
+] as const;
+
+const TIPE = [
+    ['RESELLER', 'Reseller'],
+    ['RETAIL', 'Retail'],
+    ['KARYAWAN', 'Karyawan'],
+    ['BELUM_JELAS', 'Belum jelas'],
 ] as const;
 
 const warnaSkor: Record<string, string> = {
@@ -115,13 +128,61 @@ const warnaNada: Partial<Record<Nada, string>> = {
 const query = (f: Filter, pilih?: number) => ({
     cari: f.cari || undefined,
     tab: f.tab === 'semua' ? undefined : f.tab,
+    tipe: f.tipe ?? undefined,
     pilih,
 });
+
+/**
+ * One line in the filter rail: label on the left, how many it would give on the right.
+ * Picking the type that is already on clears it, so the rail never traps the list.
+ */
+function BarisSaring({
+    label,
+    ikon,
+    n,
+    aktif,
+    onPilih,
+}: {
+    label: string;
+    ikon?: NamaIkon;
+    n: number;
+    aktif: boolean;
+    onPilih: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            aria-pressed={aktif}
+            onClick={onPilih}
+            className={cn(
+                'flex w-full cursor-pointer items-center gap-2.5 rounded-nav border-0 px-2.5 py-1.5 text-left text-body',
+                aktif
+                    ? 'bg-nav-active font-semibold text-primary-ink'
+                    : 'bg-transparent text-ink-2 hover:bg-subtle',
+                'motion-safe:transition-colors',
+            )}
+        >
+            {ikon && <Ikon nama={ikon} ukuran={15} />}
+            <span className="grow truncate">{label}</span>
+            {n > 0 && (
+                <span
+                    className={cn(
+                        'shrink-0 text-tag font-semibold tabular-nums',
+                        aktif ? 'text-primary-ink' : 'text-muted',
+                    )}
+                >
+                    {n.toLocaleString('id-ID')}
+                </span>
+            )}
+        </button>
+    );
+}
 
 export default function HalamanPercakapan({
     filter,
     waha,
     jumlah,
+    muat,
     daftar,
     percakapan,
     template,
@@ -257,6 +318,53 @@ export default function HalamanPercakapan({
                 }
             />
             <div className="mx-8 mt-5 mb-6 flex min-h-0 grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">
+                <nav
+                    aria-label="Saring percakapan"
+                    className={cn(
+                        'flex w-[188px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-subtle px-2.5 py-3.5',
+                        // narrower screens get the same filters as the chip row above the list
+                        'max-xl:hidden',
+                    )}
+                >
+                    <div className="flex flex-col gap-0.5">
+                        <span className="px-2.5 pb-1 text-tag font-semibold tracking-[0.06em] text-muted uppercase">
+                            Status
+                        </span>
+                        {STATUS.map(([nilai, label, ikon]) => (
+                            <BarisSaring
+                                key={nilai}
+                                label={label}
+                                ikon={ikon}
+                                n={jumlah.status[nilai] ?? 0}
+                                aktif={isian.tab === nilai}
+                                onPilih={() =>
+                                    setIsian({ ...isian, tab: nilai })
+                                }
+                            />
+                        ))}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="px-2.5 pb-1 text-tag font-semibold tracking-[0.06em] text-muted uppercase">
+                            Tipe customer
+                        </span>
+                        {TIPE.map(([nilai, label]) => (
+                            <BarisSaring
+                                key={nilai}
+                                label={label}
+                                n={jumlah.tipe[nilai] ?? 0}
+                                aktif={isian.tipe === nilai}
+                                onPilih={() =>
+                                    setIsian({
+                                        ...isian,
+                                        tipe:
+                                            isian.tipe === nilai ? null : nilai,
+                                    })
+                                }
+                            />
+                        ))}
+                    </div>
+                </nav>
+
                 <section
                     aria-label="Daftar chat"
                     className={cn(
@@ -279,31 +387,73 @@ export default function HalamanPercakapan({
                                 }
                             />
                         </label>
-                        <div className="flex gap-1.5 max-lg:[scrollbar-width:none] max-lg:overflow-x-auto">
-                            {TAB.map(([nilai, label]) => {
-                                const aktif = isian.tab === nilai;
-
-                                return (
-                                    <button
-                                        key={nilai}
-                                        type="button"
-                                        aria-pressed={aktif}
-                                        onClick={() =>
-                                            setIsian({ ...isian, tab: nilai })
-                                        }
-                                        className={cn(
-                                            'h-[30px] shrink-0 cursor-pointer rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
-                                            aktif
-                                                ? 'border-primary-line bg-primary-soft text-primary-ink'
-                                                : 'border-line-strong bg-surface text-ink hover:bg-subtle',
-                                            'motion-safe:transition-colors',
-                                        )}
-                                    >
-                                        {label} {jumlah[nilai] ?? 0}
-                                    </button>
-                                );
-                            })}
+                        {/* the rail's filters, for screens too narrow to hold it */}
+                        <div className="flex gap-1.5 [scrollbar-width:none] overflow-x-auto xl:hidden">
+                            {[
+                                ...STATUS.map(
+                                    ([nilai, label]) =>
+                                        [
+                                            `tab:${nilai}`,
+                                            label,
+                                            jumlah.status[nilai] ?? 0,
+                                            isian.tab === nilai,
+                                            () =>
+                                                setIsian({
+                                                    ...isian,
+                                                    tab: nilai,
+                                                }),
+                                        ] as const,
+                                ),
+                                ...TIPE.map(
+                                    ([nilai, label]) =>
+                                        [
+                                            `tipe:${nilai}`,
+                                            label,
+                                            jumlah.tipe[nilai] ?? 0,
+                                            isian.tipe === nilai,
+                                            () =>
+                                                setIsian({
+                                                    ...isian,
+                                                    tipe:
+                                                        isian.tipe === nilai
+                                                            ? null
+                                                            : nilai,
+                                                }),
+                                        ] as const,
+                                ),
+                            ].map(([kunci, label, n, aktif, onPilih]) => (
+                                <button
+                                    key={kunci}
+                                    type="button"
+                                    aria-pressed={aktif}
+                                    onClick={onPilih}
+                                    className={cn(
+                                        'h-[30px] shrink-0 cursor-pointer rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
+                                        aktif
+                                            ? 'border-primary-line bg-primary-soft text-primary-ink'
+                                            : 'border-line-strong bg-surface text-ink hover:bg-subtle',
+                                        'motion-safe:transition-colors',
+                                    )}
+                                >
+                                    {label} {n}
+                                </button>
+                            ))}
                         </div>
+                    </div>
+                    <div className="flex flex-col gap-1 border-b border-line-softer px-4 py-2.5">
+                        <span className="text-caption font-medium text-ink-2 tabular-nums">
+                            {muat.total === 0
+                                ? 'Tidak ada percakapan'
+                                : muat.tampil < muat.total
+                                  ? `${muat.tampil} terbaru dari ${muat.total.toLocaleString('id-ID')} percakapan`
+                                  : `${muat.total.toLocaleString('id-ID')} percakapan`}
+                        </span>
+                        {muat.tampil < muat.total && (
+                            <span className="text-caption text-muted">
+                                Daftar hanya memuat yang terbaru. Pakai pencarian
+                                atau saringan untuk menjangkau yang lebih lama.
+                            </span>
+                        )}
                     </div>
                     <div className="grow overflow-auto">
                         {daftar.map((b) => (
@@ -335,8 +485,35 @@ export default function HalamanPercakapan({
                         onTutup={() => setInfo(false)}
                     />
                 )}
+                {!percakapan && <TidakAdaYangDipilih kosong={muat.total === 0} />}
             </div>
         </AppLayout>
+    );
+}
+
+/** Nothing picked, or the filters left nothing: say which of the two it is. */
+function TidakAdaYangDipilih({ kosong }: { kosong: boolean }) {
+    return (
+        <section
+            aria-label="Isi percakapan"
+            className="flex grow flex-col items-center justify-center gap-3 bg-surface px-8 text-center max-lg:hidden"
+        >
+            <span className="flex size-12 items-center justify-center rounded-card bg-primary-soft text-primary">
+                <Ikon nama="percakapan" ukuran={22} />
+            </span>
+            <span className="text-judul font-semibold">
+                {kosong ? 'Belum ada percakapan' : 'Belum ada yang dipilih'}
+            </span>
+            <span className="max-w-[360px] text-body text-muted">
+                {kosong
+                    ? 'Tidak ada chat yang cocok dengan saringan ini. Ubah saringan atau kosongkan pencarian.'
+                    : 'Pilih satu chat di daftar untuk melihat isinya dan membalas.'}
+            </span>
+            <span className="flex items-center gap-1.5 text-caption text-muted">
+                <Ikon nama="whatsapp" ukuran={14} />
+                WhatsApp
+            </span>
+        </section>
     );
 }
 
@@ -370,8 +547,18 @@ function BarisChat({
                     </span>
                     <span className="text-tag text-muted">{b.waktu}</span>
                 </span>
-                <span className="truncate text-caption text-ink-3">
-                    {b.pratinjau}
+                <span className="flex items-center gap-2">
+                    <span className="grow truncate text-caption text-ink-3">
+                        {b.pratinjau}
+                    </span>
+                    {b.menunggu > 0 && (
+                        <span
+                            className="shrink-0 rounded-chip bg-primary px-1.5 py-px text-tag font-semibold text-white tabular-nums"
+                            title={`${b.menunggu} pesan belum dibalas`}
+                        >
+                            {b.menunggu}
+                        </span>
+                    )}
                 </span>
                 <span className="flex flex-wrap items-center gap-1.5 pt-px">
                     <span
@@ -557,7 +744,7 @@ function Utas({
                     aria-label="Info customer"
                     aria-controls="info-customer"
                     onClick={onInfo}
-                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:bg-subtle xl:hidden"
+                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:bg-subtle 2xl:hidden"
                 >
                     <Ikon nama="info" tebal={2} />
                 </button>
@@ -827,7 +1014,7 @@ function Penilaian({
                 <div
                     aria-hidden="true"
                     onClick={onTutup}
-                    className="fixed inset-0 z-30 bg-ink/30 motion-safe:animate-[pudar_150ms_ease-out] xl:hidden"
+                    className="fixed inset-0 z-30 bg-ink/30 motion-safe:animate-[pudar_150ms_ease-out] 2xl:hidden"
                 />
             )}
             <aside
@@ -836,14 +1023,14 @@ function Penilaian({
                 onKeyDown={(e) => e.key === 'Escape' && onTutup()}
                 className={cn(
                     'box-border flex w-[300px] shrink-0 flex-col gap-4 overflow-auto border-l border-line bg-surface p-[18px]',
-                    'max-xl:fixed max-xl:inset-y-0 max-xl:right-0 max-xl:z-40 max-xl:w-[340px] max-xl:max-w-[90vw]',
-                    'motion-safe:max-xl:transition-[translate,visibility] motion-safe:max-xl:duration-200',
+                    'max-2xl:fixed max-2xl:inset-y-0 max-2xl:right-0 max-2xl:z-40 max-2xl:w-[340px] max-2xl:max-w-[90vw]',
+                    'motion-safe:max-2xl:transition-[translate,visibility] motion-safe:max-2xl:duration-200',
                     buka
-                        ? 'max-xl:translate-x-0'
-                        : 'max-xl:invisible max-xl:translate-x-full',
+                        ? 'max-2xl:translate-x-0'
+                        : 'max-2xl:invisible max-2xl:translate-x-full',
                 )}
             >
-                <div className="flex items-center gap-2 xl:hidden">
+                <div className="flex items-center gap-2 2xl:hidden">
                     <Link
                         href={pelanggan.url({ query: { pilih: p.id } })}
                         className="grow text-body font-semibold no-underline"

@@ -10,9 +10,7 @@
         "check:fix": "vp check --fix",
         "types": "tsc --noEmit",
         "types:check": "tsc --noEmit",
-        "visual": "node scripts/visual-diff.mjs",
-        "responsif": "node scripts/responsif.mjs",
-        "foto-desain": "node scripts/foto-desain.mjs"
+        "responsif": "node scripts/responsif.mjs"
     },
     "dependencies": {
         "@inertiajs/react": "^3.0.0",

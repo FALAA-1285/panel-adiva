@@ -87,7 +87,9 @@ test('the open order shows its items, history and which commands apply', functio
             ->where('detail.berat', '1,6 kg')
             ->where('detail.invoice', '—')
             ->where('detail.riwayat', [['waktu' => '25 Sep', 'teks' => 'lama'], ['waktu' => '13:06', 'teks' => 'Dicatat Adiva dari chat']])
-            ->where('detail.langkah.0', ['label' => 'Menunggu ACC', 'selesai' => true, 'kini' => true, 'mati' => false])
+            ->where('detail.langkah.0', ['label' => 'Menunggu ACC', 'selesai' => true, 'kini' => true, 'mati' => false, 'waktu' => '28 Sep 13:06'])
+            // a step that has not happened yet carries no time
+            ->where('detail.langkah.1', ['label' => 'Invoice', 'selesai' => false, 'kini' => false, 'mati' => false, 'waktu' => null])
             ->where('detail.aksi.0', ['kode' => 'ACC', 'boleh' => true, 'bolehDenganOngkir' => false, 'judul' => 'ACC → invoice PDF dibuat & dikirim', 'gaya' => 'utama'])
             ->where('detail.aksi.2.judul', 'SIAP hanya untuk pesanan ambil sendiri')
             ->where('detail.aksi.3.judul', 'KIRIM tidak berlaku untuk status MENUNGGU_KONFIRMASI'));

@@ -12,7 +12,15 @@ import type { Stat } from '@/components/ui/stat-strip';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { cn } from '@/lib/utils';
-import { home, monitoring, otomasi, pesanan, pipeline } from '@/routes';
+import {
+    home,
+    monitoring,
+    otomasi,
+    pelanggan as pelangganRute,
+    pesanan,
+    pipeline,
+} from '@/routes';
+import { produk as katalogProduk } from '@/routes/katalog';
 import { kirimUlang } from '@/routes/percakapan';
 import { aksi as aksiPesanan } from '@/routes/pesanan';
 import { ekspor } from '@/routes/ringkasan';
@@ -55,6 +63,36 @@ type Props = {
     otomatis: {
         sub: string;
         baris: { waktu: string; judul: string; isi: string }[];
+    };
+    omzet: {
+        sub: string;
+        hari: { label: string; nilai: number; order: number }[];
+    };
+    produk: {
+        sub: string;
+        baris: {
+            nama: string;
+            qty: number;
+            nilai: string;
+            delta: string | null;
+            deltaNada: string | null;
+        }[];
+    };
+    pelanggan: {
+        sub: string;
+        persen: number;
+        baris: { label: string; n: number; nilai: string; warna: string }[];
+    };
+    hilang: {
+        sub: string;
+        jumlah: number;
+        baris: {
+            label: string;
+            n: number;
+            nilai: string;
+            nada: Nada;
+            tab: string;
+        }[];
     };
     volume: {
         sub: string;
@@ -238,6 +276,177 @@ export default function Ringkasan(props: Props) {
                             ))}
                         </Panel>
                     </div>
+                </div>
+
+                <Panel
+                    judul="Omzet · 30 hari"
+                    sub={props.omzet.sub}
+                    aksi={
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-3">
+                            <Legenda warna="bg-primary">Omzet</Legenda>
+                            <Legenda warna="bg-line-strong">Jumlah order</Legenda>
+                        </div>
+                    }
+                    isiClassName="pt-3.5 pr-[18px] pb-2.5 pl-0 max-md:overflow-x-auto"
+                >
+                    <GrafikOmzet hari={props.omzet.hari} />
+                </Panel>
+
+                <div className="grid grid-cols-3 items-start gap-5 max-xl:grid-cols-2 max-md:grid-cols-1">
+                    <Panel
+                        judul="Produk terlaris"
+                        sub={props.produk.sub}
+                        aksi={
+                            <TautanPanel href={katalogProduk.url()}>
+                                Katalog
+                            </TautanPanel>
+                        }
+                        isiClassName="pt-1.5 pb-3"
+                    >
+                        <div className="flex flex-col">
+                            {props.produk.baris.length === 0 && (
+                                <span className="px-2 py-3 text-body text-muted">
+                                    Belum ada produk terjual.
+                                </span>
+                            )}
+                            {props.produk.baris.map((p, i) => (
+                                <div
+                                    key={p.nama}
+                                    className="box-content grid h-[36px] grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-line-soft px-2 transition-colors hover:bg-subtle/60"
+                                >
+                                    <span className="text-caption text-faint tabular-nums">
+                                        {i + 1}
+                                    </span>
+                                    <span className="flex min-w-0 flex-col">
+                                        <span className="truncate text-body text-ink">
+                                            {p.nama}
+                                        </span>
+                                        <span className="text-caption text-muted tabular-nums">
+                                            {angka(p.qty)} pcs
+                                        </span>
+                                    </span>
+                                    <span className="flex flex-col items-end">
+                                        <span className="text-body font-semibold tabular-nums">
+                                            {p.nilai}
+                                        </span>
+                                        {p.delta && (
+                                            <span
+                                                className={cn(
+                                                    'text-caption tabular-nums',
+                                                    p.deltaNada === 'green'
+                                                        ? 'text-green-text'
+                                                        : 'text-red-text',
+                                                )}
+                                            >
+                                                {p.delta}
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </Panel>
+
+                    <Panel
+                        judul="Pelanggan baru vs lama"
+                        sub={props.pelanggan.sub}
+                        aksi={
+                            <TautanPanel href={pelangganRute.url()}>
+                                Pelanggan
+                            </TautanPanel>
+                        }
+                        isiClassName="pb-3.5"
+                    >
+                        <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-[3px]">
+                            {props.pelanggan.baris.map((p) => (
+                                <span
+                                    key={p.label}
+                                    style={{
+                                        width: `${(
+                                            (p.n /
+                                                Math.max(
+                                                    1,
+                                                    props.pelanggan.baris.reduce(
+                                                        (a, b) => a + b.n,
+                                                        0,
+                                                    ),
+                                                )) *
+                                            100
+                                        ).toFixed(1)}%`,
+                                        background: p.warna,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <div className="mt-2.5 flex flex-col">
+                            {props.pelanggan.baris.map((p) => (
+                                <div
+                                    key={p.label}
+                                    className="box-content grid h-[32px] grid-cols-[12px_minmax(0,1fr)_44px_auto] items-center gap-2.5 border-b border-line-soft px-2 transition-colors hover:bg-subtle/60"
+                                >
+                                    <span
+                                        className="size-2.5 rounded-[2px]"
+                                        style={{ background: p.warna }}
+                                    />
+                                    <span className="truncate text-body text-ink-2">
+                                        {p.label}
+                                    </span>
+                                    <span className="text-right text-body font-medium tabular-nums">
+                                        {angka(p.n)}
+                                    </span>
+                                    <span className="text-right text-caption text-muted tabular-nums">
+                                        {p.nilai}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </Panel>
+
+                    <Panel
+                        judul="Order yang hilang"
+                        sub={props.hilang.sub}
+                        aksi={
+                            <TautanPanel
+                                href={pesanan.url({ query: { tab: 'batal' } })}
+                            >
+                                Pesanan
+                            </TautanPanel>
+                        }
+                        isiClassName="pt-1.5 pb-3"
+                    >
+                        <div className="flex flex-col">
+                            {props.hilang.baris.length === 0 && (
+                                <span className="px-2 py-3 text-body text-muted">
+                                    Tidak ada order yang batal.
+                                </span>
+                            )}
+                            {props.hilang.baris.map((h) => (
+                                <Link
+                                    key={h.label}
+                                    href={pesanan.url({
+                                        query: { tab: h.tab },
+                                    })}
+                                    className="box-content flex h-[36px] items-center gap-2.5 rounded-[6px] border-b border-line-soft px-2 text-ink no-underline transition-colors hover:bg-subtle/60"
+                                >
+                                    <span className="grow">
+                                        <Status
+                                            nada={h.nada}
+                                            ink
+                                            className="text-body"
+                                        >
+                                            {h.label}
+                                        </Status>
+                                    </span>
+                                    <span className="text-caption text-muted tabular-nums">
+                                        {h.nilai}
+                                    </span>
+                                    <span className="text-body font-semibold tabular-nums">
+                                        {h.n}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </Panel>
                 </div>
 
                 <Panel
@@ -581,6 +790,153 @@ function garis(titik: { x: number; y: number }[]) {
     }
 
     return d;
+}
+
+/** 1250000 → "1,25 jt", 80000 → "80 rb" — tick labels have to stay narrow. */
+function rupiahSumbu(n: number) {
+    if (n >= 1_000_000) {
+        return `${(n / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} jt`;
+    }
+
+    return n >= 1000 ? `${Math.round(n / 1000)} rb` : String(n);
+}
+
+/**
+ * Omzet per day as a line, with the number of orders behind it as faint bars. The two
+ * series have their own scale, so each keeps its own axis: rupiah on the left, orders
+ * on the right.
+ */
+function GrafikOmzet({ hari }: { hari: Props['omzet']['hari'] }) {
+    const [lebar, setLebar] = useState(GRAFIK.lebar);
+    const ref = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+        const wadah = ref.current?.parentElement;
+
+        if (!wadah) {
+            return;
+        }
+
+        const amati = new ResizeObserver(() => {
+            const gaya = getComputedStyle(wadah);
+            const isi =
+                wadah.clientWidth -
+                parseFloat(gaya.paddingLeft) -
+                parseFloat(gaya.paddingRight);
+
+            setLebar(Math.max(GRAFIK.lebar, Math.floor(isi - GRAFIK.sisa)));
+        });
+
+        amati.observe(wadah);
+
+        return () => amati.disconnect();
+    }, []);
+
+    const langkah = langkahBulat(Math.max(...hari.map((h) => h.nilai), 1) / 4);
+    const puncak = langkah * 4;
+    const langkahOrder = langkahBulat(
+        Math.max(...hari.map((h) => h.order), 1) / 4,
+    );
+    const puncakOrder = langkahOrder * 4;
+    const y = (v: number) =>
+        GRAFIK.bawah - (v / puncak) * (GRAFIK.bawah - GRAFIK.atas);
+    const yOrder = (v: number) =>
+        GRAFIK.bawah - (v / puncakOrder) * (GRAFIK.bawah - GRAFIK.atas);
+    const regang = (lebar - GRAFIK.kiri) / (GRAFIK.kanan - GRAFIK.kiri);
+    const x = (i: number) => GRAFIK.kiri + i * GRAFIK.langkah * regang;
+    const lebarBatang = Math.max(4, GRAFIK.langkah * regang * 0.42);
+    const titik = hari.map((h, i) => ({ x: x(i), y: y(h.nilai) }));
+    const akhir = titik[titik.length - 1];
+
+    return (
+        <svg
+            ref={ref}
+            width={lebar}
+            height={GRAFIK.tinggi}
+            viewBox={`0 0 ${lebar} ${GRAFIK.tinggi}`}
+            role="img"
+            aria-label="Grafik omzet dan jumlah order per hari, 30 hari"
+            className="inline align-baseline max-[1440px]:h-auto max-[1440px]:w-full max-md:w-[720px] max-md:max-w-none"
+            overflow="visible"
+        >
+            {[0, 1, 2, 3, 4].map((k) => (
+                <g key={k}>
+                    <line
+                        x1={GRAFIK.kiri}
+                        y1={y(k * langkah).toFixed(1)}
+                        x2={lebar}
+                        y2={y(k * langkah).toFixed(1)}
+                        stroke="var(--color-line-soft)"
+                        strokeWidth="1"
+                    />
+                    <text
+                        x="30"
+                        y={(y(k * langkah) + 4).toFixed(1)}
+                        textAnchor="end"
+                        fontSize="11"
+                        fill="var(--color-muted)"
+                        fontFamily="Geist, sans-serif"
+                    >
+                        {rupiahSumbu(k * langkah)}
+                    </text>
+                    <text
+                        x={lebar + 6}
+                        y={(y(k * langkah) + 4).toFixed(1)}
+                        textAnchor="start"
+                        fontSize="11"
+                        fill="var(--color-faint)"
+                        fontFamily="Geist, sans-serif"
+                    >
+                        {angka(k * langkahOrder)}
+                    </text>
+                </g>
+            ))}
+            {hari.map((h, i) => (
+                <rect
+                    key={`batang-${h.label}`}
+                    x={(x(i) - lebarBatang / 2).toFixed(1)}
+                    y={yOrder(h.order).toFixed(1)}
+                    width={lebarBatang.toFixed(1)}
+                    height={Math.max(
+                        0,
+                        GRAFIK.bawah - yOrder(h.order),
+                    ).toFixed(1)}
+                    rx="2"
+                    fill="var(--color-line-softer)"
+                />
+            ))}
+            {hari.map((h, i) =>
+                i % 3 === 0 ? (
+                    <text
+                        key={h.label}
+                        x={x(i).toFixed(1)}
+                        y="214"
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="var(--color-muted)"
+                        fontFamily="Geist, sans-serif"
+                    >
+                        {h.label}
+                    </text>
+                ) : null,
+            )}
+            <path
+                d={garis(titik)}
+                fill="none"
+                stroke="var(--color-primary)"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+            <circle
+                cx={akhir.x.toFixed(1)}
+                cy={akhir.y.toFixed(1)}
+                r="3.5"
+                fill="var(--color-surface)"
+                stroke="var(--color-primary)"
+                strokeWidth="2"
+            />
+        </svg>
+    );
 }
 
 function GrafikVolume({ hari }: { hari: Props['volume']['hari'] }) {

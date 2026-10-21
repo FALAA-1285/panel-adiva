@@ -43,7 +43,8 @@ test('paused customers show how long the pause still runs', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('jeda')
-            ->where('aktif.0.nomor', '0813-5566-••42 · CS 2')
+            ->where('aktif.0.nomor', '0813-5566-••42')
+            ->where('aktif.0.sesi', 'CS 2')
             ->where('aktif.0.sejak', '10:05')
             ->where('aktif.0.sampai', '14:30')
             ->where('aktif.0.sisa', '± 50 mnt lagi')

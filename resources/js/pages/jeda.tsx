@@ -14,7 +14,9 @@ import { lanjut, simpan } from '@/routes/jeda';
 type Aktif = {
     id: number;
     nama: string;
-    nomor: string;
+    nomor: string | null;
+    /** short label of the bot number the chat came in on ("CS 2") */
+    sesi: string | null;
     sejak: string;
     sampai: string;
     sisa: string;
@@ -44,7 +46,8 @@ const DURASI = ['30 menit', '1 jam', '2 jam', '1 hari', 'Tanpa batas'] as const;
 
 // narrow screens: the columns keep their width and the card scrolls sideways
 const KOLOM_AKTIF =
-    'grid grid-cols-[minmax(0,1.15fr)_150px_56px_minmax(0,1.5fr)_128px] gap-3 max-xl:min-w-[740px]';
+    // the second column holds "Kemarin → ∞" over a chip like "tanpa batas · diingatkan 09.00"
+    'grid grid-cols-[minmax(0,1.1fr)_184px_56px_minmax(0,1.35fr)_128px] gap-3 max-xl:min-w-[780px]';
 const KOLOM_RIWAYAT =
     'grid grid-cols-[minmax(0,1fr)_150px_70px_minmax(0,1.8fr)_64px] gap-2.5 max-xl:min-w-[680px]';
 
@@ -118,15 +121,30 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                         <span className="truncate text-body font-semibold">
                                             {r.nama}
                                         </span>
-                                        <span className="font-mono text-tag whitespace-nowrap text-muted">
-                                            {r.nomor}
+                                        <span className="flex min-w-0 items-center gap-1.5">
+                                            <span className="truncate font-mono text-tag text-muted">
+                                                {r.nomor ?? '—'}
+                                            </span>
+                                            {r.sesi && (
+                                                <span className="shrink-0 rounded-tag bg-line-softer px-1.5 text-tag font-medium whitespace-nowrap text-gray-text">
+                                                    {r.sesi}
+                                                </span>
+                                            )}
                                         </span>
                                     </span>
-                                    <span className="flex min-w-0 flex-col gap-0.5">
+                                    <span className="flex min-w-0 flex-col items-start gap-1">
                                         <span className="text-caption font-semibold whitespace-nowrap">
                                             {r.sejak} → {r.sampai}
                                         </span>
-                                        <span className="truncate text-tag text-muted">
+                                        {/* a chip, so the ones about to expire stand out when scanning */}
+                                        <span
+                                            className={cn(
+                                                'max-w-full truncate rounded-tag px-1.5 py-px text-tag font-medium',
+                                                r.sampai === '∞'
+                                                    ? 'bg-line-softer text-gray-text'
+                                                    : 'bg-note-amber-bg text-amber-text',
+                                            )}
+                                        >
                                             {r.sisa}
                                         </span>
                                     </span>
@@ -297,8 +315,17 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
 
                         <Kartu className="gap-2.5">
                             <h2 className="m-0 text-panel font-semibold">
-                                Lanjutkan &amp; serah terima
+                                Serah terima ke Adiva
                             </h2>
+                            {/* the note is read by "Lanjutkan bot" in the table, which is
+                                easy to miss when the two sit in different columns */}
+                            <div className="text-caption text-ink-2">
+                                Isi dulu di sini, lalu tekan{' '}
+                                <strong className="font-semibold text-ink">
+                                    Lanjutkan bot
+                                </strong>{' '}
+                                pada baris customernya di tabel sebelah.
+                            </div>
                             <Isian label="Catatan untuk Adiva">
                                 <Textarea
                                     rows={3}

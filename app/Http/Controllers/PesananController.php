@@ -24,6 +24,7 @@ use App\Support\NomorWa;
 use App\Support\PerintahPesanan;
 use App\Support\Rupiah;
 use App\Support\UbahItemPesanan;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -257,7 +258,12 @@ class PesananController extends Controller
             'tipe' => $o->tipe_customer?->label(),
             'dibuat' => $o->tanggal->translatedFormat('j M H:i'),
             'customerId' => $o->crm_customer_id,
-            'langkah' => array_map(fn (array $l) => array_diff_key($l, ['waktu' => true]), AlurPesanan::langkah($o)),
+            // the time under each step is what makes the strip read as a trail and not
+            // as a second row of tabs under the status filter
+            'langkah' => array_map(fn (array $l) => [
+                ...array_diff_key($l, ['waktu' => true]),
+                'waktu' => $l['waktu'] instanceof CarbonInterface ? $l['waktu']->timezone((string) config('app.timezone'))->format('j M H:i') : null,
+            ], AlurPesanan::langkah($o)),
             'item' => $o->items->map(fn (OrderItem $item) => [
                 'nama' => $item->namaTampil(),
                 'qty' => $item->qty,

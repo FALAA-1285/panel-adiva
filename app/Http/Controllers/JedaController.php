@@ -37,8 +37,10 @@ class JedaController extends Controller
             'aktif' => $aktif->map(fn (JedaBot $j) => [
                 'id' => $j->id,
                 'nama' => $j->nama,
-                // "0813-5566-••42 · CS 2"
-                'nomor' => collect([$j->nomor ? NomorWa::samarkanUjung($j->nomor) : null, $singkat[$j->sesi_wa ?? ''] ?? null])->filter()->implode(' · '),
+                // kept apart so the column can lay them out instead of truncating
+                // "0813-5566-••42 · CS 2" to "0813-5566-••42 · CS…"
+                'nomor' => $j->nomor ? NomorWa::samarkanUjung($j->nomor) : null,
+                'sesi' => $singkat[$j->sesi_wa ?? ''] ?? null,
                 'sejak' => $this->hari($j->sejak),
                 'sampai' => $j->sampai ? $j->sampai->format('H:i') : '∞',
                 'sisa' => $this->sisa($j),

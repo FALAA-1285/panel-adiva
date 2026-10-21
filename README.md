@@ -1,41 +1,53 @@
-# Kit desain Panel Adiva untuk Claude Code
+# Panel admin Adiva (Bang Bana)
 
-Kit ini membuat Claude Code membangun panel **sama persis** dengan desain: ia membaca angka asli desain, bukan menebak dari gambar, lalu membuktikan hasilnya dengan uji visual piksel demi piksel.
+Panel web untuk memantau dan mengendalikan bot WhatsApp "Adiva". Bot-nya berjalan di n8n + WAHA; panel ini membaca dan menulis database yang sama, dan sejak langkah 1–3 ia juga menjalankan sendiri perintah order, jalur pesan masuk, balasan, CRM, dan pengingat.
 
-## Isi
+## Stack
 
-| Path                                 | Fungsi                                                                        |
-| ------------------------------------ | ----------------------------------------------------------------------------- |
-| `CLAUDE.md`                          | Aturan proyek yang otomatis dibaca Claude Code di setiap sesi                 |
-| `.claude/commands/halaman.md`        | Perintah `/halaman <Kode>` — bangun satu halaman                              |
-| `.claude/commands/cocokkan.md`       | Perintah `/cocokkan <Kode>` — perbaiki selisih dengan desain                  |
-| `design/screens/`                    | Gambar acuan (28 layar + Sidebar & Topbar), dibuat oleh `npm run foto-desain` |
-| `design/source/`                     | HTML/CSS asli tiap layar + `support.js` untuk melihatnya di browser           |
-| `design/tokens.css`                  | Token Tailwind 4: warna, ukuran teks, radius                                  |
-| `design/komponen.md`                 | Ukuran persis komponen bersama                                                |
-| `design/halaman.md` + `halaman.json` | Peta halaman → rute → ukuran                                                  |
-| `scripts/foto-desain.mjs`            | Memotret ulang desain dari `design/source` menjadi gambar acuan               |
-| `scripts/visual-diff.mjs`            | Uji visual (Playwright + pixelmatch)                                          |
-| `docs/urutan-prompt.md`              | Urutan prompt dari nol sampai tersambung ke bot                               |
+- Laravel 13 (PHP 8.4), Inertia 3, React 19 + TypeScript, Tailwind CSS 4
+- PostgreSQL 18, Redis + Horizon untuk antrean
+- Radix UI primitives tanpa gaya bawaan, `lucide-react`, TanStack Table, dnd-kit, grafik SVG sendiri
 
-## Cara pakai
-
-1. Buat folder proyek kosong, salin semua isi kit ini ke dalamnya (termasuk folder `.claude`).
-2. Buka terminal di folder itu, jalankan `claude`.
-3. Ikuti `docs/urutan-prompt.md` mulai Tahap 0. Di tahap itu Claude memasang Playwright lalu menjalankan `npm run foto-desain` untuk membuat gambar acuan di `design/screens/`.
-4. Untuk melihat desain aslinya kapan saja: `npx serve design/source`, buka `http://localhost:3000/Main.dc.html`.
-
-## Uji visual
+## Menjalankan
 
 ```bash
-php artisan serve            # APP_DEMO=true
-npm run dev                  # atau npm run build
-npm run visual -- Main       # satu halaman
-npm run visual               # semua halaman
+composer install && npm install
+cp .env.example .env && php artisan key:generate
+php artisan migrate
+npm run dev          # atau npm run build
+php artisan serve
 ```
 
-Hasilnya ada di `visual-diff/`: `<Kode>-app.png` (tampilan aplikasi) dan `<Kode>-diff.png` (piksel merah = beda dari desain). Lolos bila selisih ≤ 0,5%, ukurannya sama, halaman tidak lebih panjang dari desain, dan tidak ada error JavaScript. Skrip ini sudah dicoba terhadap desain itu sendiri dan hasilnya 0,00%.
+Pengaturan yang perlu diisi untuk menjalankan bot sungguhan: `BOT_DRIVER`, `WAHA_URL`, `WAHA_KEY`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`. `MENGANTAR_API_KEY` disimpan di tabel `config_toko` dan bisa diubah dari halaman Pengaturan. `GEMINI_API_KEY` tidak diperlukan panel — kunci itu tetap hanya di credential n8n.
 
-Gambar acuan sengaja dibuat di komputer Anda sendiri, sama dengan tempat uji visual dijalankan, supaya font dan cara browser menggambar teks identik — tidak ada selisih palsu karena beda sistem operasi.
+## Mode demo
 
-Agar bisa sama persis, aplikasi saat diuji harus memakai **data contoh yang sama** (`DemoSeeder`) dan **jam yang dibekukan** (Senin, 28 Sep 2026 13:42 WIB), karena angka dan jam ikut tampil di layar.
+`APP_DEMO=true` mengisi data contoh lewat `DemoSeeder`, membekukan jam aplikasi ke Senin, 28 Sep 2026 13:42 WIB, dan memaksa semua driver bot memakai tiruan. Database demo terpisah:
+
+```bash
+APP_DEMO=true DB_DATABASE=panel_adiva_demo php artisan migrate:fresh --seed
+APP_DEMO=true DB_DATABASE=panel_adiva_demo php artisan serve --port=8010
+```
+
+Rute `/_demo/login` (masuk sebagai Falah, Supervisor) dan `/_demo/komponen/{sidebar|topbar}` hanya aktif saat `APP_DEMO=true`.
+
+## Uji
+
+```bash
+php artisan test            # Pest
+npm run types               # tsc --noEmit
+npm run responsif           # cek tidak ada yang meluber ke samping di 1280/1024/768/390
+./vendor/bin/pint --test
+./vendor/bin/phpstan
+```
+
+`npm run responsif` membaca daftar halaman dari `scripts/halaman.json` dan menulis gambar ke `visual-diff/responsif/`.
+
+## Dokumen
+
+| Path | Isi |
+|---|---|
+| `CLAUDE.md` | Aturan proyek untuk Claude Code |
+| `docs/kontrak-n8n.md` | Kontrak antara panel dan workflow n8n |
+| `docs/audit-kepadatan.md` | Hasil ukur tiap halaman sebelum desain dirombak |
+| `docs/urutan-prompt.md` | Catatan urutan pembangunan panel |
