@@ -626,20 +626,20 @@ function PanelDetail({
                     </div>
                     <div className="grid grid-cols-2 gap-x-3.5 gap-y-2.5">
                         <Info label="Penerima">{detail.penerima}</Info>
-                    <Info label="No. HP" mono>
-                        {detail.hp}
-                    </Info>
-                    <Info label="Alamat" lebar>
-                        {detail.alamat}
-                    </Info>
-                    <Info label="Metode bayar">{detail.metode}</Info>
-                    <Info label="Berat">{detail.berat}</Info>
-                    <Info label="Invoice" mono>
-                        {detail.invoice}
-                    </Info>
-                    <Info label="No. resi" mono>
-                        {detail.resi}
-                    </Info>
+                        <Info label="No. HP" mono>
+                            {detail.hp}
+                        </Info>
+                        <Info label="Alamat" lebar>
+                            {detail.alamat}
+                        </Info>
+                        <Info label="Metode bayar">{detail.metode}</Info>
+                        <Info label="Berat">{detail.berat}</Info>
+                        <Info label="Invoice" mono>
+                            {detail.invoice}
+                        </Info>
+                        <Info label="No. resi" mono>
+                            {detail.resi}
+                        </Info>
                     </div>
                 </div>
 
@@ -717,7 +717,6 @@ function PanelDetail({
                         </div>
                     ))}
                 </div>
-
             </div>
 
             <div className="flex flex-col gap-2.5 border-t border-line-softer bg-subtle px-[18px] pt-3 pb-4">

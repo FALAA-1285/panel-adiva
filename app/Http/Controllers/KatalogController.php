@@ -192,6 +192,6 @@ class KatalogController extends Controller
             return '[harga per tier]';
         }
 
-        return $tier->map(fn (array $t) => Rupiah::teks($t['harga']))->implode(' · ');
+        return $tier->map(fn (array $t) => Rupiah::teks((int) $t['harga']))->implode(' · ');
     }
 }

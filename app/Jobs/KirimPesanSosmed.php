@@ -39,6 +39,10 @@ class KirimPesanSosmed implements ShouldQueue
         }
 
         $kontak = $pesan->kontak;
+        if (! $kontak) {
+            return;
+        }
+
         $mid = $pengirim->kirimTeks($kontak->platform === 'FB' ? 'FB' : 'IG', $kontak->id_pengirim, (string) $pesan->teks);
 
         // Meta's echo may have been logged by n8n already (META_APP_ID not set there): keep this one

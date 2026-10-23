@@ -394,7 +394,9 @@ class PelangganController extends Controller
      */
     private function samarkanChat(string $chatId): string
     {
-        [$nomor, $domain] = array_pad(explode('@', $chatId, 2), 2, null);
+        $parts = explode('@', $chatId, 2);
+        $nomor = $parts[0];
+        $domain = $parts[1] ?? null;
 
         if (strlen($nomor) < 11) {
             return $chatId;

@@ -45,9 +45,9 @@ npm run responsif           # cek tidak ada yang meluber ke samping di 1280/1024
 
 ## Dokumen
 
-| Path | Isi |
-|---|---|
-| `CLAUDE.md` | Aturan proyek untuk Claude Code |
-| `docs/kontrak-n8n.md` | Kontrak antara panel dan workflow n8n |
+| Path                      | Isi                                             |
+| ------------------------- | ----------------------------------------------- |
+| `CLAUDE.md`               | Aturan proyek untuk Claude Code                 |
+| `docs/kontrak-n8n.md`     | Kontrak antara panel dan workflow n8n           |
 | `docs/audit-kepadatan.md` | Hasil ukur tiap halaman sebelum desain dirombak |
-| `docs/urutan-prompt.md` | Catatan urutan pembangunan panel |
+| `docs/urutan-prompt.md`   | Catatan urutan pembangunan panel                |

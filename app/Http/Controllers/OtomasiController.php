@@ -286,9 +286,11 @@ class OtomasiController extends Controller
             ->keyBy(fn (WorkflowEvent $e) => (string) ($e->data['jenis_pesan'] ?? ''));
 
         $pesan = collect(self::PESAN_SISTEM)
-            ->filter(fn (array $jenis, string $kode) => $terbaru->has($kode))
             ->map(function (array $jenis, string $kode) use ($terbaru) {
-                $event = $terbaru[$kode];
+                $event = $terbaru->get($kode);
+                if (! $event instanceof WorkflowEvent) {
+                    return null;
+                }
 
                 return [
                     'kode' => $kode,
@@ -299,7 +301,8 @@ class OtomasiController extends Controller
                     'teks' => Str::limit((string) ($event->data['pesan_supervisor'] ?? ''), 150, '…'),
                     'catatan' => $jenis[2],
                 ];
-            });
+            })
+            ->filter();
 
         return array_values($pesan->all());
     }

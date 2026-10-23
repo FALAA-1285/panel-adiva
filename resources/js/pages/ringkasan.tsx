@@ -284,7 +284,9 @@ export default function Ringkasan(props: Props) {
                     aksi={
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-ink-3">
                             <Legenda warna="bg-primary">Omzet</Legenda>
-                            <Legenda warna="bg-line-strong">Jumlah order</Legenda>
+                            <Legenda warna="bg-line-strong">
+                                Jumlah order
+                            </Legenda>
                         </div>
                     }
                     isiClassName="pt-3.5 pr-[18px] pb-2.5 pl-0 max-md:overflow-x-auto"
@@ -897,10 +899,9 @@ function GrafikOmzet({ hari }: { hari: Props['omzet']['hari'] }) {
                     x={(x(i) - lebarBatang / 2).toFixed(1)}
                     y={yOrder(h.order).toFixed(1)}
                     width={lebarBatang.toFixed(1)}
-                    height={Math.max(
-                        0,
-                        GRAFIK.bawah - yOrder(h.order),
-                    ).toFixed(1)}
+                    height={Math.max(0, GRAFIK.bawah - yOrder(h.order)).toFixed(
+                        1,
+                    )}
                     rx="2"
                     fill="var(--color-line-softer)"
                 />

@@ -388,7 +388,7 @@ export default function HalamanPercakapan({
                             />
                         </label>
                         {/* the rail's filters, for screens too narrow to hold it */}
-                        <div className="flex gap-1.5 [scrollbar-width:none] overflow-x-auto xl:hidden">
+                        <div className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto xl:hidden">
                             {[
                                 ...STATUS.map(
                                     ([nilai, label]) =>
@@ -450,8 +450,9 @@ export default function HalamanPercakapan({
                         </span>
                         {muat.tampil < muat.total && (
                             <span className="text-caption text-muted">
-                                Daftar hanya memuat yang terbaru. Pakai pencarian
-                                atau saringan untuk menjangkau yang lebih lama.
+                                Daftar hanya memuat yang terbaru. Pakai
+                                pencarian atau saringan untuk menjangkau yang
+                                lebih lama.
                             </span>
                         )}
                     </div>
@@ -485,7 +486,9 @@ export default function HalamanPercakapan({
                         onTutup={() => setInfo(false)}
                     />
                 )}
-                {!percakapan && <TidakAdaYangDipilih kosong={muat.total === 0} />}
+                {!percakapan && (
+                    <TidakAdaYangDipilih kosong={muat.total === 0} />
+                )}
             </div>
         </AppLayout>
     );

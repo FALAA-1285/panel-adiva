@@ -306,10 +306,16 @@ class TimController extends Controller
             ->groupBy(fn (object $sesi) => $sesi->user_id.'|'.Perangkat::dari($sesi->user_agent))
             ->map(function (Collection $grup) use ($staf, $sesiIni) {
                 $terbaru = $grup->sortByDesc('last_activity')->first();
-                $user = $staf[$terbaru->user_id];
-                $perangkat = Perangkat::dari($terbaru->user_agent);
+                if (! $terbaru) {
+                    return null;
+                }
+                $user = $staf->get($terbaru->user_id);
+                if (! $user) {
+                    return null;
+                }
+                $perangkat = Perangkat::dari((string) $terbaru->user_agent);
                 $ini = $grup->contains('id', $sesiIni);
-                $waktu = Date::createFromTimestamp($terbaru->last_activity);
+                $waktu = Date::createFromTimestamp((int) $terbaru->last_activity);
 
                 return [
                     'kunci' => "web-{$user->id}-{$perangkat}",
@@ -321,7 +327,8 @@ class TimController extends Controller
                     'ini' => $ini,
                     'waktu' => $waktu->getTimestamp(),
                 ];
-            });
+            })
+            ->filter();
 
         $whatsapp = ActivityLog::query()
             ->where('sumber', SumberAktivitas::WhatsApp)
@@ -332,9 +339,12 @@ class TimController extends Controller
             ->groupBy('user_id')
             ->get()
             // taken away with "Keluarkan" until they sign in again
-            ->reject(fn (object $baris) => $staf[$baris->user_id]->wa_dicabut_at !== null)
+            ->reject(fn (object $baris) => ($staf->get($baris->user_id)?->wa_dicabut_at) !== null)
             ->map(function (object $baris) use ($staf) {
-                $user = $staf[$baris->user_id];
+                $user = $staf->get($baris->user_id);
+                if (! $user) {
+                    return null;
+                }
 
                 return [
                     'kunci' => "whatsapp-{$user->id}",
@@ -346,7 +356,8 @@ class TimController extends Controller
                     'ini' => false,
                     'waktu' => Date::parse($baris->waktu)->getTimestamp(),
                 ];
-            });
+            })
+            ->filter();
 
         $saya = $request->user()?->id;
 
