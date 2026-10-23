@@ -45,3 +45,5 @@ yarn-error.log
 /opencode.json
 /opencode.jsonc
 /visual-diff
+
+.vercel
