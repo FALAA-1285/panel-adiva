@@ -2,6 +2,7 @@
     "version": 2,
     "framework": null,
     "buildCommand": "echo 'Assets prebuilt locally'",
+    "outputDirectory": "public",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.7.3"
