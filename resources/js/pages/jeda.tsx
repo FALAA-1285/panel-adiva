@@ -340,21 +340,6 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                 Adiva saat melanjutkan percakapan.
                             </div>
                         </Kartu>
-
-                        <div className="flex flex-col gap-2 rounded-card border border-line bg-subtle px-4 py-3.5">
-                            <div className="text-body font-semibold text-ink">
-                                Perintah WhatsApp yang setara
-                            </div>
-                            <div className="font-mono text-caption leading-[1.7] whitespace-pre-line text-ink">
-                                {
-                                    'JEDA falah 2 jam | komplain\nJEDA TERAKHIR\nLANJUT falah | catatan\nDAFTAR JEDA'
-                                }
-                            </div>
-                            <div className="text-caption text-muted">
-                                Panel dan WhatsApp menulis ke tabel yang sama,
-                                jadi keduanya selalu sinkron.
-                            </div>
-                        </div>
                     </div>
                 </section>
             </IsiHalaman>
