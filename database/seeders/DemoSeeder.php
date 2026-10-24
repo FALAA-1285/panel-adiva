@@ -809,7 +809,7 @@ class DemoSeeder extends Seeder
                 [
                     ['2026-09-28 13:02', 'Chat pertama masuk (3 pesan digabung). Dikenali sebagai reseller untuk kantin sekolah.', ['jenis' => 'PERCAKAPAN']],
                     ['2026-09-28 13:03', 'Adiva mengirim foto Molreng Reguler Bawang Original dari katalog.', ['jenis' => 'PERCAKAPAN']],
-                    ['2026-09-28 13:05', 'Info pengiriman dicek: ekspedisi dengan ongkir COD ke kurir, packing Rp5.000. Customer memilih JNE.', ['jenis' => 'PERCAKAPAN']],
+                    ['2026-09-28 13:05', 'Info pengiriman dicek: ekspedisi dengan ongkir COD ke kurir. Customer memilih JNE.', ['jenis' => 'PERCAKAPAN']],
                     ['2026-09-28 13:06', 'Dicatat Adiva dari chat · supervisor dikabari dengan tombol ACC',
                         ['jenis' => 'DICATAT', 'nada' => 'blue', 'data' => ['lengkap' => 'Adiva mencatat order dan mengabari supervisor lewat WhatsApp dengan tombol ACC.']]],
                 ]],

@@ -195,9 +195,20 @@ class DetailPesananController extends Controller
         return ['nilai' => ($o->ongkir > 0 ? Rupiah::teks($o->ongkir).' · ' : '').'COD ke kurir', 'cod' => true];
     }
 
+    /**
+     * "JNE REG", or "JNE REG (COD)" for "EKSPEDISI (ONGKIR COD) - JNE REG".
+     */
     private function namaKurir(LogOrder $o): ?string
     {
-        return $o->kurir_final ?? $o->kurir_pilihan;
+        $kurir = $o->kurir_final ?? $o->kurir_pilihan;
+
+        if ($kurir === null || ! $o->ongkirCod()) {
+            return $kurir;
+        }
+
+        $nama = trim((string) preg_replace('/^\s*EKSPEDISI\s*\(ONGKIR COD\)\s*-?\s*/i', '', $kurir));
+
+        return ($nama !== '' ? $nama : 'ekspedisi').' (COD)';
     }
 
     private function waktu(?CarbonInterface $waktu): string

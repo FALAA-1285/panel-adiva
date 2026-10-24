@@ -133,7 +133,9 @@ test('an ONGKIR COD order bills products and packing; the shipping cost is only 
     $this->actingAs(User::factory()->falah()->create())
         ->get('/pesanan/ORD-COD')
         ->assertInertia(fn (Assert $page) => $page
+            ->where('total.ongkir.label', 'Ongkir JNE (COD)')
             ->where('total.ongkir.nilai', 'Rp25.000 · COD ke kurir')
+            ->where('invoice.catatan', 'Ongkir ekspedisi dibayar COD ke kurir saat paket sampai, tidak ikut ditransfer.')
             ->where('total.ongkir.cod', true)
             ->where('total.packing', 'Rp26.000')
             ->where('total.tagihan', 'Rp626.000')
