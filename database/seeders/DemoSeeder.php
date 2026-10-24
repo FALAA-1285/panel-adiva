@@ -67,6 +67,9 @@ class DemoSeeder extends Seeder
      */
     public function run(): void
     {
+        // the demo's history is written as drawn; status changes while seeding are not "Sistem" lines
+        DB::statement("select set_config('panel.tanpa_log_status', 'on', false)");
+
         $this->nomorBot();
         $this->staf();
         $this->katalog();

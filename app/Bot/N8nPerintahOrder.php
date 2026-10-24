@@ -4,6 +4,8 @@ namespace App\Bot;
 
 use App\Enums\AksiPesanan;
 use App\Enums\KategoriAktivitas;
+use App\Enums\SumberAktivitas;
+use App\Models\ActivityLog;
 use App\Models\LogOrder;
 use App\Models\User;
 use App\Support\Aktivitas;
@@ -22,6 +24,7 @@ class N8nPerintahOrder implements PerintahOrder
     public function jalankan(AksiPesanan $aksi, LogOrder $order, User $oleh, ?string $catatan = null): void
     {
         $catatan = filled($catatan) ? trim((string) $catatan) : null;
+        $mulai = now()->subSecond();
 
         $this->n8n->kirim($aksi->value, [
             'order_id' => $order->order_id,
@@ -29,8 +32,14 @@ class N8nPerintahOrder implements PerintahOrder
             'oleh' => ['id' => $oleh->id, 'nama' => $oleh->name, 'nomor_wa' => $oleh->nomor_wa],
         ]);
 
-        // n8n changed the order; log what the panel user did, with the new values
+        // n8n changed the order; log what the panel user did, with the new values. The status
+        // trigger saw n8n's write as "Sistem": this user's line below replaces it.
         $order->refresh();
+        ActivityLog::query()
+            ->where('subjek_type', $order->getMorphClass())->where('subjek_id', $order->id)
+            ->where('sumber', SumberAktivitas::Sistem)->where('aksi', 'Status order berubah')
+            ->where('waktu', '>=', $mulai)
+            ->delete();
         Aktivitas::catat($oleh, KategoriAktivitas::Pesanan, "{$aksi->value} order", collect([
             $order->order_id,
             match ($aksi) {

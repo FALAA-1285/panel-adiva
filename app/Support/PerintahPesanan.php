@@ -62,6 +62,8 @@ class PerintahPesanan
         $catatan = filled($catatan) ? trim((string) $catatan) : null;
 
         DB::transaction(function () use ($aksi, $order, $oleh, $catatan) {
+            // this command writes its own Log aktivitas line; the status trigger need not
+            DB::statement("select set_config('panel.tanpa_log_status', 'on', true)");
             $jamBayar = $order->jamBatasBayar();
             [$catatanOngkir, $packing] = $aksi === AksiPesanan::Acc ? self::pisahPacking($catatan) : [$catatan, null];
             $ongkir = self::ongkir($catatanOngkir);

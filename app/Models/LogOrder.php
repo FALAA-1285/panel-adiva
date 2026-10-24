@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\JenisNotifikasi;
 use App\Enums\StatusOrder;
 use App\Enums\TipeCustomer;
 use App\Models\Concerns\ZonaWaktuAplikasi;
@@ -339,34 +338,5 @@ class LogOrder extends Model
             'batas_bayar_at' => 'datetime',
             'diingatkan_at' => 'datetime',
         ];
-    }
-
-    /**
-     * When the order moves on, the notification that asked someone to move it is done.
-     * Here rather than in each command path, so the panel buttons, the bot, and demo
-     * mode all close it the same way.
-     */
-    protected static function booted(): void
-    {
-        static::updated(function (LogOrder $order) {
-            if (! $order->wasChanged('status_order')) {
-                return;
-            }
-
-            $sebelum = StatusOrder::tryFrom((string) $order->getRawOriginal('status_order'));
-
-            $selesai = array_values(array_filter([
-                // ACC-ed, rejected, or cancelled: nobody needs to ACC it any more
-                $sebelum === StatusOrder::MenungguKonfirmasi ? JenisNotifikasi::OrderBaru : null,
-                // paid, or called off: the transfer proof no longer waits to be checked
-                $sebelum === StatusOrder::Diacc ? JenisNotifikasi::BuktiMasuk : null,
-                // an employee order handled by the PJ
-                $sebelum === StatusOrder::Karyawan ? JenisNotifikasi::OrderKaryawan : null,
-            ]));
-
-            if ($selesai !== []) {
-                Notifikasi::selesaikan($selesai, orderId: $order->id);
-            }
-        });
     }
 }

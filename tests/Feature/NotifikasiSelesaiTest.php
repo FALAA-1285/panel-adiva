@@ -1,11 +1,15 @@
 <?php
 
+use App\Bot\LapisanData;
 use App\Enums\JenisNotifikasi;
 use App\Enums\StatusOrder;
+use App\Enums\SumberAktivitas;
+use App\Models\ActivityLog;
 use App\Models\CrmCustomer;
 use App\Models\JedaBot;
 use App\Models\LogOrder;
 use App\Models\Notifikasi;
+use App\Models\User;
 
 test('an order leaving Menunggu ACC closes its "order baru" notification', function () {
     $order = LogOrder::factory()->status(StatusOrder::MenungguKonfirmasi)->create();
@@ -58,4 +62,29 @@ test('ending a pause closes the customer\'s pause notices', function () {
     $jeda->update(['selesai_at' => now(), 'diakhiri_oleh' => 'Falah']);
 
     expect($notif->fresh()->selesai_at)->not->toBeNull();
+});
+
+test('a status the bot changes outside the panel is logged as Sistem and closes the notice', function () {
+    $order = LogOrder::factory()->status(StatusOrder::Diacc)->create(['order_id' => 'ORD-BB']);
+    $bukti = Notifikasi::factory()->jenis(JenisNotifikasi::BuktiMasuk)->belumDibaca()->create(['log_order_id' => $order->id]);
+
+    // the Batas Bayar workflow closes an unpaid order through the n8n adaptor
+    LapisanData::ubahOrder(['order_id' => 'ORD-BB', 'status_order' => 'BATAL OTOMATIS']);
+
+    expect($bukti->fresh()->selesai_at)->not->toBeNull()
+        ->and(ActivityLog::query()->sole())
+        ->pelaku->toBe('Sistem')
+        ->sumber->toBe(SumberAktivitas::Sistem)
+        ->detail->toBe('ORD-BB · DIACC → BATAL OTOMATIS');
+});
+
+test('a command from the panel writes its own line, not a Sistem one', function () {
+    $order = LogOrder::factory()->status(StatusOrder::MenungguKonfirmasi)->create(['order_id' => 'ORD-PN']);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->post('/pesanan/ORD-PN/aksi', ['aksi' => 'TOLAK', 'catatan' => 'stok habis'])
+        ->assertSessionHasNoErrors();
+
+    expect($order->refresh()->status_order)->toBe(StatusOrder::Ditolak)
+        ->and(ActivityLog::query()->pluck('pelaku')->all())->toBe(['Falah']);
 });
