@@ -27,6 +27,8 @@ class CatatOrderAdiva
             return null;
         }
 
+        $putusan = CekHargaOrder::periksa($rb, $putusan);
+
         $karyawan = (bool) preg_match('/POTONG GAJI/i', (string) $rb['metode_bayar']);
 
         LapisanData::catatOrder([
@@ -56,8 +58,14 @@ class CatatOrderAdiva
         ]);
 
         $order = LogOrder::query()->where('order_id', $rb['order_id'])->first();
+
+        // the packing fee is billed with the products (n8n_catat_order predates it)
+        if ($order !== null && filled($rb['order_packing'] ?? null)) {
+            $order->update(['biaya_packing' => (int) preg_replace('/\D/', '', (string) $rb['order_packing'])]);
+        }
+
         $nama = filled($rb['nama_penerima']) ? $rb['nama_penerima'] : (string) $rb['nama'];
-        $total = (int) preg_replace('/\D/', '', (string) $rb['order_total']) + (int) preg_replace('/\D/', '', (string) $rb['order_ongkir']);
+        $total = $order?->tagihan() ?? (int) preg_replace('/\D/', '', (string) $rb['order_total']) + (int) preg_replace('/\D/', '', (string) $rb['order_ongkir']);
 
         if ($karyawan) {
             KabarBot::notifikasi(JenisNotifikasi::OrderKaryawan, 'Order karyawan', "{$nama} · {$rb['order_id']} · diteruskan ke Bu Sarah", $customer, $order, 'SARAH_WA');

@@ -2,6 +2,8 @@
 
 namespace App\Bot;
 
+use App\Support\AturanKirim;
+
 /**
  * Adiva's structured answer turned into what is sent and saved: the WhatsApp text in up to
  * three bubbles, the CRM rating, the running order draft, and the order itself when it is
@@ -120,11 +122,20 @@ final class RapikanBalasan
             }
         }
 
-        // === Ongkir Rp0 untuk pesanan yang dikirim kurir: biasanya paket gratis ongkir ===
         $kurirAI = Js::teks(Js::atau($out['kurir_pilihan'] ?? null, ''));
         $metodeAI = Js::teks(Js::atau($out['metode_bayar'] ?? null, ''));
-        if ($orderSiap && $kurirAI !== '' && ! preg_match('/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR/i', $kurirAI.' '.$metodeAI) && ! ($ongkirAI > 0)) {
+
+        // === Pengiriman EKSPEDISI = ONGKIR COD (ongkir dibayar ke kurir, ekspedisi & nominal ditentukan CS). Paket gratis ongkir dikecualikan. ===
+        $ongkirCod = AturanKirim::jadiCod($kurirAI, $metodeAI);
+        $kurirFinal = $ongkirCod ? AturanKirim::kurirCod($kurirAI) : $kurirAI;
+
+        // === Ongkir Rp0 untuk pesanan yang dikirim kurir (bukan COD): biasanya paket gratis ongkir ===
+        if ($orderSiap && $kurirAI !== '' && ! $ongkirCod && ! preg_match('/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR/i', $kurirAI.' '.$metodeAI) && ! ($ongkirAI > 0)) {
             $tambah('ℹ️ Ongkir tercatat *Rp0* (kurir '.$kurirAI.'). Bot menganggap ini paket gratis ongkir — mohon pastikan sebelum ACC.');
+        }
+
+        if ($orderSiap && $ongkirCod) {
+            $tambah('📦 Dikirim *EKSPEDISI — ONGKIR COD* ('.$kurirFinal.'). Ongkir dibayar customer ke kurir. Kalau mau mencantumkan ongkir di invoice sebagai info, tulis saat ACC, contoh: *ACC ORD-xxx 25000*.');
         }
 
         // === Kurir motor Bang Bana ===
@@ -459,14 +470,15 @@ final class RapikanBalasan
             'order_items' => Js::teks(Js::atau($out['order_items'] ?? null, '')),
             'order_total' => Js::teks(Js::atau($totalFinal, '')),
             'peringatan_total' => $peringatan,
-            'order_ongkir' => $ongkirAI ? (string) $ongkirAI : '',
+            'order_ongkir' => $ongkirAI && ! $ongkirCod ? (string) $ongkirAI : '',
+            'order_packing' => (string) (AturanKirim::packing((float) str_replace(',', '.', (string) ($out['berat_kg'] ?? '')), (int) $totalFinal, $kurirAI, $metodeAI, $config) ?: ''),
             'nama_penerima' => Js::teks(Js::atau($out['nama_penerima'] ?? null, '')),
             'alamat_lengkap' => Js::teks(Js::atau($out['alamat_lengkap'] ?? null, '')),
             'kecamatan' => Js::teks(Js::atau($out['kecamatan'] ?? null, '')),
             'kode_pos' => Js::teks(Js::atau($out['kode_pos'] ?? null, '')),
             'berat_kg' => ($out['berat_kg'] ?? null) !== null ? Js::teks($out['berat_kg']) : '',
-            'kurir_pilihan' => $kurirAI,
-            'metode_bayar' => $metodeBayar,
+            'kurir_pilihan' => $kurirFinal,
+            'metode_bayar' => $ongkirCod ? AturanKirim::METODE_COD : $metodeBayar,
             'no_hp' => Js::teks(Js::atau($out['no_hp'] ?? null, '')),
             'kelurahan' => Js::teks(Js::atau($out['kelurahan'] ?? null, '')),
             'kota_kirim' => Js::teks(Js::atau($out['kota'] ?? null, '')),

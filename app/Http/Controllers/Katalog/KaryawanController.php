@@ -42,7 +42,7 @@ class KaryawanController extends Controller
     public function index(): Response
     {
         $bulanIni = [now()->startOfMonth(), now()->endOfMonth()];
-        $nilai = DB::raw('total_produk + ongkir');
+        $nilai = DB::raw(LogOrder::sqlTagihan());
         $pj = User::pjKaryawan();
         $namaPj = $pj->name ?? Peran::PjKaryawan->label();
 
@@ -66,7 +66,7 @@ class KaryawanController extends Controller
                     'kode' => $order->order_id,
                     'karyawan' => $order->karyawan->nama ?? $order->nama_penerima,
                     'item' => $order->items->map(fn (OrderItem $item) => "{$item->nama_produk} ×{$item->qty}")->implode(', '),
-                    'nilai' => Rupiah::teks($order->total_produk + $order->ongkir),
+                    'nilai' => Rupiah::teks($order->tagihan()),
                     'status' => $this->status($order, $namaPj),
                 ]),
             'karyawan' => Karyawan::query()
@@ -121,7 +121,7 @@ class KaryawanController extends Controller
             ->whereBetween('tanggal', $bulanIni)
             ->toBase()
             ->selectRaw(
-                'count(*) as jumlah, count(*) filter (where status_order <> ?) as berjalan, coalesce(sum(total_produk + ongkir), 0) as total',
+                'count(*) as jumlah, count(*) filter (where status_order <> ?) as berjalan, coalesce(sum('.LogOrder::sqlTagihan().'), 0) as total',
                 [StatusOrder::Selesai->value],
             )
             ->first();
@@ -242,7 +242,7 @@ class KaryawanController extends Controller
                     $o->karyawan->bagian ?? '',
                     $o->karyawan->nomor_wa ?? $o->nomor_wa,
                     $o->items->map(fn (OrderItem $item) => "{$item->nama_produk} ×{$item->qty}")->implode(', '),
-                    $o->total_produk + $o->ongkir,
+                    $o->tagihan(),
                     $this->status($o, $pj)['label'],
                 ]), escape: '');
             });

@@ -64,7 +64,7 @@ test('what the invoice prints: the customer without emoji, the lines, the totals
         ->and($data['alamat'])->toBe('Jl. Kalpataru 18, Dinoyo, Lowokwaru, Malang, 65144')
         ->and($data['tgl_invoice'])->toBe('28/09/2026')
         ->and($data['platform'])->toBe('WHATSAPP/TF')
-        ->and($data['admin'])->toBe('FALAH')
+        ->and($data['admin'])->toBe('ADIVA')
         ->and($data['subtotal'])->toBe(30000)
         ->and($data['grand_total'])->toBe(68000)
         ->and($data['terbilang'])->toBe('Enam Puluh Delapan Ribu Rupiah')
@@ -141,4 +141,18 @@ test('the text invoice carries the same figures', function () {
         '*Total bayar: Rp68.000*',
         '💳 *Pembayaran transfer ke:*'."\nBCA 123 a.n. Bang Bana",
     );
+});
+
+test('an ONGKIR COD invoice bills products and packing; the shipping cost is paid to the courier', function () {
+    $order = ($this->buat)(['metode_bayar' => 'TRANSFER (ONGKIR COD)', 'kurir_pilihan' => 'EKSPEDISI (ONGKIR COD) - JNE', 'ongkir' => 25000, 'biaya_packing' => 6000]);
+    $data = InvoiceAdiva::data($order);
+
+    expect($data['shipping_cost'])->toBe(0)
+        ->and($data['packing_cost'])->toBe(6000)
+        ->and($data['grand_total'])->toBe(36000)
+        ->and($data['notes1'])->toBe('KIRIM - EKSPEDISI (ONGKIR COD) - JNE - ongkir Rp25.000 bayar ke kurir')
+        ->and(InvoiceAdiva::teks($order, false))
+        ->toContain('🚚 Ongkir ekspedisi: Rp25.000 *dibayar COD ke kurir saat paket sampai* (tidak ikut transfer)')
+        ->toContain('📦 Packing: Rp6.000')
+        ->toContain('*Total bayar: Rp36.000*');
 });

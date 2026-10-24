@@ -7,6 +7,7 @@ use App\Enums\StatusBroadcast;
 use App\Models\Broadcast;
 use App\Models\BroadcastPenerima;
 use App\Models\Karyawan;
+use App\Models\LogOrder;
 use App\Support\Aktivitas;
 use App\Support\AturanBroadcast;
 use App\Support\CsvSanitizer;
@@ -143,7 +144,7 @@ class BroadcastController extends Controller
         $dibalas = (int) ($hitung->dibalas ?? 0);
         $stop = (int) ($hitung->stop ?? 0);
         $nilai = (int) (clone $penerima)->join('log_order', 'log_order.id', '=', 'broadcast_penerima.log_order_id')
-            ->sum(DB::raw('log_order.total_produk + log_order.ongkir'));
+            ->sum(DB::raw(LogOrder::sqlTagihan('log_order')));
 
         $persen = fn (int $n) => number_format($terkirim > 0 ? $n / $terkirim * 100 : 0, 1, ',', '.').'%';
 

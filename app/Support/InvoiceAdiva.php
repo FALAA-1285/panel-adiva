@@ -41,8 +41,13 @@ class InvoiceAdiva
         }
 
         $subtotal = (int) array_sum(array_map(fn ($i) => $i['qty'] * $i['harga'], $item));
-        $ongkir = (int) $order->ongkir;
-        $total = $subtotal + $ongkir;
+        $cod = $order->ongkirCod();
+        // an ONGKIR COD cost is paid to the courier: shown in the notes, not billed
+        $ongkir = $cod ? 0 : (int) $order->ongkir;
+        $packing = (int) $order->biaya_packing;
+        $total = $subtotal + $ongkir + $packing;
+        $kirim = 'KIRIM - '.($order->kurir_pilihan ?: '-')
+            .($cod ? ($order->ongkir > 0 ? ' - ongkir '.Rupiah::teks($order->ongkir).' bayar ke kurir' : ' - ongkir bayar ke kurir') : '');
 
         return [
             'customer' => self::rapi($order->nama_penerima ?: '-'),
@@ -54,17 +59,18 @@ class InvoiceAdiva
             'tgl_invoice' => $tanggal,
             'estimated_shipping' => $tanggal,
             'platform' => 'WHATSAPP/'.($gaji ? 'POTONG GAJI' : ($bayarDiTempat ? 'CASH' : 'TF')),
-            'admin' => mb_strtoupper($oleh?->name ?: 'ADMIN'),
+            // an invoice from the chatbot is always in Adiva's name, whoever pressed ACC
+            'admin' => 'ADIVA',
             'halaman' => array_chunk(array_map(fn ($i) => [...$i, 'nama' => self::rapi($i['nama'])], $item), self::BARIS_PER_HALAMAN),
             'subtotal' => $subtotal,
             'shipping_cost' => $ongkir,
-            'packing_cost' => 0,
+            'packing_cost' => $packing,
             'diskon_produk' => 0,
             'diskon_ongkir' => 0,
             'total_amount' => $total,
             'grand_total' => $total,
             'terbilang' => Terbilang::rupiah($total),
-            'notes1' => $gaji ? 'AMBIL KANTOR' : ($ambil ? 'AMBIL '.mb_strtoupper($lokasi) : 'KIRIM - '.($order->kurir_pilihan ?: '-')),
+            'notes1' => $gaji ? 'AMBIL KANTOR' : ($ambil ? 'AMBIL '.mb_strtoupper($lokasi) : $kirim),
             'notes2' => $lunas ? 'LUNAS' : ($gaji ? 'POTONG GAJI' : 'BELUM LUNAS'),
             'catatan_bayar' => self::catatanBayar($gaji, $bayarDiTempat, $lokasi),
             'catatan_tukar' => 'Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan',
@@ -136,7 +142,9 @@ class InvoiceAdiva
             ? ['• - (1 x '.$rp((int) $order->total_produk).') — '.$rp((int) $order->total_produk)]
             : $order->items->map(fn ($i) => "• {$i->nama_produk} ({$i->qty} x ".$rp($i->harga_satuan).') — '.$rp($i->qty * $i->harga_satuan))->all();
         $subtotal = PesanPerintah::totalProduk($order);
+        $cod = $order->ongkirCod();
         $ongkir = (int) $order->ongkir;
+        $packing = (int) $order->biaya_packing;
 
         if ($bayarDiTempat) {
             $bayar = "Pembayaran dilakukan langsung *di tempat* saat pengambilan di {$lokasi}. Cukup tunjukkan pesan ini ke tim kami ya kak 🙏";
@@ -158,8 +166,11 @@ class InvoiceAdiva
             .($ambil ? "Pengambilan: {$lokasi}\n" : ($kurir !== '' ? "Kurir: {$kurir}\n" : ''))
             ."\n📦 *Rincian pesanan*\n".implode("\n", $baris)."\n\n"
             .'💰 Total produk: '.$rp($subtotal)."\n"
-            .($ongkir > 0 ? '🚚 Ongkir: '.$rp($ongkir)."\n" : '')
-            .'*Total bayar: '.$rp($subtotal + $ongkir)."*\n\n"
+            .($cod
+                ? '🚚 Ongkir ekspedisi: '.($ongkir > 0 ? $rp($ongkir).' ' : '')."*dibayar COD ke kurir saat paket sampai* (tidak ikut transfer)\n"
+                : ($ongkir > 0 ? '🚚 Ongkir: '.$rp($ongkir)."\n" : ''))
+            .($packing > 0 ? '📦 Packing: '.$rp($packing)."\n" : '')
+            .'*Total bayar: '.$rp($subtotal + $packing + ($cod ? 0 : $ongkir))."*\n\n"
             .$bayar;
     }
 

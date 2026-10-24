@@ -44,7 +44,10 @@ type Invoice = {
     order: string;
     item: { nama: string; qty: number; harga: string; subtotal: string }[];
     produk: string;
-    ongkir: { label: string; nilai: string } | null;
+    /** cod: paid to the courier, shown for information and not in the total. */
+    ongkir: { label: string; nilai: string; cod: boolean } | null;
+    packing: string | null;
+    admin: string;
     total: string;
     rekening: string | null;
     ditahan: string | null;
@@ -64,7 +67,8 @@ type Props = {
     ubahItem: { alasan: string | null; isian: BarisItem[] };
     total: {
         produk: string;
-        ongkir: { label: string; nilai: string } | null;
+        ongkir: { label: string; nilai: string; cod: boolean } | null;
+        packing: string | null;
         tagihan: string;
     };
     pengiriman: {
@@ -223,6 +227,12 @@ export default function DetailPesanan({
                         <div className="flex text-body text-ink-3">
                             <span className="grow">{total.ongkir.label}</span>
                             <span>{total.ongkir.nilai}</span>
+                        </div>
+                    )}
+                    {total.packing && (
+                        <div className="flex text-body text-ink-3">
+                            <span className="grow">Packing</span>
+                            <span>{total.packing}</span>
                         </div>
                     )}
                     <div className="flex border-t border-line-soft pt-1.5 text-panel font-semibold">
@@ -472,6 +482,8 @@ function KertasInvoice({ invoice }: { invoice: Invoice }) {
                     <div>{invoice.tanggal}</div>
                     <div className="mt-1 text-muted">Order</div>
                     <div className="font-mono">{invoice.order}</div>
+                    <div className="mt-1 text-muted">Admin</div>
+                    <div>{invoice.admin}</div>
                 </div>
             </div>
 
@@ -513,8 +525,21 @@ function KertasInvoice({ invoice }: { invoice: Invoice }) {
                             <span className="text-muted">
                                 {invoice.ongkir.label}
                             </span>
-                            <span className="w-[78px] text-right">
+                            <span
+                                className={cn(
+                                    'text-right',
+                                    invoice.ongkir.cod ? 'text-muted' : 'w-[78px]',
+                                )}
+                            >
                                 {invoice.ongkir.nilai}
+                            </span>
+                        </div>
+                    )}
+                    {invoice.packing && (
+                        <div className="flex gap-6">
+                            <span className="text-muted">Packing</span>
+                            <span className="w-[78px] text-right">
+                                {invoice.packing}
                             </span>
                         </div>
                     )}

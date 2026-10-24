@@ -27,12 +27,14 @@ class PerintahPesanan
     public static function alasanTidakBerlaku(AksiPesanan $aksi, LogOrder $order, User $oleh, ?string $catatan = null): ?string
     {
         $pickup = $order->ambil_sendiri;
+        [$catatan, $packing] = $aksi === AksiPesanan::Acc ? self::pisahPacking($catatan) : [$catatan, null];
         $ongkir = self::ongkir($catatan);
 
         $alasan = match (true) {
             $aksi === AksiPesanan::Siap && ! $pickup => 'SIAP hanya untuk pesanan ambil sendiri',
             $aksi === AksiPesanan::Kirim && $pickup => 'Pesanan ambil sendiri tidak dikirim kurir',
             $aksi === AksiPesanan::Acc && $ongkir === false => 'Tulis ongkir dalam rupiah, mis. 25000 atau gratis',
+            $aksi === AksiPesanan::Acc && $packing === false => 'Tulis packing dalam rupiah, mis. packing 5000 atau packing gratis',
             $aksi === AksiPesanan::Acc && $ongkir !== null && $pickup => 'Pesanan ambil sendiri tidak memakai ongkir',
             self::revisiOngkir($aksi, $order, $ongkir) => null,
             $aksi === AksiPesanan::Acc && $order->status_order === StatusOrder::Diacc && $order->lunas_at === null => 'Order sudah di-ACC · tulis ongkir baru di catatan untuk revisi ongkir',
@@ -62,7 +64,8 @@ class PerintahPesanan
 
         DB::transaction(function () use ($aksi, $order, $oleh, $catatan) {
             $jamBayar = $order->jamBatasBayar();
-            $ongkir = self::ongkir($catatan);
+            [$catatanOngkir, $packing] = $aksi === AksiPesanan::Acc ? self::pisahPacking($catatan) : [$catatan, null];
+            $ongkir = self::ongkir($catatanOngkir);
             $revisi = self::revisiOngkir($aksi, $order, $ongkir);
             $catatanBaru = self::catatanBerantai($aksi, $order, $catatan, $revisi, $ongkir);
             $ubah = match ($aksi) {
@@ -71,6 +74,7 @@ class PerintahPesanan
                     'invoice_number' => $revisi ? $order->invoice_number : self::invoiceBerikutnya(),
                     'batas_bayar_at' => $jamBayar === null ? null : JamKerja::dariPengaturan()->tambah(now(), $jamBayar),
                     ...(is_int($ongkir) ? ['ongkir' => $ongkir] : []),
+                    ...(is_int($packing) ? ['biaya_packing' => $packing] : []),
                     'catatan_admin' => $catatanBaru,
                 ],
                 AksiPesanan::Lunas => ['lunas_at' => now(), 'catatan_admin' => $catatanBaru],
@@ -102,7 +106,8 @@ class PerintahPesanan
                 'teks' => collect([
                     "{$aksi->value} dari panel",
                     $revisi ? 'revisi ongkir · invoice dikirim ulang' : $aksi->keterangan(),
-                    is_int($ongkir) ? 'ongkir '.($ongkir === 0 ? 'gratis' : Rupiah::teks($ongkir)) : null,
+                    is_int($ongkir) ? 'ongkir '.($ongkir === 0 ? 'gratis' : Rupiah::teks($ongkir)).($order->ongkirCod() ? ' (COD ke kurir)' : '') : null,
+                    is_int($packing) ? 'packing '.($packing === 0 ? 'gratis' : Rupiah::teks($packing)) : null,
                     self::alasan($aksi, $catatan),
                 ])->filter()->implode(' · '),
             ]);
@@ -113,7 +118,7 @@ class PerintahPesanan
                 match ($aksi) {
                     AksiPesanan::Acc => "invoice {$order->invoice_number} terkirim",
                     AksiPesanan::Kirim => $order->no_resi ? "resi {$order->no_resi}" : 'tanpa resi',
-                    AksiPesanan::Lunas => Rupiah::teks($order->total_produk + $order->ongkir),
+                    AksiPesanan::Lunas => Rupiah::teks($order->tagihan()),
                     default => $aksi->keterangan(),
                 },
                 self::alasan($aksi, $catatan),
@@ -182,6 +187,30 @@ class PerintahPesanan
     private static function alasan(AksiPesanan $aksi, ?string $catatan): ?string
     {
         return in_array($aksi, [AksiPesanan::Batal, AksiPesanan::Tolak, AksiPesanan::Tutup], true) ? $catatan : null;
+    }
+
+    /**
+     * "25000 packing 5000" → ["25000", 5000]: the packing fee typed with ACC (as n8n reads
+     * "ACC ORD-xxx 25000 packing 5000"), and the rest. Null when none was typed, false
+     * when it is not an amount.
+     *
+     * @return array{0: string|null, 1: int|false|null}
+     */
+    public static function pisahPacking(?string $catatan): array
+    {
+        if (! preg_match('/\bpacking\s*:?\s*(\S+)/i', (string) $catatan, $m)) {
+            return [$catatan, null];
+        }
+
+        $sisa = trim((string) str_replace($m[0], '', (string) $catatan));
+        $nilai = self::ongkir($m[1]);
+
+        // the shared reader refuses small amounts; packing may be a few thousand rupiah
+        if ($nilai === false && preg_match('/^(?:rp\.?)?(\d[\d.]*)$/i', $m[1], $n)) {
+            $nilai = (int) str_replace('.', '', $n[1]);
+        }
+
+        return [$sisa === '' ? null : $sisa, $nilai];
     }
 
     /**

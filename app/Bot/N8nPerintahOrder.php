@@ -39,7 +39,7 @@ class N8nPerintahOrder implements PerintahOrder
                     is_int($ongkir = PerintahPesanan::ongkir($catatan)) ? 'ongkir '.($ongkir === 0 ? 'gratis' : Rupiah::teks($ongkir)) : null,
                 ])->filter()->implode(' · ') ?: null,
                 AksiPesanan::Kirim => $order->no_resi ? "resi {$order->no_resi}" : null,
-                AksiPesanan::Lunas => Rupiah::teks($order->total_produk + $order->ongkir),
+                AksiPesanan::Lunas => Rupiah::teks($order->tagihan()),
                 default => $aksi->keterangan(),
             },
             in_array($aksi, [AksiPesanan::Batal, AksiPesanan::Tolak, AksiPesanan::Tutup], true) ? $catatan : null,

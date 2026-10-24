@@ -63,6 +63,7 @@ type Detail = {
     item: { nama: string; qty: number; subtotal: string }[];
     produk: string;
     ongkir: string;
+    packing: string | null;
     kurir: string | null;
     total: string;
     penerima: string;
@@ -685,6 +686,12 @@ function PanelDetail({
                         <span className="grow">Ongkir · {detail.kurir}</span>
                         <span>{detail.ongkir}</span>
                     </div>
+                    {detail.packing && (
+                        <div className="flex text-body text-ink-3">
+                            <span className="grow">Packing</span>
+                            <span>{detail.packing}</span>
+                        </div>
+                    )}
                     <div className="flex text-panel font-semibold">
                         <span className="grow">Total tagihan</span>
                         <span>{detail.total}</span>

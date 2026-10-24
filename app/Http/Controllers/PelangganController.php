@@ -368,14 +368,14 @@ class PelangganController extends Controller
     private function pesanan(CrmCustomer $c): array
     {
         $order = LogOrder::query()->where('crm_customer_id', $c->id)->with('items')->latest('tanggal')->get();
-        $nilai = $order->sum(fn (LogOrder $o) => $o->total_produk + $o->ongkir);
+        $nilai = $order->sum(fn (LogOrder $o) => $o->tagihan());
         $terakhir = $order->first();
 
         return [
             'jumlah' => $order->count(),
             'nilai' => $nilai >= 1_000_000 ? 'Rp'.number_format($nilai / 1_000_000, 2, ',', '.').' jt' : Rupiah::teks($nilai),
             'lunas' => Rupiah::teks($order->filter(fn (LogOrder $o) => $o->lunas_at !== null && ! in_array($o->status_order, StatusOrder::batal(), true))
-                ->sum(fn (LogOrder $o) => $o->total_produk + $o->ongkir)),
+                ->sum(fn (LogOrder $o) => $o->tagihan())),
             'terakhir' => $terakhir ? [
                 'id' => $terakhir->order_id,
                 // "Molreng ×40, Basreng ×30 · JNE REG"
@@ -383,7 +383,7 @@ class PelangganController extends Controller
                     $terakhir->items->map(fn (OrderItem $i) => strtok($i->nama_produk, ' ')." ×{$i->qty}")->implode(', '),
                     $terakhir->kurir(),
                 ])->filter()->implode(' · '),
-                'total' => Rupiah::teks($terakhir->total_produk + $terakhir->ongkir),
+                'total' => Rupiah::teks($terakhir->tagihan()),
                 'status' => ['label' => $terakhir->status_order->label(), 'nada' => $terakhir->status_order->nada()],
             ] : null,
         ];

@@ -122,7 +122,8 @@ final readonly class LampiranMasuk
     {
         $order->loadMissing('items');
         $produk = (int) $order->items->sum(fn ($i) => $i->qty * $i->harga_satuan) ?: (int) $order->total_produk;
-        $ongkir = (int) $order->ongkir;
+        $ongkir = $order->ongkirCod() ? 0 : (int) $order->ongkir; // ongkir COD is not transferred
+        $packing = (int) $order->biaya_packing;
         $rincian = $order->items->isEmpty()
             ? '-'
             : $order->items->map(fn ($i) => "• {$i->nama_produk} ({$i->qty}) — ".Rupiah::teks($i->qty * $i->harga_satuan))->implode("\n");
@@ -138,7 +139,9 @@ final readonly class LampiranMasuk
             ."📦 *Rincian pesanan*\n{$rincian}\n\n"
             .'💰 *Total produk:* '.Rupiah::teks((int) $order->total_produk)."\n"
             .($ongkir > 0 ? '🚚 *Ongkir:* '.Rupiah::teks($ongkir)."\n" : '')
-            .'🧾 *Total tagihan (yang harus ditransfer):* '.Rupiah::teks($produk + $ongkir)."\n"
+            .($packing > 0 ? '📦 *Packing:* '.Rupiah::teks($packing)."\n" : '')
+            .($order->ongkirCod() ? "🚚 *Ongkir:* COD ke kurir (tidak ikut transfer)\n" : '')
+            .'🧾 *Total tagihan (yang harus ditransfer):* '.Rupiah::teks($produk + $packing + $ongkir)."\n"
             .'🚚 Kurir: '.($order->kurir_pilihan ?: '-').($order->berat_kg ? " · {$order->berat_kg} kg" : '')."\n"
             .($alamat !== '' ? "📍 {$alamat}\n" : '')
             .($caption !== '' ? "\n💬 Catatan customer: {$caption}\n" : '')

@@ -30,7 +30,7 @@ class DetailPesananController extends Controller
     /**
      * Shown on the invoice while REKENING is still empty.
      */
-    private const REKENING_KOSONG = '[Bank] · [nomor rekening] a.n. CV TKT Bana Food';
+    private const REKENING_KOSONG = 'Rekening belum diisi di Pengaturan';
 
     public function __invoke(Request $request, LogOrder $order): Response
     {
@@ -70,9 +70,10 @@ class DetailPesananController extends Controller
                 // "Ongkir JNE REG · 1,6 kg"; nothing to send for an order picked up
                 'ongkir' => $order->ambil_sendiri ? null : [
                     'label' => collect(['Ongkir '.$this->namaKurir($order), $order->beratTeks()])->filter()->implode(' · '),
-                    'nilai' => Rupiah::teks($order->ongkir),
+                    ...$this->nilaiOngkir($order),
                 ],
-                'tagihan' => Rupiah::teks($order->total_produk + $order->ongkir),
+                'packing' => $order->biaya_packing > 0 ? Rupiah::teks($order->biaya_packing) : null,
+                'tagihan' => Rupiah::teks($order->tagihan()),
             ],
             'pengiriman' => $this->pengiriman($order),
             'riwayat' => $order->riwayat()->orderByDesc('waktu')->orderByDesc('id')->get()->map(fn (Riwayat $r) => [
@@ -158,8 +159,11 @@ class DetailPesananController extends Controller
                 'subtotal' => Rupiah::teks($item->subtotal),
             ]),
             'produk' => Rupiah::teks($o->total_produk),
-            'ongkir' => $o->ambil_sendiri ? null : ['label' => 'Ongkir '.$this->namaKurir($o), 'nilai' => Rupiah::teks($o->ongkir)],
-            'total' => Rupiah::teks($o->total_produk + $o->ongkir),
+            'ongkir' => $o->ambil_sendiri ? null : ['label' => 'Ongkir '.$this->namaKurir($o), ...$this->nilaiOngkir($o)],
+            'packing' => $o->biaya_packing > 0 ? Rupiah::teks($o->biaya_packing) : null,
+            // the chatbot's invoices are always in Adiva's name
+            'admin' => 'ADIVA',
+            'total' => Rupiah::teks($o->tagihan()),
             // transfer lines only when the customer pays by transfer
             'rekening' => $jamBayar === null ? null : (filled($config['REKENING']) ? $config['REKENING'] : self::REKENING_KOSONG),
             // "5 jam kerja (07.00–21.00, Minggu tidak dihitung)"
@@ -169,6 +173,21 @@ class DetailPesananController extends Controller
             ])->filter()->implode(', ').')',
             'catatan' => $o->ambil_sendiri ? null : $config['CATATAN_INVOICE'],
         ];
+    }
+
+    /**
+     * The shipping cost as the invoice shows it: billed, or paid COD to the courier and
+     * only there for information.
+     *
+     * @return array{nilai: string, cod: bool}
+     */
+    private function nilaiOngkir(LogOrder $o): array
+    {
+        if (! $o->ongkirCod()) {
+            return ['nilai' => Rupiah::teks($o->ongkir), 'cod' => false];
+        }
+
+        return ['nilai' => ($o->ongkir > 0 ? Rupiah::teks($o->ongkir).' · ' : '').'COD ke kurir', 'cod' => true];
     }
 
     private function namaKurir(LogOrder $o): ?string

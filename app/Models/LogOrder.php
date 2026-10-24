@@ -6,6 +6,7 @@ use App\Enums\JenisNotifikasi;
 use App\Enums\StatusOrder;
 use App\Enums\TipeCustomer;
 use App\Models\Concerns\ZonaWaktuAplikasi;
+use App\Support\AturanKirim;
 use App\Support\PengaturanToko;
 use Database\Factories\LogOrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -30,7 +31,8 @@ use Illuminate\Support\Carbon;
  * @property StatusOrder $status_order
  * @property TipeCustomer|null $tipe_customer
  * @property int $total_produk
- * @property int $ongkir
+ * @property int $ongkir for an ONGKIR COD order only what the courier collects, not billed
+ * @property int $biaya_packing
  * @property string|null $invoice_number
  * @property string|null $invoice_pdf_url the PDF n8n made
  * @property string|null $no_hp
@@ -63,7 +65,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'order_id', 'invoice_number', 'invoice_pdf_url', 'crm_customer_id', 'chat_id', 'nomor_wa', 'sesi_wa',
     'nama_penerima', 'no_hp', 'tanggal', 'status_order', 'metode_bayar', 'tipe_customer',
-    'total_produk', 'ongkir', 'berat_kg', 'kurir_pilihan', 'kurir_final', 'estimasi_kirim', 'no_resi', 'ambil_sendiri',
+    'total_produk', 'ongkir', 'biaya_packing', 'berat_kg', 'kurir_pilihan', 'kurir_final', 'estimasi_kirim', 'no_resi', 'ambil_sendiri',
     'alamat_lengkap', 'kelurahan', 'kecamatan', 'kota', 'provinsi', 'kode_pos', 'jadwal_pickup',
     'catatan_admin', 'dicatat_oleh_id', 'pesanan_tambahan', 'dobel_dengan', 'bukti_masuk_at',
     'diacc_at', 'lunas_at', 'dikirim_at', 'siap_diambil_at', 'selesai_at', 'batas_bayar_at', 'diingatkan_at',
@@ -183,6 +185,38 @@ class LogOrder extends Model
     }
 
     /**
+     * Sent by expedition with the shipping cost paid COD to the courier: the cost is not
+     * on the bill. Adiva marks it in kurir_pilihan ("EKSPEDISI (ONGKIR COD) - JNE") and
+     * metode_bayar ("TRANSFER (ONGKIR COD)").
+     */
+    public function ongkirCod(): bool
+    {
+        return AturanKirim::ongkirCod($this->metode_bayar, $this->kurir_pilihan);
+    }
+
+    /**
+     * What the customer transfers: products and packing, plus the shipping cost unless it
+     * is paid COD.
+     */
+    public function tagihan(): int
+    {
+        return $this->total_produk + $this->biaya_packing + ($this->ongkirCod() ? 0 : $this->ongkir);
+    }
+
+    /**
+     * tagihan() in SQL, for sums over many orders.
+     *
+     * @param  literal-string  $tabel
+     * @return literal-string
+     */
+    public static function sqlTagihan(string $tabel = ''): string
+    {
+        $t = $tabel === '' ? '' : "{$tabel}.";
+
+        return "({$t}total_produk + {$t}biaya_packing + case when concat_ws(' ', {$t}metode_bayar, {$t}kurir_pilihan) ~* 'ONGKIR COD' then 0 else {$t}ongkir end)";
+    }
+
+    /**
      * The customer's name, or the recipient's when the order has no CRM customer.
      */
     public function namaCustomer(): string
@@ -232,6 +266,7 @@ class LogOrder extends Model
             'TRANSFER' => 'Transfer',
             'BAYAR DI TEMPAT (PICKUP)' => 'Bayar di tempat',
             'TRANSFER (PICKUP)' => 'Transfer · ambil sendiri',
+            AturanKirim::METODE_COD => 'Transfer · ongkir COD',
             'POTONG GAJI' => 'Potong gaji',
             default => $this->metode_bayar,
         };
@@ -291,6 +326,7 @@ class LogOrder extends Model
             'tipe_customer' => TipeCustomer::class,
             'total_produk' => 'integer',
             'ongkir' => 'integer',
+            'biaya_packing' => 'integer',
             'berat_kg' => 'decimal:2',
             'ambil_sendiri' => 'boolean',
             'pesanan_tambahan' => 'boolean',

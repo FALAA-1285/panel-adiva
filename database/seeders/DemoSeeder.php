@@ -1192,7 +1192,7 @@ class DemoSeeder extends Seeder
 
         // Pengisi: three finished campaigns earlier this month, off the list
         $nilaiTertaut = (int) BroadcastPenerima::query()->join('log_order', 'log_order.id', '=', 'broadcast_penerima.log_order_id')
-            ->sum(DB::raw('log_order.total_produk + log_order.ongkir'));
+            ->sum(DB::raw(LogOrder::sqlTagihan('log_order')));
         $sisa = 6_400_000 - $nilaiTertaut;
 
         foreach ([[100, '2026-09-03 10:00'], [100, '2026-09-09 10:00'], [93, '2026-09-15 10:00']] as $k => [$jumlah, $mulai]) {

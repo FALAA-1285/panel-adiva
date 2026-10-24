@@ -608,7 +608,7 @@ class PercakapanController extends Controller
 
         return array_values($order->map(fn (LogOrder $o) => [
             'id' => $o->order_id,
-            'total' => Rupiah::teks($o->total_produk + $o->ongkir),
+            'total' => Rupiah::teks($o->tagihan()),
             'status' => $o->status_order === StatusOrder::Karyawan
                 ? ['label' => 'Order karyawan · potong gaji', 'nada' => 'gray']
                 : ['label' => $o->status_order->label(), 'nada' => $o->status_order->nada()],

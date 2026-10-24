@@ -52,7 +52,7 @@ test('an order waiting for ACC shows its steps, items, delivery, history and a d
             ->where('langkah.1.label', 'Invoice terkirim')
             ->where('langkah.1.waktu', '—')
             ->where('item.0', ['nama' => 'Molreng Reguler Bawang Original', 'keterangan' => 'Harga 10–49 pcs', 'harga' => 'Rp16.500', 'qty' => 40, 'subtotal' => 'Rp660.000'])
-            ->where('total', ['produk' => 'Rp1.245.000', 'ongkir' => ['label' => 'Ongkir JNE REG · 1,6 kg', 'nilai' => 'Rp38.000'], 'tagihan' => 'Rp1.283.000'])
+            ->where('total', ['produk' => 'Rp1.245.000', 'ongkir' => ['label' => 'Ongkir JNE REG · 1,6 kg', 'nilai' => 'Rp38.000', 'cod' => false], 'packing' => null, 'tagihan' => 'Rp1.283.000'])
             ->where('pengiriman', [
                 'penerima' => 'Rina Maharani',
                 'nomor' => '0812-3345-••81',
@@ -75,8 +75,9 @@ test('an order waiting for ACC shows its steps, items, delivery, history and a d
             ->where('invoice.perusahaan', 'CV TKT Bana Food · Sawojajar, Kota Malang')
             ->where('invoice.tanggal', '28 September 2026')
             ->where('invoice.alamat', 'Jl. Kalpataru 18, Dinoyo, Lowokwaru, Kota Malang 65144')
-            ->where('invoice.ongkir', ['label' => 'Ongkir JNE REG', 'nilai' => 'Rp38.000'])
-            ->where('invoice.rekening', '[Bank] · [nomor rekening] a.n. CV TKT Bana Food')
+            ->where('invoice.ongkir', ['label' => 'Ongkir JNE REG', 'nilai' => 'Rp38.000', 'cod' => false])
+            ->where('invoice.admin', 'ADIVA')
+            ->where('invoice.rekening', 'Rekening belum diisi di Pengaturan')
             ->where('invoice.ditahan', '5 jam kerja (07.00–21.00, Minggu tidak dihitung)')
             ->where('invoice.catatan', 'Ongkir sudah termasuk dalam tagihan ini.')
             ->where('aksi', fn ($aksi) => collect($aksi)->pluck('kode')->all() === ['TOLAK', 'BATAL', 'ACC'])
@@ -121,4 +122,21 @@ test('a pickup order has no shipping cost and its own payment time', function ()
             ->where('invoice.ongkir', null)
             ->where('invoice.catatan', null)
             ->where('invoice.ditahan', '24 jam kerja (07.00–21.00, Minggu tidak dihitung)'));
+});
+
+test('an ONGKIR COD order bills products and packing; the shipping cost is only information', function () {
+    LogOrder::factory()->create([
+        'order_id' => 'ORD-COD', 'metode_bayar' => 'TRANSFER (ONGKIR COD)', 'kurir_pilihan' => 'EKSPEDISI (ONGKIR COD) - JNE',
+        'total_produk' => 600000, 'ongkir' => 25000, 'biaya_packing' => 26000,
+    ]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/pesanan/ORD-COD')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('total.ongkir.nilai', 'Rp25.000 · COD ke kurir')
+            ->where('total.ongkir.cod', true)
+            ->where('total.packing', 'Rp26.000')
+            ->where('total.tagihan', 'Rp626.000')
+            ->where('invoice.total', 'Rp626.000')
+            ->where('invoice.admin', 'ADIVA'));
 });

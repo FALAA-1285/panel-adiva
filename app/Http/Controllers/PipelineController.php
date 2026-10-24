@@ -40,11 +40,6 @@ class PipelineController extends Controller
     private const KARTU = 3;
 
     /**
-     * Only customers active in the last 3 days get a card (like Riwayat on Jeda).
-     */
-    private const HARI_KARTU = 3;
-
-    /**
      * The column descriptions, as written in the design.
      *
      * @var array<string, string>

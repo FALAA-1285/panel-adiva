@@ -146,7 +146,7 @@ class RingkasanController extends Controller
                     $chat['chat'],
                     $chat['diteruskan'],
                     LogOrder::query()->whereBetween('tanggal', [$awal, $akhir])->count(),
-                    $lunas->sum(fn (LogOrder $o) => $o->total_produk + $o->ongkir),
+                    $lunas->sum(fn (LogOrder $o) => $o->tagihan()),
                     $lunas->count(),
                 ]), escape: '');
             }
@@ -183,7 +183,7 @@ class RingkasanController extends Controller
 
         $order = LogOrder::query()->whereBetween('tanggal', [$awal, $akhir])->get(['status_order', 'tipe_customer']);
         $hitungLunas = fn (CarbonInterface $dari, CarbonInterface $sampai) => [
-            'total' => (int) LogOrder::query()->whereBetween('lunas_at', [$dari, $sampai])->sum(DB::raw('total_produk + ongkir')),
+            'total' => (int) LogOrder::query()->whereBetween('lunas_at', [$dari, $sampai])->sum(DB::raw(LogOrder::sqlTagihan())),
             'count' => LogOrder::query()->whereBetween('lunas_at', [$dari, $sampai])->count(),
         ];
         $lunasKini = $hitungLunas($awal, $akhir);
@@ -327,7 +327,7 @@ class RingkasanController extends Controller
                 'kode' => $o->order_id,
                 'isi' => collect([
                     $o->items->count().' item',
-                    Rupiah::teks($o->total_produk + $o->ongkir).($o->ongkir > 0 && $o->kurir() ? ' termasuk ongkir '.$o->kurir() : ''),
+                    Rupiah::teks($o->tagihan()).($o->ongkir > 0 && ! $o->ongkirCod() && $o->kurir() ? ' termasuk ongkir '.$o->kurir() : ''),
                 ])->implode(' · '),
                 'aksi' => [
                     ['label' => 'Tinjau', 'href' => "/pesanan/{$o->order_id}"],
@@ -340,7 +340,7 @@ class RingkasanController extends Controller
                 'nama' => $o->namaCustomer(),
                 'info' => $c?->tipe_customer->label(),
                 'kode' => $o->order_id,
-                'isi' => 'tagihan '.Rupiah::teks($o->total_produk + $o->ongkir).' · tidak akan batal otomatis selama belum dicek',
+                'isi' => 'tagihan '.Rupiah::teks($o->tagihan()).' · tidak akan batal otomatis selama belum dicek',
                 'aksi' => [
                     ['label' => 'Lihat bukti', 'href' => "/pesanan/{$o->order_id}"],
                     ...($user?->can('status_order') ? [['label' => 'Tandai lunas', 'aksi' => 'LUNAS', 'order' => $o->order_id, 'garis' => true]] : []),
@@ -376,7 +376,7 @@ class RingkasanController extends Controller
                 'nama' => $o->namaCustomer(),
                 'info' => 'Karyawan terverifikasi',
                 'kode' => $o->order_id,
-                'isi' => 'potong gaji '.Rupiah::teks($o->total_produk + $o->ongkir).($pj ? " · sudah diteruskan ke {$pj}" : ''),
+                'isi' => 'potong gaji '.Rupiah::teks($o->tagihan()).($pj ? " · sudah diteruskan ke {$pj}" : ''),
                 'aksi' => [['label' => 'Lihat order', 'href' => route('katalog.karyawan', absolute: false), 'garis' => true]],
             ] : null,
             default => null,
@@ -510,7 +510,7 @@ class RingkasanController extends Controller
         $perHari = LogOrder::query()->toBase()
             ->where('lunas_at', '>=', $awal)
             ->selectRaw('(lunas_at at time zone ?)::date as hari', [(string) config('app.timezone')])
-            ->selectRaw('sum(total_produk + ongkir) as nilai')
+            ->selectRaw('sum('.LogOrder::sqlTagihan().') as nilai')
             ->selectRaw('count(*) as "order"')
             ->groupBy('hari')
             ->get()
@@ -609,7 +609,7 @@ class RingkasanController extends Controller
             ->whereNotIn('status_order', $batal)
             ->groupByRaw($siapa)
             ->selectRaw("{$siapa} as siapa")
-            ->selectRaw('sum(total_produk + ongkir) as nilai')
+            ->selectRaw('sum('.LogOrder::sqlTagihan().') as nilai')
             ->get();
 
         $baru = $diRentang->filter(fn (object $o) => ($pertama[$o->siapa] ?? null) !== null
@@ -645,7 +645,7 @@ class RingkasanController extends Controller
             ->whereBetween('tanggal', [$awal, $akhir])
             ->whereIn('status_order', array_column(StatusOrder::batal(), 'value'))
             ->groupBy('status_order')
-            ->selectRaw('status_order, count(*) as n, sum(total_produk + ongkir) as nilai')
+            ->selectRaw('status_order, count(*) as n, sum('.LogOrder::sqlTagihan().') as nilai')
             ->get()
             ->keyBy('status_order');
 

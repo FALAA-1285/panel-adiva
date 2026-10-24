@@ -185,19 +185,16 @@ if (_sumDetail > 0) {
 
 // === Ongkir Rp0 untuk pesanan yang dikirim kurir: biasanya paket gratis ongkir — supervisor diminta memastikan ===
 const _kurirAI = String(out.kurir_pilihan || '');
-if (
-    out.order_siap &&
-    _kurirAI &&
-    !/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR/i.test(
-        _kurirAI + ' ' + String(out.metode_bayar || ''),
-    ) &&
-    !(_ongkirAI > 0)
-) {
-    _peringatanTotal =
-        (_peringatanTotal ? _peringatanTotal + '\n\n' : '') +
-        'ℹ️ Ongkir tercatat *Rp0* (kurir ' +
-        _kurirAI +
-        '). Bot menganggap ini paket gratis ongkir — mohon pastikan sebelum ACC.';
+// === Pengiriman EKSPEDISI = ONGKIR COD (ongkir dibayar ke kurir, ekspedisi & nominal ditentukan CS). Paket gratis ongkir dikecualikan. ===
+const _ekspedisiAI = !!_kurirAI.trim() && !/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR|POTONG GAJI/i.test(_kurirAI + ' ' + String(out.metode_bayar || ''));
+const _ongkirCod = _ekspedisiAI && !/GRATIS ONGKIR/i.test(_kurirAI);
+const _kurirFinal = (_ongkirCod && !/ONGKIR COD/i.test(_kurirAI)) ? ('EKSPEDISI (ONGKIR COD)' + (/^\s*EKSPEDISI\b/i.test(_kurirAI) ? '' : ' - ' + _kurirAI.trim())).slice(0, 80) : _kurirAI;
+if (out.order_siap && _kurirAI && !_ongkirCod && !/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR/i.test(_kurirAI + ' ' + String(out.metode_bayar || '')) && !(_ongkirAI > 0)) {
+_peringatanTotal = (_peringatanTotal ? _peringatanTotal + '\n\n' : '') + 'ℹ️ Ongkir tercatat *Rp0* (kurir ' + _kurirAI + '). Bot menganggap ini paket gratis ongkir — mohon pastikan sebelum ACC.';
+}
+
+if (out.order_siap && _ongkirCod) {
+  _peringatanTotal = (_peringatanTotal ? _peringatanTotal + '\n\n' : '') + '📦 Dikirim *EKSPEDISI — ONGKIR COD* (' + _kurirFinal + '). Ongkir dibayar customer ke kurir. Kalau mau mencantumkan ongkir di invoice sebagai info, tulis saat ACC, contoh: *ACC ' + 'ORD-xxx 25000*.';
 }
 
 // === Kurir motor Bang Bana: ongkir di order = batas atas estimasi, admin boleh menetapkan angka pasti saat ACC ===
@@ -898,6 +895,19 @@ if (
                 .slice(0, 300),
         });
 }
+// BIAYA PACKING (dihitung sistem, bukan AI). Aktif kalau PACKING_PER_KG / PACKING_MINIMAL di CONFIG_TOKO diisi.
+// Hanya untuk pesanan yang dikirim ekspedisi dan berongkir; ambil sendiri, kurir motor, armada kantor, karyawan, dan paket gratis ongkir tidak kena.
+let _packing = 0;
+try {
+  const _cfgP = {};
+  $('Ambil Config Ongkir').all().forEach(function (it) { _cfgP[(it.json || {}).kunci] = (it.json || {}).nilai; });
+  const _pn = function (v) { return Number(String(v == null ? '' : v).replace(/[^0-9]/g, '')) || 0; };
+  const _perKg = _pn(_cfgP.PACKING_PER_KG), _minP = _pn(_cfgP.PACKING_MINIMAL), _gratisAtas = _pn(_cfgP.PACKING_GRATIS_DI_ATAS);
+  const _ekspedisi = _kurirAI && !/AMBIL SENDIRI|PICKUP|KARYAWAN|KURIR MOTOR|ARMADA KANTOR|POTONG GAJI/i.test(_kurirAI + ' ' + String(out.metode_bayar || ''));
+  const _beratP = parseFloat(String(out.berat_kg == null ? '' : out.berat_kg).replace(',', '.')) || 0;
+  if ((_perKg || _minP) && _ekspedisi && !/GRATIS ONGKIR/i.test(_kurirAI) && _beratP > 0 && !(_gratisAtas && _totalFinal >= _gratisAtas)) _packing = Math.max(_minP, Math.ceil(_beratP) * _perKg);
+} catch (e) { _packing = 0; }
+
 return [
     {
         json: {
@@ -987,14 +997,15 @@ return [
             order_items: String(out.order_items || ''),
             order_total: String(_totalFinal || ''),
             peringatan_total: _peringatanTotal,
-            order_ongkir: _ongkirAI ? String(_ongkirAI) : '',
+            order_ongkir: (_ongkirAI && !_ongkirCod) ? String(_ongkirAI) : '',
+            order_packing: _packing ? String(_packing) : '',
             nama_penerima: String(out.nama_penerima || ''),
             alamat_lengkap: String(out.alamat_lengkap || ''),
             kecamatan: String(out.kecamatan || ''),
             kode_pos: String(out.kode_pos || ''),
             berat_kg: out.berat_kg != null ? String(out.berat_kg) : '',
-            kurir_pilihan: String(out.kurir_pilihan || ''),
-            metode_bayar: _metodeBayar,
+            kurir_pilihan: _kurirFinal,
+            metode_bayar: _ongkirCod ? 'TRANSFER (ONGKIR COD)' : _metodeBayar,
             no_hp: String(out.no_hp || ''),
             kelurahan: String(out.kelurahan || ''),
             kota_kirim: String(out.kota || ''),

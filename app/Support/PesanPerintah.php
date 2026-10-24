@@ -52,7 +52,8 @@ class PesanPerintah
                     .($catatan ? "\n".($sendiri === 'armada' ? 'Info pengiriman: ' : 'Kurir: ').$catatan : '')
                     ."\n\nMohon pastikan ada yang bisa menerima di alamat ya kak. Kalau pesanannya sudah sampai, kabari kami ya 😊"
                 : ($catatan === null ? null
-                    : "Pesanan {$id} sudah dikirim ✅\n\nNomor resi: *{$catatan}*\n\nMohon dipantau berkala ya. Kalau paketnya sudah sampai, kabari kami 😊"),
+                    : "Pesanan {$id} sudah dikirim ✅\n\nNomor resi: *{$catatan}*\n\nMohon dipantau berkala ya. Kalau paketnya sudah sampai, kabari kami 😊"
+                        .($order->ongkirCod() ? "\n\n💵 Ongkir dibayar *COD* ke kurir saat paket sampai".($order->ongkir > 0 ? ' ('.Rupiah::teks($order->ongkir).')' : '').' ya kak.' : '')),
 
             AksiPesanan::Selesai => "Terima kasih banyak Kak {$nama} 🙏\n\nSemoga camilannya cocok di lidah Kakak."
                 .(filled($ulasan = PengaturanToko::nilai('LINK_ULASAN')) ? " Kalau berkenan, boleh tinggalkan ulasan singkat untuk kami di {$ulasan}." : '')
