@@ -6,7 +6,6 @@ use App\Models\CrmCustomer;
 use App\Models\JedaBot;
 use App\Support\NomorWa;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -28,7 +27,10 @@ class JedaRequest extends FormRequest
     {
         return [
             'customer' => ['required', 'string', 'max:255'],
-            'durasi' => ['required', Rule::in(array_keys(self::DURASI))],
+            'durasi' => ['nullable', 'string', 'max:255'],
+            'tanpa_batas' => ['nullable', 'boolean'],
+            'jam' => ['nullable', 'integer', 'min:0', 'max:720'],
+            'menit' => ['nullable', 'integer', 'min:0', 'max:59'],
             'alasan' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -61,8 +63,20 @@ class JedaRequest extends FormRequest
                 } elseif (JedaBot::query()->aktif()->where('chat_id', $customer->chat_id)->exists()) {
                     $validator->errors()->add('customer', 'Customer ini sedang dijeda.');
                 }
+
+                if (! $this->isTanpaBatas() && $this->menit() === null) {
+                    $validator->errors()->add('durasi', 'Pilih durasi jeda minimal 1 menit atau centang Tanpa batas.');
+                }
             },
         ];
+    }
+
+    /**
+     * Whether the pause is without limit.
+     */
+    public function isTanpaBatas(): bool
+    {
+        return $this->boolean('tanpa_batas') || $this->input('durasi') === 'Tanpa batas';
     }
 
     /**
@@ -81,6 +95,37 @@ class JedaRequest extends FormRequest
 
     public function menit(): ?int
     {
-        return self::DURASI[(string) $this->validated('durasi')];
+        if ($this->isTanpaBatas()) {
+            return null;
+        }
+
+        if ($this->has('jam') || $this->has('menit')) {
+            $total = ((int) $this->input('jam', 0) * 60) + (int) $this->input('menit', 0);
+
+            return $total > 0 ? $total : null;
+        }
+
+        $durasi = trim((string) $this->input('durasi'));
+        if (array_key_exists($durasi, self::DURASI)) {
+            return self::DURASI[$durasi];
+        }
+
+        if (is_numeric($durasi)) {
+            $val = (int) $durasi;
+
+            return $val > 0 ? $val : null;
+        }
+
+        $jam = 0;
+        $menit = 0;
+        if (preg_match('/(\d+)\s*jam/i', $durasi, $m)) {
+            $jam = (int) $m[1];
+        }
+        if (preg_match('/(\d+)\s*menit/i', $durasi, $m)) {
+            $menit = (int) $m[1];
+        }
+        $total = ($jam * 60) + $menit;
+
+        return $total > 0 ? $total : null;
     }
 }

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
-import { Input, Segmented, Textarea } from '@/components/ui/form';
+import { Checkbox, Input, Select, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatStrip } from '@/components/ui/stat-strip';
@@ -42,7 +42,31 @@ type Props = {
     terakhir: { nama: string; jam: string } | null;
 };
 
-const DURASI = ['30 menit', '1 jam', '2 jam', '1 hari', 'Tanpa batas'] as const;
+function hitungDurasiString(jam: number, menit: number): string {
+    const total = jam * 60 + menit;
+    if (total === 30) {
+        return '30 menit';
+    }
+    if (total === 60) {
+        return '1 jam';
+    }
+    if (total === 120) {
+        return '2 jam';
+    }
+    if (total === 1440) {
+        return '1 hari';
+    }
+    if (jam > 0 && menit > 0) {
+        return `${jam} jam ${menit} menit`;
+    }
+    if (jam > 0) {
+        return `${jam} jam`;
+    }
+    if (menit > 0) {
+        return `${menit} menit`;
+    }
+    return '';
+}
 
 // narrow screens: the columns keep their width and the card scrolls sideways
 const KOLOM_AKTIF =
@@ -56,13 +80,48 @@ const kelasIsian = 'h-10 rounded-[9px] px-3 text-body';
 export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
     const form = useForm({
         customer: '',
-        durasi: '2 jam' as (typeof DURASI)[number],
+        jam: 2,
+        menit: 0,
+        tanpa_batas: false,
+        durasi: '2 jam',
         alasan: '',
     });
     const [targetLanjut, setTargetLanjut] = useState<Aktif | null>(null);
     const [catatan, setCatatan] = useState('');
     const [sedangKirim, setSedangKirim] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const ubahJam = (val: number) => {
+        const j = Math.max(0, Math.min(val, 720));
+        form.setData((prev) => ({
+            ...prev,
+            jam: j,
+            durasi: prev.tanpa_batas
+                ? 'Tanpa batas'
+                : hitungDurasiString(j, prev.menit),
+        }));
+    };
+
+    const ubahMenit = (val: number) => {
+        const m = Math.max(0, Math.min(val, 59));
+        form.setData((prev) => ({
+            ...prev,
+            menit: m,
+            durasi: prev.tanpa_batas
+                ? 'Tanpa batas'
+                : hitungDurasiString(prev.jam, m),
+        }));
+    };
+
+    const toggleTanpaBatas = (checked: boolean) => {
+        form.setData((prev) => ({
+            ...prev,
+            tanpa_batas: checked,
+            durasi: checked
+                ? 'Tanpa batas'
+                : hitungDurasiString(prev.jam, prev.menit),
+        }));
+    };
 
     useEffect(() => {
         if (targetLanjut) {
@@ -76,11 +135,24 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
         only: ['ringkasan', 'aktif', 'riwayat', 'terakhir', 'panel'],
     });
 
-    const jeda = () =>
+    const jeda = () => {
+        if (
+            !form.data.tanpa_batas &&
+            form.data.jam === 0 &&
+            form.data.menit === 0
+        ) {
+            form.setError(
+                'durasi',
+                'Pilih durasi jeda minimal 1 menit atau centang Tanpa batas.',
+            );
+            return;
+        }
+
         form.post(simpan.url(), {
             preserveScroll: true,
             onSuccess: () => form.reset('customer', 'alasan'),
         });
+    };
 
     const bukaModalLanjut = (item: Aktif) => {
         setTargetLanjut(item);
@@ -296,25 +368,112 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                     · {terakhir.jam}
                                 </button>
                             )}
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-caption font-semibold">
-                                    Durasi
-                                </span>
-                                <Segmented
-                                    className="flex-wrap"
-                                    kelasPilihan="h-[34px]"
-                                    pilihan={DURASI.map((d) => ({
-                                        nilai: d,
-                                        label: d,
-                                    }))}
-                                    nilai={form.data.durasi}
-                                    onUbah={(d) => form.setData('durasi', d)}
-                                />
-                                <span className="text-caption text-muted">
-                                    Tanpa batas = diingatkan ke supervisor tiap
-                                    pagi 09.00. Selama dijeda, customer tidak
-                                    ikut sapaan ulang.
-                                </span>
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-caption font-semibold text-ink">
+                                        Durasi
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'text-tag font-medium',
+                                            form.data.tanpa_batas
+                                                ? 'text-muted'
+                                                : form.data.jam === 0 &&
+                                                    form.data.menit === 0
+                                                  ? 'text-red-text'
+                                                  : 'text-primary',
+                                        )}
+                                    >
+                                        {form.data.tanpa_batas
+                                            ? 'Tanpa batas (sampai aktif lagi)'
+                                            : form.data.jam === 0 &&
+                                                form.data.menit === 0
+                                              ? 'Minimal 1 menit'
+                                              : `Total: ${hitungDurasiString(form.data.jam, form.data.menit)}`}
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    <label className="flex flex-col gap-1">
+                                        <span className="text-tag text-muted">
+                                            Jam
+                                        </span>
+                                        <div className="relative flex items-center">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={720}
+                                                disabled={form.data.tanpa_batas}
+                                                className={cn(
+                                                    kelasIsian,
+                                                    'pr-10',
+                                                    form.data.tanpa_batas &&
+                                                        'cursor-not-allowed border-line bg-subtle text-muted',
+                                                )}
+                                                value={form.data.jam}
+                                                onChange={(e) =>
+                                                    ubahJam(
+                                                        parseInt(
+                                                            e.target.value,
+                                                            10,
+                                                        ) || 0,
+                                                    )
+                                                }
+                                            />
+                                            <span className="pointer-events-none absolute right-3 text-caption text-muted">
+                                                jam
+                                            </span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex flex-col gap-1">
+                                        <span className="text-tag text-muted">
+                                            Menit
+                                        </span>
+                                        <Select
+                                            disabled={form.data.tanpa_batas}
+                                            className={cn(
+                                                kelasIsian,
+                                                form.data.tanpa_batas &&
+                                                    'cursor-not-allowed border-line bg-subtle text-muted',
+                                            )}
+                                            value={form.data.menit}
+                                            onChange={(e) =>
+                                                ubahMenit(
+                                                    parseInt(
+                                                        e.target.value,
+                                                        10,
+                                                    ) || 0,
+                                                )
+                                            }
+                                        >
+                                            <option value={0}>0 menit</option>
+                                            <option value={5}>5 menit</option>
+                                            <option value={10}>10 menit</option>
+                                            <option value={15}>15 menit</option>
+                                            <option value={20}>20 menit</option>
+                                            <option value={30}>30 menit</option>
+                                            <option value={45}>45 menit</option>
+                                        </Select>
+                                    </label>
+                                </div>
+
+                                <div className="pt-1">
+                                    <Checkbox
+                                        label="Tanpa batas waktu"
+                                        sub="Diingatkan ke supervisor tiap pagi 09.00. Selama dijeda, customer tidak ikut sapaan ulang."
+                                        checked={form.data.tanpa_batas}
+                                        onChange={(e) =>
+                                            toggleTanpaBatas(e.target.checked)
+                                        }
+                                    />
+                                </div>
+
+                                {form.errors.durasi && (
+                                    <span className="text-caption text-red-text">
+                                        {form.errors.durasi}
+                                    </span>
+                                )}
                             </div>
                             <Isian label="Alasan" galat={form.errors.alasan}>
                                 <Input
