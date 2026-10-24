@@ -4,20 +4,29 @@ Panel berjalan di VPS yang sama dengan n8n dan WAHA. Database tetap di Supabase.
 
 | Yang sudah ada di VPS | Port |
 |---|---|
-| n8n | 5678 |
-| WAHA | 3001 → 3000 di container |
+| n8n **(proyek lain)** | 5678 |
+| WAHA **(proyek lain)** | 3001 → 3000 di container |
+| n8n Bang Bana (`compose.bot.yml`) | 127.0.0.1:5679 |
+| WAHA Bang Bana (`compose.bot.yml`) | 127.0.0.1:3002 |
 | sandbox n8n | tidak dipublikasikan |
 | **panel (baru)** | **8080** |
 
-Tiga container dari satu image:
+Empat container dari satu image:
 
 | Container | Perintah | Tugasnya |
 |---|---|---|
-| `panel-web` | bawaan image | Melayani panel di `:8080` |
+| `panel-migrasi` | `migrate --force` | Sekali jalan lalu berhenti; yang lain menunggu sampai ia selesai |
+| `panel-web` | bawaan image | Melayani panel di `:8080` — **tidak perlu kalau panel disajikan Vercel** |
 | `panel-worker` | `queue:work` | 9 job di `app/Jobs/`: pesan masuk, balasan keluar, broadcast, order Mengantar |
-| `panel-cron` | `schedule:work` | `n8n:sinkron` tiap menit, `jeda:ingatkan` tiap 09.00 |
+| `panel-cron` | `schedule:work` | `broadcast:lanjutkan` tiap 5 menit, `notifikasi:kirim-wa` tiap 15 detik, `n8n:sinkron` tiap menit, `jeda:ingatkan` 09.00 |
 
-Tanpa `panel-worker`, pesan customer berhenti di tabel `jobs` dan Adiva tidak pernah menjawab.
+Tanpa `panel-worker`, pesan customer berhenti di tabel `jobs` dan Adiva tidak pernah menjawab. Tanpa `panel-cron`, broadcast berhenti di tengah dan notifikasi WhatsApp tidak terkirim.
+
+**Kalau panel sudah disajikan Vercel**, VPS cukup menjalankan yang tidak bisa serverless:
+
+```bash
+docker compose up -d --build worker cron
+```
 
 ## 1. Ambil kodenya ke VPS
 
@@ -108,7 +117,7 @@ git pull
 docker compose up -d --build
 ```
 
-Migrasi jalan sendiri saat `panel-web` start, karena hanya container itu yang punya `JALANKAN_MIGRASI=1`.
+Migrasi jalan sendiri lewat container `panel-migrasi`, yang sekali jalan lalu berhenti. Container lain menunggu sampai ia selesai, jadi migrasi tidak pernah tereksekusi dua kali bersamaan.
 
 ## Yang belum aman, dan cara membereskannya
 
@@ -134,8 +143,40 @@ ufw deny 8080/tcp
 
 Caddy mengurus sertifikat Let's Encrypt sendiri, gratis dan otomatis diperpanjang. Setelah itu ubah `APP_URL` ke `https://…`, `SESSION_SECURE_COOKIE=true`, hapus `ports` dari service `web`, lalu `docker compose up -d`.
 
-Catatan lain: n8n (5678) dan WAHA (3001) juga terbuka ke internet tanpa TLS. Begitu Caddy ada, keduanya sebaiknya ikut di belakangnya dan port langsungnya ditutup.
+Catatan lain: n8n (5678) dan WAHA (3001) milik proyek lain terbuka ke internet tanpa TLS. Yang milik Bang Bana sengaja hanya terikat `127.0.0.1` dan diakses lewat SSH tunnel, jadi tidak menambah permukaan serang. Begitu Caddy ada, port milik proyek lain sebaiknya ikut ditutup dan dialihkan ke belakangnya.
 
 ## Kalau suatu saat pindah ke platform berbayar
 
 `Dockerfile` dan `docker/mulai.sh` tidak terikat VPS ini. Railway, Render, atau Fly.io bisa memakainya apa adanya: satu layanan tanpa perintah khusus untuk web, satu dengan `php artisan queue:work`, satu dengan `php artisan schedule:work`, ditambah volume di `/app/storage/app/public`.
+
+## Memori VPS dan swap
+
+`free -h` pada 24 Okt 2026: **7,8 GB total, 3,3 GB terpakai, 4,5 GB tersedia, swap 0**.
+
+Yang akan ditambahkan Bang Bana, dengan batas yang dipasang di compose:
+
+| Container | `mem_limit` | Perkiraan nyata |
+|---|---|---|
+| `bangbana-waha` | 2 GB | ±700 MB per sesi WhatsApp; engine WEBJS menjalankan satu Chromium per nomor |
+| `bangbana-n8n` | 768 MB | ±400 MB |
+| `panel-worker` | 512 MB | ±150 MB |
+| `panel-cron` | 512 MB | ±100 MB |
+
+Batas itu adalah langit-langit, bukan jatah yang dikunci, jadi pemakaian sebenarnya jauh di bawahnya. Tetap muat di 4,5 GB yang tersedia.
+
+**Pasang swap 2 GB sebelum menjalankan apa pun.** Tanpa swap, lonjakan memori sesaat langsung memicu OOM killer kernel, dan kernel memilih korbannya sendiri berdasarkan skor — bisa jatuh ke n8n proyek lain, bukan ke container yang menyebabkan lonjakan. Chromium di WAHA membuat lonjakan itu bukan hipotetis.
+
+```bash
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+sysctl -w vm.swappiness=10
+echo 'vm.swappiness=10' > /etc/sysctl.d/99-swap.conf
+free -h
+```
+
+`swappiness=10` membuat kernel memakai swap hanya saat benar-benar perlu, bukan memindahkan memori aktif ke disk tanpa alasan.
+
+Kalau suatu saat WAHA terasa terlalu berat, ada engine yang jauh lebih ringan (`GOWS`/`NOWEB`, tanpa Chromium sama sekali). Jangan ditukar begitu saja: `PesanMasuk`, `WahaChat`, dan `LampiranMasuk` di panel diport berdasarkan bentuk payload WEBJS, dan engine lain mengirim bentuk yang berbeda. Perlu diuji dulu di nomor percobaan.

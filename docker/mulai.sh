@@ -7,12 +7,8 @@ if [ -n "$PORT" ]; then
     export SERVER_NAME=":$PORT"
 fi
 
-# Migrasi hanya dari layanan web, supaya worker dan cron tidak ikut menjalankannya
-# bersamaan saat ketiganya naik serentak.
-if [ "${JALANKAN_MIGRASI:-0}" = "1" ]; then
-    echo "> migrasi database"
-    php artisan migrate --force --no-interaction
-fi
+# Migrasi punya layanannya sendiri di compose.yml (`migrasi`), supaya tidak
+# tereksekusi berkali-kali saat beberapa container naik serentak.
 
 # Cache dibangun saat start, bukan saat build: nilainya baru ada di sini.
 php artisan config:cache

@@ -1,19 +1,24 @@
 # Panel Adiva di VPS, berdampingan dengan n8n dan WAHA yang sudah jalan di sana.
+# Database ada di Supabase, jadi di sini tidak ada container Postgres.
 #
+# Panel disajikan Vercel, VPS hanya menjalankan yang tidak bisa serverless:
+#   docker compose up -d --build worker cron
+#
+# Panel ikut disajikan VPS juga (tanpa Vercel):
 #   docker compose up -d --build
 #
-# Tiga layanan dari satu image. Tanpa `worker`, pesan customer berhenti di tabel
-# jobs dan Adiva tidak pernah menjawab; tanpa `cron`, pengingat jeda dan
-# sinkronisasi n8n mati. Ketiganya wajib hidup.
-#
-# Database ada di Supabase, jadi di sini tidak ada container Postgres.
+# Tanpa `worker`, pesan customer berhenti di tabel jobs dan Adiva tidak pernah
+# menjawab. Tanpa `cron`, broadcast berhenti di tengah, notifikasi WhatsApp tidak
+# terkirim, dan pengingat jeda 09.00 tidak jalan.
 
 x-panel: &panel
     build: .
     image: panel-adiva:terbaru
     env_file: .env.produksi
     restart: unless-stopped
-    # supaya panel bisa memanggil WAHA di :3001 dan n8n di :5678 lewat host,
+    # VPS tanpa swap: batas per container mengurung dampak lonjakan memori
+    mem_limit: 512m
+    # supaya panel bisa memanggil WAHA di :3002 dan n8n di :5679 lewat host,
     # tanpa perlu tahu nama jaringan Docker yang dipakai keduanya
     extra_hosts:
         - 'host.docker.internal:host-gateway'
@@ -22,13 +27,21 @@ x-panel: &panel
         - log:/app/storage/logs
 
 services:
+    # Sekali jalan lalu berhenti. Dipisah supaya migrasi tidak ikut tereksekusi
+    # tiga kali saat web, worker, dan cron naik serentak — dan supaya tetap jalan
+    # walau `web` tidak dipakai karena panelnya disajikan Vercel.
+    migrasi:
+        <<: *panel
+        container_name: panel-migrasi
+        restart: 'no'
+        command: php artisan migrate --force --no-interaction
+
     web:
         <<: *panel
         container_name: panel-web
-        environment:
-            # migrasi dijalankan dari satu layanan saja, supaya ketiganya tidak
-            # bermigrasi bersamaan saat naik serentak
-            JALANKAN_MIGRASI: '1'
+        depends_on:
+            migrasi:
+                condition: service_completed_successfully
         ports:
             - '8080:8080'
         healthcheck:
@@ -48,18 +61,24 @@ services:
         <<: *panel
         container_name: panel-worker
         depends_on:
-            web:
-                condition: service_healthy
+            migrasi:
+                condition: service_completed_successfully
         # --max-time memulai ulang worker tiap jam: memori PHP yang bocor pelan
         # ikut bersih, dan kode baru terpakai tanpa perlu restart manual
         command: php artisan queue:work --tries=3 --backoff=10 --max-time=3600 --sleep=1
+        healthcheck:
+            test: ['CMD', 'php', 'artisan', 'queue:monitor', 'default']
+            interval: 60s
+            timeout: 15s
+            retries: 3
+            start_period: 30s
 
     cron:
         <<: *panel
         container_name: panel-cron
         depends_on:
-            web:
-                condition: service_healthy
+            migrasi:
+                condition: service_completed_successfully
         command: php artisan schedule:work
 
 volumes:
