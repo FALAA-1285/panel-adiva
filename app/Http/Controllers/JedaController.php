@@ -73,7 +73,7 @@ class JedaController extends Controller
     {
         $user = $request->user() ?? abort(403);
         $customer = $request->customer() ?? abort(404);
-        $menit = $request->menit();
+        $detik = $request->detik();
         $alasan = $request->validated('alasan');
 
         $jeda = JedaBot::create([
@@ -83,7 +83,7 @@ class JedaController extends Controller
             'nama' => $customer->nama,
             'sesi_wa' => $customer->sesi_wa,
             'sejak' => now(),
-            'sampai' => $menit === null ? null : now()->addMinutes($menit),
+            'sampai' => $detik === null ? null : now()->addSeconds($detik),
             'oleh' => $user->name,
             'alasan' => $alasan,
         ]);

@@ -140,38 +140,49 @@ test('LANJUT ends the pause with the hand-over note', function () {
     $this->actingAs($falah)->post("/jeda/{$jeda->id}/lanjut")->assertNotFound();
 });
 
-test('JEDA accepts custom jam and menit or tanpa batas boolean', function () {
+test('JEDA accepts custom jumlah and satuan (menit, jam, detik) or tanpa batas boolean', function () {
     $this->travelTo('2026-09-28 13:42:00');
     $budi = CrmCustomer::factory()->create(['nama' => 'Budi Santoso', 'nomor_wa' => '6281122334455']);
     $rudi = CrmCustomer::factory()->create(['nama' => 'Rudi Hartono', 'nomor_wa' => '6281122334466']);
+    $sari = CrmCustomer::factory()->create(['nama' => 'Sari Indah', 'nomor_wa' => '6281122334477']);
     $falah = User::factory()->falah()->create();
 
-    // 1 jam 30 menit (90 menit)
+    // 45 detik
     $this->actingAs($falah)->post('/jeda', [
         'customer' => 'Budi Santoso',
-        'jam' => 1,
-        'menit' => 30,
+        'jumlah' => 45,
+        'satuan' => 'detik',
+        'alasan' => 'tunggu sebentar',
+    ])->assertSessionHasNoErrors();
+
+    // 2 jam
+    $this->actingAs($falah)->post('/jeda', [
+        'customer' => 'Rudi Hartono',
+        'jumlah' => 2,
+        'satuan' => 'jam',
         'alasan' => 'cek stok gudang',
     ])->assertSessionHasNoErrors();
 
     // tanpa_batas boolean
     $this->actingAs($falah)->post('/jeda', [
-        'customer' => 'Rudi Hartono',
+        'customer' => 'Sari Indah',
         'tanpa_batas' => true,
     ])->assertSessionHasNoErrors();
 
     $jedaBudi = JedaBot::query()->where('chat_id', $budi->chat_id)->sole();
     $jedaRudi = JedaBot::query()->where('chat_id', $rudi->chat_id)->sole();
+    $jedaSari = JedaBot::query()->where('chat_id', $sari->chat_id)->sole();
 
-    expect($jedaBudi->sampai?->format('H:i'))->toBe('15:12')
-        ->and($jedaRudi->sampai)->toBeNull();
+    expect($jedaBudi->sampai?->format('H:i:s'))->toBe('13:42:45')
+        ->and($jedaRudi->sampai?->format('H:i'))->toBe('15:42')
+        ->and($jedaSari->sampai)->toBeNull();
 
-    // validation fails if jam 0, menit 0, and not tanpa batas
-    $sari = CrmCustomer::factory()->create(['nama' => 'Sari Indah']);
+    // validation fails if jumlah 0 and not tanpa batas
+    $rina = CrmCustomer::factory()->create(['nama' => 'Rina']);
     $this->actingAs($falah)->post('/jeda', [
-        'customer' => 'Sari Indah',
-        'jam' => 0,
-        'menit' => 0,
+        'customer' => 'Rina',
+        'jumlah' => 0,
+        'satuan' => 'menit',
         'tanpa_batas' => false,
     ])->assertSessionHasErrors(['durasi']);
 });

@@ -42,31 +42,7 @@ type Props = {
     terakhir: { nama: string; jam: string } | null;
 };
 
-function hitungDurasiString(jam: number, menit: number): string {
-    const total = jam * 60 + menit;
-    if (total === 30) {
-        return '30 menit';
-    }
-    if (total === 60) {
-        return '1 jam';
-    }
-    if (total === 120) {
-        return '2 jam';
-    }
-    if (total === 1440) {
-        return '1 hari';
-    }
-    if (jam > 0 && menit > 0) {
-        return `${jam} jam ${menit} menit`;
-    }
-    if (jam > 0) {
-        return `${jam} jam`;
-    }
-    if (menit > 0) {
-        return `${menit} menit`;
-    }
-    return '';
-}
+type SatuanDurasi = 'menit' | 'jam' | 'detik' | 'hari';
 
 // narrow screens: the columns keep their width and the card scrolls sideways
 const KOLOM_AKTIF =
@@ -80,10 +56,10 @@ const kelasIsian = 'h-10 rounded-[9px] px-3 text-body';
 export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
     const form = useForm({
         customer: '',
-        jam: 2,
-        menit: 0,
+        jumlah: 30,
+        satuan: 'menit' as SatuanDurasi,
         tanpa_batas: false,
-        durasi: '2 jam',
+        durasi: '30 menit',
         alasan: '',
     });
     const [targetLanjut, setTargetLanjut] = useState<Aktif | null>(null);
@@ -91,25 +67,20 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
     const [sedangKirim, setSedangKirim] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const ubahJam = (val: number) => {
-        const j = Math.max(0, Math.min(val, 720));
+    const ubahJumlah = (val: number) => {
+        const j = Math.max(0, val);
         form.setData((prev) => ({
             ...prev,
-            jam: j,
-            durasi: prev.tanpa_batas
-                ? 'Tanpa batas'
-                : hitungDurasiString(j, prev.menit),
+            jumlah: j,
+            durasi: prev.tanpa_batas ? 'Tanpa batas' : `${j} ${prev.satuan}`,
         }));
     };
 
-    const ubahMenit = (val: number) => {
-        const m = Math.max(0, Math.min(val, 59));
+    const ubahSatuan = (s: SatuanDurasi) => {
         form.setData((prev) => ({
             ...prev,
-            menit: m,
-            durasi: prev.tanpa_batas
-                ? 'Tanpa batas'
-                : hitungDurasiString(prev.jam, m),
+            satuan: s,
+            durasi: prev.tanpa_batas ? 'Tanpa batas' : `${prev.jumlah} ${s}`,
         }));
     };
 
@@ -117,9 +88,7 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
         form.setData((prev) => ({
             ...prev,
             tanpa_batas: checked,
-            durasi: checked
-                ? 'Tanpa batas'
-                : hitungDurasiString(prev.jam, prev.menit),
+            durasi: checked ? 'Tanpa batas' : `${prev.jumlah} ${prev.satuan}`,
         }));
     };
 
@@ -136,14 +105,10 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
     });
 
     const jeda = () => {
-        if (
-            !form.data.tanpa_batas &&
-            form.data.jam === 0 &&
-            form.data.menit === 0
-        ) {
+        if (!form.data.tanpa_batas && form.data.jumlah <= 0) {
             form.setError(
                 'durasi',
-                'Pilih durasi jeda minimal 1 menit atau centang Tanpa batas.',
+                'Isi jumlah durasi minimal 1 atau centang Tanpa batas.',
             );
             return;
         }
@@ -378,57 +343,50 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                             'text-tag font-medium',
                                             form.data.tanpa_batas
                                                 ? 'text-muted'
-                                                : form.data.jam === 0 &&
-                                                    form.data.menit === 0
+                                                : form.data.jumlah <= 0
                                                   ? 'text-red-text'
                                                   : 'text-primary',
                                         )}
                                     >
                                         {form.data.tanpa_batas
                                             ? 'Tanpa batas (sampai aktif lagi)'
-                                            : form.data.jam === 0 &&
-                                                form.data.menit === 0
-                                              ? 'Minimal 1 menit'
-                                              : `Total: ${hitungDurasiString(form.data.jam, form.data.menit)}`}
+                                            : form.data.jumlah <= 0
+                                              ? 'Isi angka minimal 1'
+                                              : `Total: ${form.data.jumlah} ${form.data.satuan}`}
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2.5">
+                                <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-2.5">
                                     <label className="flex flex-col gap-1">
                                         <span className="text-tag text-muted">
-                                            Jam
+                                            Jumlah durasi
                                         </span>
-                                        <div className="relative flex items-center">
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                max={720}
-                                                disabled={form.data.tanpa_batas}
-                                                className={cn(
-                                                    kelasIsian,
-                                                    'pr-10',
-                                                    form.data.tanpa_batas &&
-                                                        'cursor-not-allowed border-line bg-subtle text-muted',
-                                                )}
-                                                value={form.data.jam}
-                                                onChange={(e) =>
-                                                    ubahJam(
-                                                        parseInt(
-                                                            e.target.value,
-                                                            10,
-                                                        ) || 0,
-                                                    )
-                                                }
-                                            />
-                                            <span className="pointer-events-none absolute right-3 text-caption text-muted">
-                                                jam
-                                            </span>
-                                        </div>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={9999}
+                                            disabled={form.data.tanpa_batas}
+                                            className={cn(
+                                                kelasIsian,
+                                                form.data.tanpa_batas &&
+                                                    'cursor-not-allowed border-line bg-subtle text-muted',
+                                            )}
+                                            placeholder="Mis. 30"
+                                            value={form.data.jumlah || ''}
+                                            onChange={(e) =>
+                                                ubahJumlah(
+                                                    parseInt(
+                                                        e.target.value,
+                                                        10,
+                                                    ) || 0,
+                                                )
+                                            }
+                                        />
                                     </label>
 
                                     <label className="flex flex-col gap-1">
                                         <span className="text-tag text-muted">
-                                            Menit
+                                            Satuan
                                         </span>
                                         <Select
                                             disabled={form.data.tanpa_batas}
@@ -437,23 +395,18 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                                 form.data.tanpa_batas &&
                                                     'cursor-not-allowed border-line bg-subtle text-muted',
                                             )}
-                                            value={form.data.menit}
+                                            value={form.data.satuan}
                                             onChange={(e) =>
-                                                ubahMenit(
-                                                    parseInt(
-                                                        e.target.value,
-                                                        10,
-                                                    ) || 0,
+                                                ubahSatuan(
+                                                    e.target
+                                                        .value as SatuanDurasi,
                                                 )
                                             }
                                         >
-                                            <option value={0}>0 menit</option>
-                                            <option value={5}>5 menit</option>
-                                            <option value={10}>10 menit</option>
-                                            <option value={15}>15 menit</option>
-                                            <option value={20}>20 menit</option>
-                                            <option value={30}>30 menit</option>
-                                            <option value={45}>45 menit</option>
+                                            <option value="menit">Menit</option>
+                                            <option value="jam">Jam</option>
+                                            <option value="detik">Detik</option>
+                                            <option value="hari">Hari</option>
                                         </Select>
                                     </label>
                                 </div>
