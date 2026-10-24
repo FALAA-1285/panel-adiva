@@ -173,7 +173,7 @@ export default function KatalogProduk({ tab, produk, uji }: Props) {
                 <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-5 max-xl:grid-cols-1">
                     <Panel
                         judul={`${produk.length} produk`}
-                        sub="Dibaca Adiva lewat tool Cari_Produk_per_Kategori dan Rekomendasi_Produk_Semua"
+                        sub="Katalog produk yang otomatis digunakan oleh Adiva untuk menjawab pertanyaan customer"
                         aksi={
                             <InputCari
                                 lebar="w-[240px]"

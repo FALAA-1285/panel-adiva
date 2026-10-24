@@ -44,6 +44,6 @@ test('demo data reproduces the numbers drawn in Sidebar.dc.html and Topbar.dc.ht
                 'notifikasi' => 4,
                 'sosmed' => 0,
             ])
-            ->where('panel.status', ['nomorWaha' => 2, 'workflowAktif' => 7, 'dijeda' => 3])
+            ->where('panel.status', ['nomorWaha' => 2, 'workflowAktif' => 7, 'dijeda' => 3, 'adivaAktif' => true])
             ->where('panel.pengguna', ['nama' => 'Falah', 'inisial' => 'F', 'peran' => 'Supervisor']));
 });

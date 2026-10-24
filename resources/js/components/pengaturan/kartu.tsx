@@ -50,11 +50,8 @@ export function KartuPengaturan({
                     {aksi}
                 </div>
             ) : kunci ? (
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2" title={kunci}>
                     {h2}
-                    <span className="font-mono text-key text-muted">
-                        {kunci}
-                    </span>
                 </div>
             ) : sub ? (
                 <div className="flex flex-col gap-[3px]">

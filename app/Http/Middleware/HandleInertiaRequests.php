@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                 'nomorWaha' => count(NomorBot::daftar()),
                 'workflowAktif' => Workflow::query()->whereIn('status', StatusWorkflow::berjalan())->count(),
                 'dijeda' => $dijeda,
+                'adivaAktif' => Workflow::query()->where('kode', 'chatbot')->where('status', StatusWorkflow::Aktif->value)->exists(),
             ],
             'pengguna' => [
                 'nama' => $user->name,
@@ -93,6 +94,9 @@ class HandleInertiaRequests extends Middleware
                 'pengaturan' => HakAkses::boleh($user, 'pengaturan'),
                 'balas' => HakAkses::boleh($user, 'balas'),
                 'catat' => HakAkses::boleh($user, 'catat'),
+                'broadcast' => HakAkses::boleh($user, 'broadcast'),
+                'monitoring' => HakAkses::boleh($user, 'monitoring'),
+                'aktivitas' => HakAkses::boleh($user, 'aktivitas'),
                 // Instagram & Facebook: not in the design, so not in demo mode (the visual tests)
                 'sosmed' => ! Demo::aktif(),
             ],

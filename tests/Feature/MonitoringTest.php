@@ -39,6 +39,11 @@ test('guests are sent to the login page', function () {
     $this->get('/monitoring')->assertRedirect('/masuk');
 });
 
+test('only supervisors see Monitoring', function () {
+    $this->actingAs(User::factory()->create())->get('/monitoring')->assertForbidden();
+    $this->actingAs(User::factory()->supervisor()->create())->get('/monitoring')->assertOk();
+});
+
 test('the figures count every workflow run and the chatbot replies', function () {
     jalan('chatbot', '2026-09-28 10:00', isi: ['durasi_ms' => 10000, 'data' => ['model' => 'gemini-3.6-flash', 'model_ms' => 1200]]);
     jalan('chatbot', '2026-09-28 10:05', isi: ['durasi_ms' => 12000, 'data' => ['model' => 'gemini-flash-latest', 'model_ms' => 1400, 'ongkir' => true]]);

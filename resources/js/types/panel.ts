@@ -17,6 +17,7 @@ export type Panel = {
         nomorWaha: number;
         workflowAktif: number;
         dijeda: number;
+        adivaAktif?: boolean;
     };
     pengguna: {
         nama: string;
@@ -31,6 +32,9 @@ export type Panel = {
         /** Reply, pause and resume the bot, and edit what Adiva knows of a customer. */
         balas: boolean;
         catat: boolean;
+        broadcast?: boolean;
+        monitoring?: boolean;
+        aktivitas?: boolean;
         /** Instagram & Facebook: hidden in demo mode (not in the design) */
         sosmed: boolean;
     };

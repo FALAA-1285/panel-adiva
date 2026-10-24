@@ -608,10 +608,10 @@ export default function BuatKampanye({
                                         Kirim lewat nomor bot
                                     </span>
                                     <span className="text-caption leading-[1.45] text-muted">
-                                        Setiap customer dikirimi dari nomor yang
-                                        terakhir ia pakai (kolom sesi_wa), sama
+                                        Setiap customer dikirimi dari nomor WhatsApp yang
+                                        terakhir ia gunakan, sama
                                         seperti balasan dan invoice. Customer
-                                        tanpa riwayat memakai SESI_UTAMA.
+                                        tanpa riwayat dikirim dari nomor WhatsApp utama.
                                     </span>
                                 </div>
                                 <Select

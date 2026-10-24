@@ -182,7 +182,7 @@ export default function Ringkasan(props: Props) {
             <IsiHalaman>
                 <StatStrip stat={props.angka} />
 
-                <div className="grid grid-cols-[minmax(0,1fr)_380px] items-start gap-5 max-xl:grid-cols-[minmax(0,1fr)_320px] max-lg:grid-cols-1">
+                <div className="grid grid-cols-[minmax(0,1fr)_380px] items-stretch gap-5 max-xl:grid-cols-[minmax(0,1fr)_320px] max-lg:grid-cols-1">
                     <Panel
                         judul="Perlu tindakan"
                         sub="Sama dengan notifikasi yang dikirim ke WhatsApp supervisor"
@@ -191,15 +191,30 @@ export default function Ringkasan(props: Props) {
                                 {props.tindakan.length} item
                             </span>
                         }
-                        isiClassName="p-0"
+                        className="h-full flex flex-col"
+                        isiClassName="p-0 grow flex flex-col justify-center"
                     >
-                        {props.tindakan.map((t, i) => (
-                            <BarisTindakan
-                                key={t.id}
-                                tindakan={t}
-                                terakhir={i === props.tindakan.length - 1}
-                            />
-                        ))}
+                        {props.tindakan.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-8 text-center">
+                                <div className="mb-2.5 flex size-12 items-center justify-center rounded-full bg-note-green-bg text-green-text">
+                                    <Ikon nama="centang" ukuran={24} tebal={2.5} />
+                                </div>
+                                <span className="text-body font-semibold text-ink">
+                                    Semua beres!
+                                </span>
+                                <span className="mt-1 max-w-[320px] text-caption leading-relaxed text-muted">
+                                    Tidak ada tindakan yang tertunda saat ini. Semua pesanan, chat, dan bot Adiva berjalan lancar.
+                                </span>
+                            </div>
+                        ) : (
+                            props.tindakan.map((t, i) => (
+                                <BarisTindakan
+                                    key={t.id}
+                                    tindakan={t}
+                                    terakhir={i === props.tindakan.length - 1}
+                                />
+                            ))
+                        )}
                     </Panel>
 
                     <div className="flex flex-col gap-5">

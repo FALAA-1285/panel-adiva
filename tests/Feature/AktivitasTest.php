@@ -24,7 +24,7 @@ test('lines are grouped per day for the last seven days, newest first', function
         ActivityLog::factory()->pada($waktu)->create(['aksi' => $aksi]);
     }
 
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(User::factory()->supervisor()->create())
         ->get('/aktivitas')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -40,7 +40,7 @@ test('lines are grouped per day for the last seven days, newest first', function
 });
 
 test('today keeps its panel when nothing matches', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(User::factory()->supervisor()->create())
         ->get('/aktivitas?q=tidak-ada')
         ->assertInertia(fn (Assert $page) => $page
             ->has('hari', 1)
@@ -74,14 +74,13 @@ test('the latest setting change that can still be put back is selected', functio
             ]));
 });
 
-test('only supervisors are offered Kembalikan, and only while the value is unchanged', function () {
+test('only supervisors see the log, and Kembalikan only while the value is unchanged', function () {
     $dina = User::factory()->create(['name' => 'Dina']);
     ConfigToko::create(['kunci' => 'BATAS_BAYAR_JAM', 'nilai' => '5']);
     ActivityLog::factory()->oleh($dina)->ubahPengaturan('BATAS_BAYAR_JAM', '4', '5')->create();
 
-    $this->actingAs($dina)
-        ->get('/aktivitas')
-        ->assertInertia(fn (Assert $page) => $page->where('hari.0.kejadian.0.rincian.kembalikan', null));
+    $this->actingAs($dina)->get('/aktivitas')->assertForbidden();
+    $this->actingAs($dina)->get('/aktivitas/ekspor')->assertForbidden();
 
     ConfigToko::query()->where('kunci', 'BATAS_BAYAR_JAM')->update(['nilai' => '6']);
 
@@ -129,7 +128,7 @@ test('filters narrow the lines and unknown values are ignored', function (string
 
     $query = str_replace('{dina}', (string) $dina->id, $query);
 
-    $this->actingAs($dina)
+    $this->actingAs(User::factory()->supervisor()->create())
         ->get('/aktivitas?'.$query)
         ->assertInertia(fn (Assert $page) => $page->where('hari.0.kejadian', fn ($kejadian) => collect($kejadian)->pluck('aksi')->all() === $aksi));
 })->with([
@@ -159,7 +158,7 @@ test('Ekspor CSV holds every matching line, not only the last days', function ()
     ActivityLog::factory()->pada('2026-08-01 09:00')->create(['aksi' => 'Arsip data', 'detail' => '12 order diarsipkan']);
     ActivityLog::factory()->adiva()->pada('2026-09-28 12:48')->create(['aksi' => 'Teruskan ke admin']);
 
-    $csv = $this->actingAs(User::factory()->create())
+    $csv = $this->actingAs(User::factory()->supervisor()->create())
         ->get('/aktivitas/ekspor?sumber=SISTEM')
         ->assertOk()
         ->assertDownload('log-aktivitas-2026-09-28.csv')

@@ -43,13 +43,8 @@ export function IsianKunci({
                 className,
             )}
         >
-            <span className="flex flex-col gap-0.5">
+            <span className="flex flex-col gap-0.5" title={kunci}>
                 <span className="text-body font-semibold">{label}</span>
-                {kunci && (
-                    <span className="font-mono text-key text-muted">
-                        {kunci}
-                    </span>
-                )}
             </span>
             {children}
             {error && (

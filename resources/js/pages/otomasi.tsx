@@ -73,7 +73,7 @@ const kolom: KolomTabel<Workflow>[] = [
         cell: ({ row }) => (
             <>
                 <T1 className="font-semibold">{row.original.nama}</T1>
-                <T2>{row.original.node}</T2>
+                <T2>{row.original.jadwalKeterangan || row.original.jadwal || 'Otomasi Adiva'}</T2>
             </>
         ),
     },
@@ -164,7 +164,7 @@ export default function Otomasi({
             <Head title="Otomasi" />
             <PageHeader
                 judul="Otomasi"
-                sub="Workflow n8n yang berjalan sendiri di belakang Adiva: jadwalnya, aturannya, dan pesan yang dikirim. Angka aturan dibaca dari CONFIG_TOKO."
+                sub="Sistem otomasi Adiva: jadwal kerja, aturan respon, dan alur pesan ke customer mengikuti Pengaturan Toko."
                 tab={[
                     {
                         label: 'Semua',
@@ -219,7 +219,7 @@ export default function Otomasi({
                 {tampilWorkflow && (
                     <Panel
                         judul="Workflow & jadwal"
-                        sub="Zona waktu Asia/Jakarta. Semua pesan ke customer dikirim lewat nomor bot yang ia pakai (sesi_wa); pesan ke supervisor lewat SESI_UTAMA."
+                        sub="Zona waktu Asia/Jakarta. Semua pesan ke customer dikirim lewat nomor WhatsApp yang ia gunakan; pesan ke supervisor lewat nomor WhatsApp utama."
                         aksi={
                             n8nUrl ? (
                                 <a

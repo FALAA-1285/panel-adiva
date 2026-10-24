@@ -103,7 +103,7 @@ export function PageHeader({
                 <nav
                     aria-label={tabLabel}
                     // narrow screens: the tabs scroll sideways instead of wrapping
-                    className="mt-3.5 flex gap-6 border-b border-line max-xl:[scrollbar-width:none] max-xl:overflow-x-auto max-md:gap-5"
+                    className="mt-3.5 flex gap-6 border-b border-line [scrollbar-width:none] overflow-x-auto max-md:gap-5"
                 >
                     {tab.map((t) => (
                         <TabItem key={t.label} tab={t} />
@@ -193,7 +193,7 @@ export function DaftarTab({ label, tab, className }: DaftarTabProps) {
             role="tablist"
             aria-label={label}
             className={cn(
-                'flex border-b border-line max-xl:[scrollbar-width:none] max-xl:overflow-x-auto',
+                'flex border-b border-line [scrollbar-width:none] overflow-x-auto',
                 className,
             )}
         >

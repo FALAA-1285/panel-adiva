@@ -344,18 +344,7 @@ function BarisPesanan({
     );
 }
 
-const kelasAksi = (a: Aksi, boleh: boolean) =>
-    cn(
-        'h-9 min-w-[76px] cursor-pointer rounded-control border px-3 text-caption font-semibold whitespace-nowrap',
-        // a step that does not apply yet is drawn as an outline, not as a broken button,
-        // so the one that can be pressed is the only solid thing in the row
-        !boleh
-            ? 'cursor-not-allowed border-dashed border-line-strong bg-transparent text-faint'
-            : a.gaya === 'utama'
-              ? 'border-primary bg-primary text-white hover:border-primary-ink hover:bg-primary-ink'
-              : 'border-line-strong bg-surface text-red-text hover:bg-note-red-bg',
-        'motion-safe:transition-colors motion-safe:duration-150',
-    );
+
 
 /**
  * The grid's eighth button: TUTUP and BATAL KIRIM, once WhatsApp commands only. Opens
@@ -456,7 +445,17 @@ function PanelDetail({
     tampil: boolean;
     onKembali: () => void;
 }) {
-    const [catatan, setCatatan] = useState('');
+    const [modalAksi, setModalAksi] = useState<{
+        kode: string;
+        judul: string;
+        deskripsi: string;
+        labelInput?: string;
+        placeholderInput?: string;
+        wajibInput?: boolean;
+        tombolTeks: string;
+        varian?: 'primary' | 'bahaya';
+    } | null>(null);
+    const [nilaiInput, setNilaiInput] = useState('');
     const [mengirimInvoice, setMengirimInvoice] = useState(false);
     const [galatInvoice, setGalatInvoice] = useState<string | null>(null);
 
@@ -479,18 +478,90 @@ function PanelDetail({
         );
     };
 
-    const jalankan = (kode: string) =>
+    const jalankan = (kode: string, catatanKirim = '') =>
         router.post(
             perintah.url(detail.id),
-            { aksi: kode, catatan },
-            { preserveScroll: true, onSuccess: () => setCatatan('') },
+            { aksi: kode, catatan: catatanKirim },
+            { preserveScroll: true },
         );
+
+    const klikAksi = (a: Aksi) => {
+        if (a.kode === 'KIRIM') {
+            setNilaiInput('');
+            setModalAksi({
+                kode: 'KIRIM',
+                judul: 'Kirim Pesanan',
+                deskripsi:
+                    'Tandai pesanan telah dikirim. Masukkan nomor resi kurir, atau kosongkan jika pengiriman otomatis di-booking via Mengantar.',
+                labelInput: 'Nomor Resi Pengiriman (Opsional)',
+                placeholderInput:
+                    'Contoh: JNE0123456789 (kosongkan jika otomatis)',
+                wajibInput: false,
+                tombolTeks: 'Konfirmasi Kirim',
+                varian: 'primary',
+            });
+            return;
+        }
+
+        if (a.kode === 'ACC' && a.bolehDenganOngkir) {
+            setNilaiInput('');
+            setModalAksi({
+                kode: 'ACC',
+                judul: 'Setujui Pesanan & Tentukan Ongkir',
+                deskripsi:
+                    'Pesanan ini belum memiliki biaya ongkos kirim. Masukkan nominal ongkir untuk menerbitkan invoice ke customer.',
+                labelInput: 'Biaya Ongkir (Rp)',
+                placeholderInput: 'Contoh: 25000',
+                wajibInput: true,
+                tombolTeks: 'ACC & Terbitkan Invoice',
+                varian: 'primary',
+            });
+            return;
+        }
+
+        if (a.kode === 'TOLAK') {
+            setNilaiInput('');
+            setModalAksi({
+                kode: 'TOLAK',
+                judul: 'Tolak Pesanan Ini?',
+                deskripsi:
+                    'Pesanan akan ditolak dan dibatalkan. Masukkan alasan penolakan untuk dicatat dalam riwayat sistem.',
+                labelInput: 'Alasan Penolakan (Wajib)',
+                placeholderInput:
+                    'Contoh: Stok varian habis, customer membatalkan...',
+                wajibInput: true,
+                tombolTeks: 'Tolak Pesanan',
+                varian: 'bahaya',
+            });
+            return;
+        }
+
+        if (a.kode === 'BATAL') {
+            setNilaiInput('');
+            setModalAksi({
+                kode: 'BATAL',
+                judul: 'Batalkan Pesanan Ini?',
+                deskripsi:
+                    'Pesanan akan dibatalkan. Masukkan alasan pembatalan untuk dicatat dalam riwayat sistem.',
+                labelInput: 'Alasan Pembatalan (Wajib)',
+                placeholderInput:
+                    'Contoh: Customer meminta pembatalan transaksi...',
+                wajibInput: true,
+                tombolTeks: 'Batalkan Pesanan',
+                varian: 'bahaya',
+            });
+            return;
+        }
+
+        // Aksi langsung (LUNAS, SIAP, SELESAI, atau ACC yang sudah berongkir)
+        jalankan(a.kode);
+    };
 
     return (
         <aside
             aria-label="Detail pesanan"
             className={cn(
-                'box-content flex w-[420px] shrink-0 flex-col overflow-hidden rounded-card border border-line bg-surface',
+                'box-content flex w-[380px] max-w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-surface',
                 'max-xl:w-auto max-xl:min-w-0 max-xl:grow',
                 !tampil && 'max-xl:hidden',
             )}
@@ -719,85 +790,189 @@ function PanelDetail({
                 </div>
             </div>
 
-            <div className="flex flex-col gap-2.5 border-t border-line-softer bg-subtle px-[18px] pt-3 pb-4">
-                {/* the note carries the receipt (KIRIM; none = n8n books Mengantar),
-                    the shipping cost (ACC), or the reason (TOLAK, BATAL) */}
-                {/* the note sits with the buttons that read it, not above the fold of
-                    a panel that scrolls: KIRIM and TOLAK are unusable without it */}
-                <label className="flex flex-col gap-1.5">
-                    <span className="text-tag font-semibold tracking-[0.04em] text-muted uppercase">
-                        Catatan, nomor resi, atau alasan
-                    </span>
-                    <Input
-                        type="text"
-                        placeholder="Mis. JNE999, ongkir 25000, atau alasan tolak"
-                        className="h-9 rounded-control bg-surface px-3 text-body"
-                        value={catatan}
-                        onChange={(e) => setCatatan(e.target.value)}
-                    />
-                </label>
+            <div className="flex flex-col gap-3 border-t border-line-softer bg-subtle px-[18px] pt-3.5 pb-4">
                 {(() => {
-                    const bisa = (a: Aksi) =>
-                        a.boleh ||
-                        (a.bolehDenganOngkir && catatan.trim() !== '');
-                    const maju = detail.aksi.filter((a) => a.gaya === 'utama');
-                    const bahaya = detail.aksi.filter(
-                        (a) => a.gaya === 'bahaya',
+                    const maju = detail.aksi.filter(
+                        (a) =>
+                            a.gaya === 'utama' &&
+                            (a.boleh || a.bolehDenganOngkir),
                     );
+                    const bahaya = detail.aksi.filter(
+                        (a) => a.gaya === 'bahaya' && a.boleh,
+                    );
+                    const lainnya = detail.lainnya.filter((a) => a.boleh);
+
+                    const tidakAdaAksi =
+                        maju.length === 0 &&
+                        bahaya.length === 0 &&
+                        lainnya.length === 0;
+
+                    if (tidakAdaAksi) {
+                        return (
+                            <div className="rounded-control border border-line bg-surface p-3 text-caption text-ink-2">
+                                Pesanan saat ini berada pada status{' '}
+                                <strong>{detail.status.label}</strong>. Tidak
+                                ada tindakan admin lanjutan yang diperlukan.
+                            </div>
+                        );
+                    }
+
+                    const labelAksi = (
+                        kode: string,
+                        bolehDenganOngkir: boolean,
+                    ) => {
+                        switch (kode) {
+                            case 'ACC':
+                                return bolehDenganOngkir
+                                    ? 'ACC (+ Ongkir)'
+                                    : 'ACC Pesanan';
+                            case 'LUNAS':
+                                return 'Tandai Lunas';
+                            case 'SIAP':
+                                return 'Siap Diambil';
+                            case 'KIRIM':
+                                return 'Kirim Pesanan';
+                            case 'SELESAI':
+                                return 'Selesaikan Pesanan';
+                            case 'TOLAK':
+                                return 'Tolak Pesanan';
+                            case 'BATAL':
+                                return 'Batalkan Pesanan';
+                            default:
+                                return kode;
+                        }
+                    };
 
                     return (
                         <>
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-tag font-semibold tracking-[0.04em] text-muted uppercase">
-                                    Langkah berikutnya
-                                </span>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {maju.map((a) => (
+                            {maju.length > 0 && (
+                                <div className="flex flex-col gap-1.5">
+                                    <span className="text-tag font-semibold tracking-[0.04em] text-muted uppercase">
+                                        Langkah berikutnya
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {maju.map((a) => (
+                                            <button
+                                                key={a.kode}
+                                                type="button"
+                                                title={a.judul}
+                                                onClick={() => klikAksi(a)}
+                                                className="inline-flex h-9 cursor-pointer items-center justify-center rounded-control border border-primary bg-primary px-3.5 text-caption font-semibold text-white hover:border-primary-ink hover:bg-primary-ink motion-safe:transition-colors"
+                                            >
+                                                {labelAksi(
+                                                    a.kode,
+                                                    a.bolehDenganOngkir,
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(bahaya.length > 0 || lainnya.length > 0) && (
+                                <div className="flex flex-wrap items-center gap-2 border-t border-line-soft pt-2">
+                                    <span className="mr-auto text-tag font-semibold tracking-[0.04em] text-muted uppercase">
+                                        Opsi lain
+                                    </span>
+                                    {bahaya.map((a) => (
                                         <button
                                             key={a.kode}
                                             type="button"
-                                            disabled={!bisa(a)}
                                             title={a.judul}
-                                            onClick={() => jalankan(a.kode)}
-                                            className={kelasAksi(a, bisa(a))}
+                                            onClick={() => klikAksi(a)}
+                                            className="h-8 cursor-pointer rounded-control border border-line-strong bg-surface px-3 text-caption font-semibold text-red-text hover:bg-note-red-bg motion-safe:transition-colors"
                                         >
-                                            {a.kode}
+                                            {labelAksi(a.kode, false)}
                                         </button>
                                     ))}
+                                    {lainnya.length > 0 && (
+                                        <MenuLainnya
+                                            aksi={lainnya}
+                                            onPilih={jalankan}
+                                        />
+                                    )}
                                 </div>
-                            </div>
-                            <div className="h-px bg-line-softer" />
-                            <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="mr-auto text-tag font-semibold tracking-[0.04em] text-muted uppercase">
-                                    Hentikan order
-                                </span>
-                                {bahaya.map((a) => (
-                                    <button
-                                        key={a.kode}
-                                        type="button"
-                                        disabled={!bisa(a)}
-                                        title={a.judul}
-                                        onClick={() => jalankan(a.kode)}
-                                        className={kelasAksi(a, bisa(a))}
-                                    >
-                                        {a.kode}
-                                    </button>
-                                ))}
-                                <MenuLainnya
-                                    aksi={detail.lainnya}
-                                    onPilih={jalankan}
-                                />
-                            </div>
+                            )}
                         </>
                     );
                 })()}
-                <div className="text-tag leading-[1.5] text-muted">
-                    Nomor resi untuk KIRIM · ongkir untuk ACC · alasan untuk
-                    TOLAK dan BATAL. Urutannya sama dengan workflow: LUNAS
-                    setelah ACC, KIRIM setelah LUNAS, SIAP hanya untuk ambil
-                    sendiri. Tombol bergaris putus belum berlaku — arahkan
-                    kursor untuk alasannya.
-                </div>
+
+                {modalAksi && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 motion-safe:animate-[pudar_120ms_ease-out]"
+                        onClick={() => setModalAksi(null)}
+                    >
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="judul-modal-aksi"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) =>
+                                e.key === 'Escape' && setModalAksi(null)
+                            }
+                            className="w-full max-w-[440px] rounded-card border border-line bg-surface p-5 font-sans text-ink shadow-lg"
+                        >
+                            <h3
+                                id="judul-modal-aksi"
+                                className="m-0 text-panel font-semibold text-ink"
+                            >
+                                {modalAksi.judul}
+                            </h3>
+                            <p className="mt-2 text-body leading-relaxed text-ink-2">
+                                {modalAksi.deskripsi}
+                            </p>
+                            {modalAksi.labelInput && (
+                                <div className="mt-4 flex flex-col gap-1.5">
+                                    <label
+                                        htmlFor="input-modal-aksi"
+                                        className="text-tag font-semibold tracking-wider text-muted uppercase"
+                                    >
+                                        {modalAksi.labelInput}
+                                    </label>
+                                    <Input
+                                        id="input-modal-aksi"
+                                        autoFocus
+                                        placeholder={modalAksi.placeholderInput}
+                                        value={nilaiInput}
+                                        onChange={(e) =>
+                                            setNilaiInput(e.target.value)
+                                        }
+                                        className="h-10 rounded-control bg-surface px-3 text-body"
+                                    />
+                                </div>
+                            )}
+                            <div className="mt-5 flex justify-end gap-2.5">
+                                <Button
+                                    type="button"
+                                    onClick={() => setModalAksi(null)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="button"
+                                    varian={
+                                        modalAksi.varian === 'bahaya'
+                                            ? 'danger'
+                                            : 'primary'
+                                    }
+                                    disabled={
+                                        modalAksi.wajibInput &&
+                                        !nilaiInput.trim()
+                                    }
+                                    onClick={() => {
+                                        const catatanKirim = nilaiInput.trim();
+                                        const kode = modalAksi.kode;
+                                        setModalAksi(null);
+                                        setNilaiInput('');
+                                        jalankan(kode, catatanKirim);
+                                    }}
+                                >
+                                    {modalAksi.tombolTeks}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </aside>
     );

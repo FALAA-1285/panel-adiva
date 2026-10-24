@@ -68,7 +68,7 @@ test('the access table ticks the roles allowed for each action', function () {
     $this->actingAs(User::factory()->supervisor()->create())
         ->get('/tim')
         ->assertInertia(fn (Assert $page) => $page
-            ->has('hakAkses', 9)
+            ->has('hakAkses', 11)
             ->where('hakAkses.4', [
                 'aksi' => 'order_karyawan',
                 'label' => 'Order karyawan',

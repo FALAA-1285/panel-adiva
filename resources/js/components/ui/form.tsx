@@ -23,14 +23,10 @@ export function Field({
         <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
             <label
                 htmlFor={htmlFor}
+                title={kunci}
                 className="flex items-baseline gap-2 text-body font-semibold text-ink"
             >
                 {label}
-                {kunci && (
-                    <span className="font-mono text-tag font-normal whitespace-nowrap text-muted">
-                        {kunci}
-                    </span>
-                )}
             </label>
             {children}
             {hint && (

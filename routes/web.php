@@ -143,10 +143,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/jeda/{jeda}/lanjut', [JedaController::class, 'lanjut'])->name('jeda.lanjut');
     });
 
-    Route::get('/monitoring', MonitoringController::class)->name('monitoring');
-    Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas');
-    Route::get('/aktivitas/ekspor', [AktivitasController::class, 'ekspor'])->name('aktivitas.ekspor');
-    Route::post('/aktivitas/{log}/kembalikan', [AktivitasController::class, 'kembalikan'])->name('aktivitas.kembalikan');
+    Route::middleware('can:monitoring')->group(function () {
+        Route::get('/monitoring', MonitoringController::class)->name('monitoring');
+    });
+
+    Route::middleware('can:aktivitas')->group(function () {
+        Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas');
+        Route::get('/aktivitas/ekspor', [AktivitasController::class, 'ekspor'])->name('aktivitas.ekspor');
+        Route::post('/aktivitas/{log}/kembalikan', [AktivitasController::class, 'kembalikan'])->name('aktivitas.kembalikan');
+    });
 
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
     Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca-semua');

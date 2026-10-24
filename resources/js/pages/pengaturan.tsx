@@ -772,7 +772,7 @@ export default function Pengaturan({
                                     <span className="text-caption leading-[1.45] text-muted">
                                         Semua nomor masuk ke pintu yang sama.
                                         Customer selalu dibalas dari nomor yang
-                                        ia pakai (sesi_wa), termasuk invoice dan
+                                        ia gunakan, termasuk invoice dan
                                         pengingat.
                                     </span>
                                     <div className="overflow-hidden rounded-control border border-line max-md:overflow-x-auto">
@@ -857,7 +857,7 @@ export default function Pengaturan({
 
                                 <KartuPengaturan
                                     judul="AI & perilaku bot"
-                                    sub="Model, temperature, ingatan, dan jeda gabung saat ini diatur di node workflow, bukan di CONFIG_TOKO."
+                                    sub="Konfigurasi model AI, gaya respon (suhu), dan parameter ingatan bot Adiva."
                                 >
                                     <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
                                         {(

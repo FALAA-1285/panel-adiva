@@ -348,9 +348,11 @@ function KolomPipeline({
                     <button
                         type="button"
                         onClick={onLainnya}
-                        className="h-[30px] cursor-pointer rounded-control border-none bg-transparent text-caption font-medium text-primary"
+                        className="h-[30px] cursor-pointer rounded-control border-none bg-transparent text-caption font-medium text-primary hover:underline"
                     >
-                        Lihat {sisa} lainnya
+                        {kolom.kartu.length > 0
+                            ? `Lihat ${sisa} lainnya`
+                            : `Lihat ${sisa} customer`}
                     </button>
                 )}
             </div>

@@ -22,8 +22,10 @@ class HakAkses
         'order_karyawan' => ['label' => 'Order karyawan', 'peran' => [Peran::Supervisor, Peran::PjKaryawan]],
         'broadcast' => ['label' => 'Broadcast', 'peran' => [Peran::Supervisor]],
         'katalog' => ['label' => 'Katalog, kebijakan, prompt', 'peran' => [Peran::Supervisor]],
-        'pengaturan' => ['label' => 'Pengaturan toko', 'peran' => [Peran::Supervisor]],
+        'pengaturan' => ['label' => 'Pengaturan toko & otomasi', 'peran' => [Peran::Supervisor]],
         'tim' => ['label' => 'Tim & akses', 'peran' => [Peran::Supervisor]],
+        'monitoring' => ['label' => 'Monitoring sistem', 'peran' => [Peran::Supervisor]],
+        'aktivitas' => ['label' => 'Log aktivitas sistem', 'peran' => [Peran::Supervisor]],
     ];
 
     public static function boleh(User $user, string $aksi): bool

@@ -106,10 +106,8 @@ export default function HalamanSosmed({
 }: Props) {
     const [cari, setCari] = useState(cariAwal);
     const [dipilih, setDipilih] = useState(kontak?.id);
-    // not connected yet: the connection form first
-    const [aturSambungan, setAturSambungan] = useState(
-        !sambungan.tersambung && sambungan.boleh,
-    );
+    // Daily DM workspace is always the default view; connection setup is opened on demand
+    const [aturSambungan, setAturSambungan] = useState(false);
     const pertama = useRef(true);
     const lihatUtas = new URLSearchParams(
         usePage().url.split('?')[1] ?? '',
@@ -251,7 +249,10 @@ export default function HalamanSosmed({
             />
             {aturSambungan && sambungan.boleh && (
                 <div className="mx-8 mt-5 max-md:mx-4">
-                    <FormSambungan sambungan={sambungan} />
+                    <FormSambungan
+                        sambungan={sambungan}
+                        onTutup={() => setAturSambungan(false)}
+                    />
                 </div>
             )}
             <div className="mx-8 mt-5 mb-6 flex min-h-[420px] grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">
@@ -628,7 +629,13 @@ function InfoKontak({ kontak: k }: { kontak: Kontak }) {
  * Sambungan: the page's ids and switches; the token and the app secret are typed in and
  * never shown again.
  */
-function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
+function FormSambungan({
+    sambungan: s,
+    onTutup,
+}: {
+    sambungan: Sambungan;
+    onTutup?: () => void;
+}) {
     const form = useForm({
         ...s.nilai,
         META_PAGE_TOKEN_BARU: '',
@@ -648,6 +655,8 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
         <Field label={label} htmlFor={kunci} hint={sub}>
             <Input
                 id={kunci}
+                name={`meta_field_${kunci.toLowerCase()}`}
+                autoComplete="off"
                 value={form.data[kunci]}
                 onChange={(e) => form.setData(kunci, e.target.value)}
             />
@@ -664,27 +673,39 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
             judul="Sambungan Meta"
             sub="Diisi dari Meta for Developers (aplikasi + halaman Facebook yang tertaut ke akun Instagram). Dipakai n8n dan panel."
             aksi={
-                <Button
-                    ukuran="sm"
-                    onClick={() =>
-                        router.post(
-                            ujiSambungan.url(),
-                            {},
-                            {
-                                preserveScroll: true,
-                                onSuccess: () => setGalatUji(null),
-                                onError: (e) =>
-                                    setGalatUji(e.sambungan ?? null),
-                            },
-                        )
-                    }
-                >
-                    Uji sambungan
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        ukuran="sm"
+                        onClick={() =>
+                            router.post(
+                                ujiSambungan.url(),
+                                {},
+                                {
+                                    preserveScroll: true,
+                                    onSuccess: () => setGalatUji(null),
+                                    onError: (e) =>
+                                        setGalatUji(e.sambungan ?? null),
+                                },
+                            )
+                        }
+                    >
+                        Uji sambungan
+                    </Button>
+                    {onTutup && (
+                        <Button
+                            ukuran="sm"
+                            type="button"
+                            onClick={onTutup}
+                        >
+                            Tutup
+                        </Button>
+                    )}
+                </div>
             }
         >
             <form
                 className="flex flex-col gap-4"
+                autoComplete="off"
                 onSubmit={(e) => {
                     e.preventDefault();
                     form.put(simpanSambungan.url(), {
@@ -697,6 +718,22 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
                     });
                 }}
             >
+                {/* Dummy inputs to prevent browser credential managers from autofilling saved email/password */}
+                <input
+                    type="text"
+                    name="meta_prevent_autofill_email"
+                    className="hidden"
+                    tabIndex={-1}
+                    autoComplete="off"
+                />
+                <input
+                    type="password"
+                    name="meta_prevent_autofill_pwd"
+                    className="hidden"
+                    tabIndex={-1}
+                    autoComplete="new-password"
+                />
+
                 {galatUji && (
                     <span role="alert" className="text-body text-red-text">
                         {galatUji}
@@ -721,8 +758,9 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
                     >
                         <Input
                             id="META_PAGE_TOKEN_BARU"
+                            name="meta_field_page_token"
                             type="password"
-                            autoComplete="off"
+                            autoComplete="new-password"
                             value={form.data.META_PAGE_TOKEN_BARU}
                             onChange={(e) =>
                                 form.setData(
@@ -743,8 +781,9 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
                     >
                         <Input
                             id="META_APP_SECRET_BARU"
+                            name="meta_field_app_secret"
                             type="password"
-                            autoComplete="off"
+                            autoComplete="new-password"
                             value={form.data.META_APP_SECRET_BARU}
                             onChange={(e) =>
                                 form.setData(
@@ -766,7 +805,7 @@ function FormSambungan({ sambungan: s }: { sambungan: Sambungan }) {
                     </span>
                     <span className="font-mono text-caption break-all text-ink-2">
                         {s.webhook ??
-                            'Isi N8N_WEBHOOK_URL di .env panel dulu; alamatnya …/webhook/meta-bangbana di n8n.'}
+                            'Alamat webhook belum terkonfigurasi di server.'}
                     </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-8 gap-y-3">

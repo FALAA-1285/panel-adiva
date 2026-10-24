@@ -105,6 +105,7 @@ const grup: { judul: string; item: ItemMenu[] }[] = [
                 label: 'Broadcast',
                 href: broadcast.url(),
                 ikon: 'broadcast',
+                akses: 'broadcast',
             },
             {
                 kode: 'sosmed',
@@ -157,6 +158,7 @@ const grup: { judul: string; item: ItemMenu[] }[] = [
                 href: monitoring.url(),
                 ikon: 'monitoring',
                 hitungan: 'monitoring',
+                akses: 'monitoring',
             },
             {
                 kode: 'tim',
@@ -170,6 +172,7 @@ const grup: { judul: string; item: ItemMenu[] }[] = [
                 label: 'Log aktivitas',
                 href: '/aktivitas',
                 ikon: 'aktivitas',
+                akses: 'aktivitas',
             },
         ],
     },
@@ -264,25 +267,33 @@ export function Sidebar({
                 </span>
             </Link>
 
-            {grup.map((g) => (
-                <div key={g.judul} className="flex flex-col gap-px">
-                    <div
-                        className={cn('mx-2.5 mb-1.5 h-px bg-line', mode.ikon)}
-                    />
-                    <div
-                        className={cn(
-                            'px-2.5 pb-1.5 text-caption font-medium text-muted',
-                            mode.penuh,
-                        )}
-                    >
-                        {g.judul}
-                    </div>
-                    {g.item
-                        .filter((item) => !item.akses || akses[item.akses])
-                        .map((item) => {
+            {grup.map((g) => {
+                const itemTampil = g.item.filter(
+                    (item) => !item.akses || akses[item.akses],
+                );
+                if (itemTampil.length === 0) return null;
+
+                return (
+                    <div key={g.judul} className="flex flex-col gap-px">
+                        <div
+                            className={cn('mx-2.5 mb-1.5 h-px bg-line', mode.ikon)}
+                        />
+                        <div
+                            className={cn(
+                                'px-2.5 pb-1.5 text-caption font-medium text-muted',
+                                mode.penuh,
+                            )}
+                        >
+                            {g.judul}
+                        </div>
+                        {itemTampil.map((item) => {
                             const n = item.hitungan
                                 ? hitungan[item.hitungan]
                                 : 0;
+                            const judulTooltip =
+                                n > 0
+                                    ? `${item.label} (${n} perlu tindakan)`
+                                    : item.label;
 
                             return (
                                 <Link
@@ -293,8 +304,8 @@ export function Sidebar({
                                             ? 'page'
                                             : undefined
                                     }
-                                    aria-label={item.label}
-                                    title={item.label}
+                                    aria-label={judulTooltip}
+                                    title={judulTooltip}
                                     className={cn(
                                         'relative flex h-8.5 items-center gap-2.5 rounded-nav px-2.5 text-body no-underline motion-safe:transition-colors motion-safe:duration-150',
                                         item.kode === active
@@ -323,43 +334,64 @@ export function Sidebar({
                                                     'absolute top-1 right-1 size-[7px] rounded-full bg-primary',
                                                     mode.ikon,
                                                 )}
+                                                title={`${n} perlu tindakan`}
                                             />
                                         </>
                                     )}
                                 </Link>
                             );
                         })}
-                </div>
-            ))}
+                    </div>
+                );
+            })}
 
             <div className="grow" />
 
-            <div
-                className={cn(
-                    'flex justify-center border-t border-line py-3',
-                    mode.ikon,
-                )}
-                title="Adiva sedang aktif"
-            >
-                <span className="size-[7px] rounded-full bg-green-dot" />
-            </div>
-            <div
-                className={cn(
-                    'flex flex-col gap-[3px] border-t border-line px-2.5 py-3',
-                    mode.penuh,
-                )}
-            >
-                <div className="flex items-center gap-2 text-body font-semibold text-ink">
-                    <span className="size-[7px] rounded-full bg-green-dot" />
-                    Adiva sedang aktif
-                </div>
-                <div className="text-caption leading-[1.45] text-muted">
-                    {status.nomorWaha} nomor WAHA · {status.workflowAktif}{' '}
-                    workflow aktif
-                    <br />
-                    {status.dijeda} customer sedang dijeda
-                </div>
-            </div>
+            {(() => {
+                const aktif = status.adivaAktif ?? true;
+                const statusTeks = aktif ? 'Adiva sedang aktif' : 'Adiva nonaktif';
+
+                return (
+                    <>
+                        <div
+                            className={cn(
+                                'flex justify-center border-t border-line py-3',
+                                mode.ikon,
+                            )}
+                            title={statusTeks}
+                        >
+                            <span
+                                className={cn(
+                                    'size-[7px] rounded-full',
+                                    aktif ? 'bg-green-dot' : 'bg-gray-400',
+                                )}
+                            />
+                        </div>
+                        <div
+                            className={cn(
+                                'flex flex-col gap-[3px] border-t border-line px-2.5 py-3',
+                                mode.penuh,
+                            )}
+                        >
+                            <div className="flex items-center gap-2 text-body font-semibold text-ink">
+                                <span
+                                    className={cn(
+                                        'size-[7px] rounded-full',
+                                        aktif ? 'bg-green-dot' : 'bg-gray-400',
+                                    )}
+                                />
+                                {statusTeks}
+                            </div>
+                            <div className="text-caption leading-[1.45] text-muted">
+                                {status.nomorWaha} nomor WAHA · {status.workflowAktif}{' '}
+                                workflow aktif
+                                <br />
+                                {status.dijeda} customer sedang dijeda
+                            </div>
+                        </div>
+                    </>
+                );
+            })()}
 
             <div
                 className={cn(

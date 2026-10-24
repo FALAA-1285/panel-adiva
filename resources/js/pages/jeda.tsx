@@ -46,10 +46,9 @@ type SatuanDurasi = 'menit' | 'jam' | 'detik' | 'hari';
 
 // narrow screens: the columns keep their width and the card scrolls sideways
 const KOLOM_AKTIF =
-    // the second column holds "Kemarin → ∞" over a chip like "tanpa batas · diingatkan 09.00"
-    'grid grid-cols-[minmax(0,1.1fr)_184px_56px_minmax(0,1.35fr)_128px] gap-3 max-xl:min-w-[780px]';
+    'grid grid-cols-[minmax(110px,1.2fr)_minmax(125px,1.2fr)_56px_minmax(100px,1.4fr)_auto] gap-2.5';
 const KOLOM_RIWAYAT =
-    'grid grid-cols-[minmax(0,1fr)_150px_70px_minmax(0,1.8fr)_64px] gap-2.5 max-xl:min-w-[680px]';
+    'grid grid-cols-[minmax(90px,1fr)_minmax(110px,1.1fr)_60px_minmax(110px,1.5fr)_56px] gap-2';
 
 const kelasIsian = 'h-10 rounded-[9px] px-3 text-body';
 

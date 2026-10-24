@@ -387,57 +387,95 @@ export default function HalamanPercakapan({
                                 }
                             />
                         </label>
-                        {/* the rail's filters, for screens too narrow to hold it */}
-                        <div className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto xl:hidden">
-                            {[
-                                ...STATUS.map(
-                                    ([nilai, label]) =>
-                                        [
-                                            `tab:${nilai}`,
-                                            label,
-                                            jumlah.status[nilai] ?? 0,
-                                            isian.tab === nilai,
-                                            () =>
+                        {/* the rail's filters, for screens too narrow to hold it: separated by category */}
+                        <div className="flex flex-col gap-2 xl:hidden">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                                <span className="mr-1 shrink-0 text-tag font-semibold tracking-wider text-muted uppercase">
+                                    Status:
+                                </span>
+                                {STATUS.map(([nilai, label]) => {
+                                    const n = jumlah.status[nilai] ?? 0;
+                                    const aktif = isian.tab === nilai;
+                                    return (
+                                        <button
+                                            key={`tab:${nilai}`}
+                                            type="button"
+                                            aria-pressed={aktif}
+                                            onClick={() =>
                                                 setIsian({
                                                     ...isian,
                                                     tab: nilai,
-                                                }),
-                                        ] as const,
-                                ),
-                                ...TIPE.map(
-                                    ([nilai, label]) =>
-                                        [
-                                            `tipe:${nilai}`,
-                                            label,
-                                            jumlah.tipe[nilai] ?? 0,
-                                            isian.tipe === nilai,
-                                            () =>
+                                                })
+                                            }
+                                            className={cn(
+                                                'inline-flex h-[28px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
+                                                aktif
+                                                    ? 'border-primary-line bg-primary-soft text-primary-ink'
+                                                    : 'border-line-strong bg-surface text-ink hover:bg-subtle',
+                                                'motion-safe:transition-colors',
+                                            )}
+                                        >
+                                            <span>{label}</span>
+                                            <span
+                                                className={cn(
+                                                    'text-tag tabular-nums',
+                                                    aktif
+                                                        ? 'text-primary-ink'
+                                                        : 'text-muted',
+                                                )}
+                                            >
+                                                {n}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                                <span className="mr-1 shrink-0 text-tag font-semibold tracking-wider text-muted uppercase">
+                                    Tipe:
+                                </span>
+                                {TIPE.map(([nilai, label]) => {
+                                    const n = jumlah.tipe[nilai] ?? 0;
+                                    const aktif = isian.tipe === nilai;
+                                    return (
+                                        <button
+                                            key={`tipe:${nilai}`}
+                                            type="button"
+                                            aria-pressed={aktif}
+                                            onClick={() =>
                                                 setIsian({
                                                     ...isian,
                                                     tipe:
                                                         isian.tipe === nilai
                                                             ? null
                                                             : nilai,
-                                                }),
-                                        ] as const,
-                                ),
-                            ].map(([kunci, label, n, aktif, onPilih]) => (
-                                <button
-                                    key={kunci}
-                                    type="button"
-                                    aria-pressed={aktif}
-                                    onClick={onPilih}
-                                    className={cn(
-                                        'h-[30px] shrink-0 cursor-pointer rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
-                                        aktif
-                                            ? 'border-primary-line bg-primary-soft text-primary-ink'
-                                            : 'border-line-strong bg-surface text-ink hover:bg-subtle',
-                                        'motion-safe:transition-colors',
-                                    )}
-                                >
-                                    {label} {n}
-                                </button>
-                            ))}
+                                                })
+                                            }
+                                            className={cn(
+                                                'inline-flex h-[28px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
+                                                aktif
+                                                    ? 'border-primary-line bg-primary-soft text-primary-ink'
+                                                    : 'border-line-strong bg-surface text-ink hover:bg-subtle',
+                                                'motion-safe:transition-colors',
+                                            )}
+                                        >
+                                            <span>{label}</span>
+                                            {n > 0 && (
+                                                <span
+                                                    className={cn(
+                                                        'text-tag tabular-nums',
+                                                        aktif
+                                                            ? 'text-primary-ink'
+                                                            : 'text-muted',
+                                                    )}
+                                                >
+                                                    {n}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1 border-b border-line-softer px-4 py-2.5">
@@ -659,6 +697,8 @@ function Utas({
             },
         );
 
+    const [konfirmasiReset, setKonfirmasiReset] = useState(false);
+
     return (
         <section
             aria-label="Isi percakapan"
@@ -724,18 +764,69 @@ function Utas({
                 <button
                     type="button"
                     aria-label="Reset memori chat"
-                    title="Reset memori chat — mulai sesi ingatan AI baru (mem_gen +1)"
-                    onClick={() =>
-                        router.post(
-                            resetMemori.url(p.id),
-                            {},
-                            { preserveScroll: true },
-                        )
-                    }
-                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:bg-subtle motion-safe:transition-colors"
+                    title="Reset memori chat — mulai sesi ingatan AI baru untuk customer ini"
+                    onClick={() => setKonfirmasiReset(true)}
+                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:border-note-amber-line hover:bg-note-amber-bg hover:text-amber-text motion-safe:transition-colors"
                 >
                     <Ikon nama="segarkan" tebal={2} />
                 </button>
+                {konfirmasiReset && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 motion-safe:animate-[pudar_120ms_ease-out]"
+                        onClick={() => setKonfirmasiReset(false)}
+                    >
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="judul-reset-memori"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) =>
+                                e.key === 'Escape' && setKonfirmasiReset(false)
+                            }
+                            className="w-full max-w-[460px] rounded-card border border-line bg-surface p-5 font-sans text-ink shadow-lg"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-note-amber-bg text-amber-text">
+                                    <Ikon nama="segarkan" ukuran={20} tebal={2} />
+                                </div>
+                                <h3
+                                    id="judul-reset-memori"
+                                    className="m-0 text-panel font-semibold text-ink"
+                                >
+                                    Reset Memori Chat Adiva?
+                                </h3>
+                            </div>
+                            <p className="mt-3 text-body leading-relaxed text-ink-2">
+                                Adiva akan melupakan riwayat percakapan sebelumnya dan memulai sesi ingatan AI baru untuk <strong>{p.nama}</strong>. Gunakan jika bot melantur atau ingin mengulang pemahaman bot dari awal.
+                            </p>
+                            <div className="mt-2 rounded-control bg-subtle p-3 text-caption text-muted">
+                                ℹ️ Pesan WhatsApp asli di chat <strong>tidak dihapus</strong>, hanya konteks ingatan percakapan bot yang diulang dari awal.
+                            </div>
+                            <div className="mt-5 flex justify-end gap-2.5">
+                                <Button
+                                    type="button"
+                                    onClick={() => setKonfirmasiReset(false)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="button"
+                                    varian="danger"
+                                    onClick={() => {
+                                        setKonfirmasiReset(false);
+                                        router.post(
+                                            resetMemori.url(p.id),
+                                            {},
+                                            { preserveScroll: true },
+                                        );
+                                    }}
+                                >
+                                    Ya, Reset Memori
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <Link
                     href={pelanggan.url({ query: { pilih: p.id } })}
                     className="box-content flex h-[38px] shrink-0 items-center rounded-[9px] border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink no-underline hover:bg-subtle motion-safe:transition-colors max-md:hidden"
