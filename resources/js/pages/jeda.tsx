@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePoll } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,17 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
         durasi: '2 jam' as (typeof DURASI)[number],
         alasan: '',
     });
+    const [targetLanjut, setTargetLanjut] = useState<Aktif | null>(null);
     const [catatan, setCatatan] = useState('');
+    const [sedangKirim, setSedangKirim] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (targetLanjut) {
+            const timer = setTimeout(() => textareaRef.current?.focus(), 50);
+            return () => clearTimeout(timer);
+        }
+    }, [targetLanjut]);
 
     // pauses set or ended on WhatsApp, and expiring ones, show up by themselves
     usePoll(10000, {
@@ -72,12 +82,30 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
             onSuccess: () => form.reset('customer', 'alasan'),
         });
 
-    const lanjutkan = (id: number) =>
+    const bukaModalLanjut = (item: Aktif) => {
+        setTargetLanjut(item);
+        setCatatan('');
+    };
+
+    const kirimLanjut = () => {
+        if (!targetLanjut || sedangKirim) {
+            return;
+        }
+
+        setSedangKirim(true);
         router.post(
-            lanjut.url(id),
+            lanjut.url(targetLanjut.id),
             { catatan },
-            { preserveScroll: true, onSuccess: () => setCatatan('') },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setTargetLanjut(null);
+                    setCatatan('');
+                },
+                onFinish: () => setSedangKirim(false),
+            },
         );
+    };
 
     return (
         <AppLayout active="jeda">
@@ -170,7 +198,7 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                         </Link>
                                         <button
                                             type="button"
-                                            onClick={() => lanjutkan(r.id)}
+                                            onClick={() => bukaModalLanjut(r)}
                                             className="h-[34px] cursor-pointer rounded-control border border-line-strong bg-surface px-3 text-caption font-semibold whitespace-nowrap text-ink hover:bg-subtle motion-safe:transition-colors"
                                         >
                                             Lanjutkan bot
@@ -312,37 +340,142 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
                                 lagi dan supervisor dikabari.
                             </div>
                         </Kartu>
-
-                        <Kartu className="gap-2.5">
-                            <h2 className="m-0 text-panel font-semibold">
-                                Serah terima ke Adiva
-                            </h2>
-                            {/* the note is read by "Lanjutkan bot" in the table, which is
-                                easy to miss when the two sit in different columns */}
-                            <div className="text-caption text-ink-2">
-                                Isi dulu di sini, lalu tekan{' '}
-                                <strong className="font-semibold text-ink">
-                                    Lanjutkan bot
-                                </strong>{' '}
-                                pada baris customernya di tabel sebelah.
-                            </div>
-                            <Isian label="Catatan untuk Adiva">
-                                <Textarea
-                                    rows={3}
-                                    placeholder="Mis. kompensasi 2 bungkus di order berikutnya sudah disepakati"
-                                    className="resize-none rounded-[9px] px-3 py-2 text-body leading-[1.4]"
-                                    value={catatan}
-                                    onChange={(e) => setCatatan(e.target.value)}
-                                />
-                            </Isian>
-                            <div className="text-tag leading-[1.45] text-muted">
-                                Catatan disimpan di profil customer dan dibaca
-                                Adiva saat melanjutkan percakapan.
-                            </div>
-                        </Kartu>
                     </div>
                 </section>
             </IsiHalaman>
+
+            {targetLanjut && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 motion-safe:animate-[pudar_120ms_ease-out]"
+                    onClick={() => !sedangKirim && setTargetLanjut(null)}
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="judul-modal-lanjut"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape' && !sedangKirim) {
+                                setTargetLanjut(null);
+                            }
+                        }}
+                        className="w-full max-w-[480px] rounded-card border border-line bg-surface p-5 font-sans text-ink shadow-lg motion-safe:animate-[muncul_150ms_ease-out]"
+                    >
+                        <div className="flex items-center justify-between gap-3 border-b border-line-softer pb-3.5">
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex size-8 items-center justify-center rounded-control bg-subtle text-primary">
+                                    <Ikon nama="whatsapp" tebal={2} />
+                                </div>
+                                <h2
+                                    id="judul-modal-lanjut"
+                                    className="m-0 text-panel font-semibold"
+                                >
+                                    Serah terima ke Adiva
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                aria-label="Tutup"
+                                disabled={sedangKirim}
+                                onClick={() => setTargetLanjut(null)}
+                                className="flex size-8 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-muted hover:bg-line-softer hover:text-ink disabled:opacity-50"
+                            >
+                                <Ikon nama="tutup" />
+                            </button>
+                        </div>
+
+                        <div className="mt-3.5 rounded-[9px] border border-line-softer bg-subtle p-3 text-caption">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-body font-semibold text-ink">
+                                    {targetLanjut.nama}
+                                </span>
+                                {targetLanjut.sesi && (
+                                    <span className="shrink-0 rounded-tag bg-line-softer px-1.5 py-0.5 text-tag font-medium text-gray-text">
+                                        {targetLanjut.sesi}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-muted">
+                                {targetLanjut.nomor && (
+                                    <span className="font-mono text-tag text-ink-2">
+                                        {targetLanjut.nomor}
+                                    </span>
+                                )}
+                                {targetLanjut.alasan && (
+                                    <span>
+                                        Alasan dijeda:{' '}
+                                        <strong className="font-medium text-ink-2">
+                                            {targetLanjut.alasan}
+                                        </strong>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-3.5 flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                                <label
+                                    htmlFor="catatan-adiva"
+                                    className="text-caption font-semibold text-ink"
+                                >
+                                    Catatan untuk Adiva{' '}
+                                    <span className="font-normal text-muted">
+                                        (opsional)
+                                    </span>
+                                </label>
+                                {catatan.length > 0 && (
+                                    <span className="text-tag text-muted">
+                                        {catatan.length}/500
+                                    </span>
+                                )}
+                            </div>
+                            <Textarea
+                                id="catatan-adiva"
+                                ref={textareaRef}
+                                rows={3}
+                                maxLength={500}
+                                placeholder="Mis. kompensasi 2 bungkus di order berikutnya sudah disepakati"
+                                className="resize-none rounded-[9px] px-3 py-2 text-body leading-[1.4]"
+                                value={catatan}
+                                onChange={(e) => setCatatan(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (
+                                        (e.metaKey || e.ctrlKey) &&
+                                        e.key === 'Enter'
+                                    ) {
+                                        e.preventDefault();
+                                        kirimLanjut();
+                                    }
+                                }}
+                            />
+                            <p className="m-0 text-tag leading-[1.45] text-muted">
+                                Catatan disimpan di profil customer dan dibaca
+                                Adiva saat melanjutkan percakapan.
+                            </p>
+                        </div>
+
+                        <div className="mt-5 flex items-center justify-end gap-2 border-t border-line-softer pt-3.5">
+                            <Button
+                                varian="secondary"
+                                disabled={sedangKirim}
+                                onClick={() => setTargetLanjut(null)}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                varian="primary"
+                                disabled={sedangKirim}
+                                data-memuat={sedangKirim ? '' : undefined}
+                                onClick={kirimLanjut}
+                            >
+                                {sedangKirim
+                                    ? 'Melanjutkan...'
+                                    : 'Lanjutkan bot'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }
