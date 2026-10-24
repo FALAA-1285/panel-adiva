@@ -318,10 +318,23 @@ export default function Pelanggan({
                                 </button>
                             );
                         })}
+                        {daftar.length === 0 && (
+                            <div className="flex flex-col items-center justify-center p-8 text-center text-muted">
+                                <span className="mb-2 flex size-10 items-center justify-center rounded-xl bg-subtle text-muted">
+                                    <Ikon nama="cari" ukuran={18} />
+                                </span>
+                                <p className="text-body font-medium text-ink">Tidak ada pelanggan</p>
+                                <p className="mt-1 text-caption text-muted">
+                                    {isian.cari || isian.tipe || isian.tahap
+                                        ? 'Coba sesuaikan kata kunci atau bersihkan filter.'
+                                        : 'Belum ada data pelanggan tersimpan.'}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </section>
 
-                {profil && (
+                {profil ? (
                     <ProfilPelanggan
                         key={profil.id}
                         profil={profil}
@@ -329,9 +342,34 @@ export default function Pelanggan({
                         tampil={lihatProfil}
                         onKembali={keDaftar}
                     />
+                ) : (
+                    <TidakAdaPelangganDipilih kosong={daftar.length === 0} />
                 )}
             </IsiHalaman>
         </AppLayout>
+    );
+}
+
+function TidakAdaPelangganDipilih({ kosong }: { kosong: boolean }) {
+    return (
+        <section
+            aria-label="Profil pelanggan"
+            className="box-border flex min-w-0 grow flex-col items-center justify-center gap-3.5 rounded-card border border-line bg-surface p-12 text-center max-lg:hidden"
+        >
+            <span className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft text-primary shadow-sm">
+                <Ikon nama="pelanggan" ukuran={28} />
+            </span>
+            <div className="flex flex-col gap-1.5">
+                <h3 className="text-judul font-semibold text-ink">
+                    {kosong ? 'Belum Ada Pelanggan' : 'Pilih Pelanggan'}
+                </h3>
+                <p className="max-w-[420px] text-body text-muted leading-relaxed">
+                    {kosong
+                        ? 'Tidak ada data customer yang sesuai dengan filter atau database belum memiliki data pelanggan.'
+                        : 'Pilih salah satu customer dari daftar di sebelah kiri untuk melihat ringkasan profil, detail pesanan, dan riwayat interaksi.'}
+                </p>
+            </div>
+        </section>
     );
 }
 

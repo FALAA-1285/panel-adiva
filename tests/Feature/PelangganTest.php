@@ -1,4 +1,4 @@
-1<?php
+<?php
 
 use App\Enums\KategoriAktivitas;
 use App\Enums\Peran;
