@@ -197,7 +197,7 @@ function ItemBagian({
             preserveScroll
             aria-current={terpilih ? 'true' : undefined}
             className={cn(
-                'flex h-8 items-center gap-2 rounded-chip px-2.5 text-body no-underline',
+                'flex min-h-8 items-center gap-2 rounded-chip px-2.5 py-1 text-body no-underline',
                 terpilih
                     ? 'bg-nav-active font-semibold text-primary-ink'
                     : 'font-medium text-ink-2',
@@ -205,13 +205,13 @@ function ItemBagian({
         >
             <span
                 className={cn(
-                    'w-[18px] text-caption tabular-nums',
+                    'w-[18px] shrink-0 text-caption tabular-nums',
                     terpilih ? 'text-primary-ink' : 'text-faint',
                 )}
             >
                 {no}
             </span>
-            <span className="grow">{judul}</span>
+            <span className="grow leading-snug">{judul}</span>
             {diubah && (
                 <span
                     title="Diubah di draf"
