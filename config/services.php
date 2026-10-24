@@ -43,7 +43,7 @@ return [
         'webhook_url' => env('N8N_WEBHOOK_URL'),
         'webhook_secret' => env('N8N_WEBHOOK_SECRET'),
         'timeout' => (int) env('N8N_TIMEOUT', 15),
-        // Uji Adiva and Uji cek ongkir wait for the AI agent and Mengantar
+        // Uji Adiva waits for the AI agent
         'timeout_jawab' => (int) env('N8N_TIMEOUT_JAWAB', 180),
         'timeout_uji' => (int) env('N8N_TIMEOUT_UJI', 60),
         // Otomasi: "Buka n8n" opens the editor here
@@ -51,10 +51,6 @@ return [
         // n8n:sinkron reads workflows and runs from the n8n public API
         'api_url' => env('N8N_API_URL'),
         'api_key' => env('N8N_API_KEY'),
-    ],
-
-    'mengantar' => [
-        'timeout' => (int) env('MENGANTAR_TIMEOUT', 30),
     ],
 
     'waha' => [

@@ -11,8 +11,7 @@ use App\Models\LogOrder;
  * n8n's "Susun Respons" always used, so a customer sees no change. Ask for the text with
  * the order as it was *before* the command: BATAL, for one, depends on the old status.
  *
- * ACC (the invoice PDF carries the news), TUTUP (the customer is not told) and BATAL KIRIM
- * say nothing here.
+ * ACC (the invoice PDF carries the news) and TUTUP (the customer is not told) say nothing here.
  */
 class PesanPerintah
 {
@@ -59,7 +58,7 @@ class PesanPerintah
                 .(filled($ulasan = PengaturanToko::nilai('LINK_ULASAN')) ? " Kalau berkenan, boleh tinggalkan ulasan singkat untuk kami di {$ulasan}." : '')
                 ."\n\nKalau nanti mau pesan lagi, tinggal chat ke sini saja ya 😊",
 
-            AksiPesanan::Acc, AksiPesanan::Tutup, AksiPesanan::BatalKirim => null,
+            AksiPesanan::Acc, AksiPesanan::Tutup => null,
         };
 
         return $pesan === null ? null : self::sebutInvoice($pesan, $order);

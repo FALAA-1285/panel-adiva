@@ -184,7 +184,6 @@ Route::middleware('auth')->group(function () {
         Route::patch('/otomasi/template/{template}', [OtomasiController::class, 'ubahTemplate'])->name('otomasi.template');
         Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan');
         Route::put('/pengaturan', [PengaturanController::class, 'simpan'])->name('pengaturan.simpan');
-        Route::post('/pengaturan/uji-ongkir', [PengaturanController::class, 'ujiOngkir'])->name('pengaturan.uji-ongkir');
         Route::patch('/pengaturan/kabar-wa', [PengaturanController::class, 'kabarWa'])->name('pengaturan.kabar-wa');
         // Monitoring: "Lihat QR" and "Restart sesi" change the bot's WhatsApp link, so supervisors only
         Route::get('/monitoring/waha/qr', [WahaSesiController::class, 'qr'])->name('monitoring.qr');

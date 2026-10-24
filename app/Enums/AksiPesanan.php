@@ -15,10 +15,8 @@ enum AksiPesanan: string
     case Selesai = 'SELESAI';
     case Batal = 'BATAL';
     case Tolak = 'TOLAK';
-    // under "Lainnya" (once WhatsApp commands only): close without telling the customer,
-    // and cancel the Mengantar shipment the bot booked
+    // under "Lainnya" (once a WhatsApp command only): close without telling the customer
     case Tutup = 'TUTUP';
-    case BatalKirim = 'BATAL KIRIM';
 
     /**
      * The seven buttons of the design's grid; the rest sit under "Lainnya".
@@ -35,7 +33,7 @@ enum AksiPesanan: string
      */
     public static function lainnya(): array
     {
-        return [self::Tutup, self::BatalKirim];
+        return [self::Tutup];
     }
 
     /**
@@ -54,7 +52,6 @@ enum AksiPesanan: string
             self::Siap => [StatusOrder::Lunas, StatusOrder::Diacc, StatusOrder::Karyawan],
             self::Selesai => [StatusOrder::Dikirim, StatusOrder::Lunas],
             self::Tutup => [StatusOrder::MenungguKonfirmasi, StatusOrder::Diacc, StatusOrder::Karyawan, StatusOrder::Lunas, StatusOrder::Dikirim],
-            self::BatalKirim => [StatusOrder::Lunas, StatusOrder::Dikirim],
         };
     }
 
@@ -71,7 +68,7 @@ enum AksiPesanan: string
             self::Kirim => StatusOrder::Dikirim,
             self::Selesai => StatusOrder::Selesai,
             self::Tutup => StatusOrder::Ditutup,
-            self::Siap, self::BatalKirim => null,
+            self::Siap => null,
         };
     }
 
@@ -89,7 +86,6 @@ enum AksiPesanan: string
             self::Siap => 'customer dikabari alamat & jam ambil',
             self::Selesai => 'bot minta ulasan · CRM → REPEAT',
             self::Tutup => 'ditutup tanpa chat ke customer',
-            self::BatalKirim => 'order pengiriman Mengantar dibatalkan',
         };
     }
 
@@ -107,7 +103,6 @@ enum AksiPesanan: string
             self::Kirim => 'Tandai dikirim',
             self::Selesai => 'Tandai selesai',
             self::Tutup => 'Tutup',
-            self::BatalKirim => 'Batalkan pengiriman',
         };
     }
 
@@ -128,7 +123,7 @@ enum AksiPesanan: string
     public function gaya(): string
     {
         return match ($this) {
-            self::Tolak, self::Batal, self::Tutup, self::BatalKirim => 'bahaya',
+            self::Tolak, self::Batal, self::Tutup => 'bahaya',
             default => 'utama',
         };
     }

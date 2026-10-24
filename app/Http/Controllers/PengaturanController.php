@@ -2,29 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Bot\CekOngkir;
-use App\Bot\PerintahGagal;
 use App\Enums\KategoriAktivitas;
 use App\Enums\Peran;
 use App\Http\Requests\SimpanPengaturanRequest;
 use App\Models\ActivityLog;
-use App\Models\ConfigToko;
 use App\Models\PromptVersi;
 use App\Models\User;
 use App\Models\WorkflowEvent;
-use App\Support\Aktivitas;
 use App\Support\KabarWa;
 use App\Support\NomorBot;
 use App\Support\NomorWa;
 use App\Support\PengaturanAi;
 use App\Support\PengaturanToko;
 use App\Support\Perangkat;
-use App\Support\Rupiah;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,12 +27,9 @@ use Inertia\Response;
  */
 class PengaturanController extends Controller
 {
-    /** Where "Uji cek ongkir" checks to (Inbox.dc.html: "dari Sawojajar ke Dinoyo"). */
-    private const UJI_ONGKIR_TUJUAN = 'DINOYO, LOWOKWARU, MALANG, JAWA TIMUR';
-
     public function index(): Response
     {
-        $nilai = PengaturanToko::nilaiBanyak([...SimpanPengaturanRequest::ISIAN, 'INVOICE_TERAKHIR', 'MENGANTAR_API_KEY']);
+        $nilai = PengaturanToko::nilaiBanyak([...SimpanPengaturanRequest::ISIAN, 'INVOICE_TERAKHIR']);
         $koneksi = $this->koneksiTerakhir();
         $prompt = PromptVersi::query()->aktif()->orderByDesc('versi')->first();
 
@@ -53,8 +43,6 @@ class PengaturanController extends Controller
             'ai' => array_map(fn (?string $v) => (string) $v, PengaturanAi::nilai()),
             'modelPilihan' => PengaturanAi::MODEL,
             'invoiceTerakhir' => $nilai['INVOICE_TERAKHIR'],
-            // the key itself never leaves the server
-            'apiKeyTersimpan' => filled($nilai['MENGANTAR_API_KEY']),
             // Notifikasi WhatsApp: the rows switched off
             'kabarWaMati' => KabarWa::mati(),
             'staf' => User::query()->whereNull('nonaktif_at')->orderBy('id')->get()->map(fn (User $user) => [
@@ -89,29 +77,6 @@ class PengaturanController extends Controller
      * "Simpan perubahan": only the values that changed are written, each one logged.
      */
     /**
-     * "Uji cek ongkir": one rate check from the warehouse to a fixed place nearby, to see
-     * that Mengantar answers with the saved key and pickup.
-     */
-    public function ujiOngkir(CekOngkir $ongkir): JsonResponse
-    {
-        try {
-            $tarif = $ongkir->cek(self::UJI_ONGKIR_TUJUAN, 1);
-        } catch (PerintahGagal $e) {
-            throw ValidationException::withMessages(['ongkir' => $e->getMessage()]);
-        }
-
-        if ($tarif === []) {
-            throw ValidationException::withMessages(['ongkir' => 'Mengantar tidak memberi tarif untuk tujuan uji.']);
-        }
-
-        return response()->json([
-            'hasil' => 'Ke Dinoyo, Malang · 1 kg: '.collect($tarif)
-                ->map(fn (array $t) => trim("{$t['kurir']} {$t['layanan']}").' '.Rupiah::teks($t['harga']).($t['estimasi'] ? " ({$t['estimasi']})" : ''))
-                ->implode(' · '),
-        ]);
-    }
-
-    /**
      * Notifikasi WhatsApp: one row switched on or off, saved at once.
      */
     public function kabarWa(Request $request): RedirectResponse
@@ -145,12 +110,6 @@ class PengaturanController extends Controller
             $oleh,
             $perangkat,
         );
-
-        // the key itself never reaches the log (no before/after, so no "Kembalikan" either)
-        if (filled($kunci = $request->validated('MENGANTAR_API_KEY_BARU'))) {
-            $config = ConfigToko::query()->updateOrCreate(['kunci' => 'MENGANTAR_API_KEY'], ['nilai' => trim((string) $kunci)]);
-            Aktivitas::catat($oleh, KategoriAktivitas::Pengaturan, 'Ubah pengaturan', 'API key Mengantar diganti', $config, ['perangkat' => $perangkat]);
-        }
 
         Inertia::flash('toast', 'Pengaturan disimpan.');
 

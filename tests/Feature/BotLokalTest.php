@@ -1,8 +1,6 @@
 <?php
 
-use App\Bot\CekOngkir;
 use App\Bot\KirimUlangInvoice;
-use App\Bot\LokalCekOngkir;
 use App\Bot\LokalKirimUlangInvoice;
 use App\Bot\LokalPerintahOrder;
 use App\Bot\N8nPerintahOrder;
@@ -26,9 +24,7 @@ use App\Models\Pesan;
 use App\Models\User;
 use App\Models\WorkflowEvent;
 use App\Providers\AppServiceProvider;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Tests\Support\PengirimRekam;
 
 /*
@@ -40,7 +36,6 @@ beforeEach(function () {
     foreach ([
         'REKENING' => 'BCA 123 a.n. Bang Bana', 'SESI_UTAMA' => 'bangbana-waha', 'BATAS_BAYAR_JAM' => '6',
         'JAM_PESAN_OTOMATIS' => '07:00-21:00', 'HARI_LIBUR_OTOMATIS' => 'Minggu',
-        'MENGANTAR_API_KEY' => 'rahasia-kunci', 'MENGANTAR_KOTA_ASAL' => 'Lawang', 'MENGANTAR_PICKUP_ADDRESS_ID' => 'pk1',
     ] as $kunci => $nilai) {
         ConfigToko::create(['kunci' => $kunci, 'nilai' => $nilai]);
     }
@@ -64,37 +59,6 @@ beforeEach(function () {
 
         return $order;
     };
-
-    // Mengantar answers; $ubah replaces one answer, keyed "METODE /jalur"
-    $this->mengantar = function (array $ubah = []) {
-        Http::fake(['api-public.mengantar.com/*' => function (Request $r) use ($ubah) {
-            $jalur = (string) preg_replace('#^.*/api/public/[^/]+#', '', (string) parse_url($r->url(), PHP_URL_PATH));
-            $kunci = $r->method().' '.$jalur;
-
-            if (array_key_exists($kunci, $ubah)) {
-                return is_callable($ubah[$kunci]) ? $ubah[$kunci]($r) : $ubah[$kunci];
-            }
-
-            return match ($kunci) {
-                'GET /address' => Http::response(['data' => [['_id' => 'pk1', 'PICKUP_DISTRICT' => 'LAWANG', 'PICKUP_NAME' => 'Pabrik Lawang']]]),
-                'GET /address/search' => Http::response(['data' => [
-                    ['_id' => 'aceh1', 'SUBDISTRICT_NAME' => 'DINOYO', 'DISTRICT_NAME' => 'KUTA', 'CITY_NAME' => 'ACEH BESAR', 'PROVINCE_NAME' => 'ACEH'],
-                    ['_id' => 'dst1', 'SUBDISTRICT_NAME' => 'DINOYO', 'DISTRICT_NAME' => 'LOWOKWARU', 'CITY_NAME' => 'MALANG', 'PROVINCE_NAME' => 'JAWA TIMUR'],
-                ]]),
-                'GET /time' => Http::response(['data' => []]),
-                'POST /time' => Http::response(['data' => ['_id' => 't1']]),
-                'GET /order/estimate' => Http::response(['data' => [
-                    'JNE' => ['estimatedPrice' => 38000, 'estimatedDate' => '2-3 hari'],
-                    'SAPLite' => ['estimatedPrice' => 9975],
-                    'SiCepat' => ['estimatedPrice' => 35000, 'estimatedSpecialPrice' => 30000],
-                    'Lion' => ['unsupported' => true],
-                ]]),
-                'POST /order' => Http::response(['data' => [['ORDER_ID' => 'M123', '_id' => 'a1b2c3d4e5f6a1b2c3d4e5f6', 'cnote_no' => 'JNE999', 'estimatedPrice' => 38000]]]),
-                'DELETE /order' => Http::response(['deletedCount' => 1]),
-                default => Http::response([], 404),
-            };
-        }]);
-    };
 });
 
 // ---------------------------------------------------------------- who does the work
@@ -105,7 +69,6 @@ test('BOT_DRIVER=lokal gives the panel what it has taken over, and leaves the re
     (new AppServiceProvider($this->app))->register();
 
     expect(app(PerintahOrder::class))->toBeInstanceOf(LokalPerintahOrder::class)
-        ->and(app(CekOngkir::class))->toBeInstanceOf(LokalCekOngkir::class)
         ->and(app(KirimUlangInvoice::class))->toBeInstanceOf(LokalKirimUlangInvoice::class)
         ->and(app(TanyaAdiva::class))->toBeInstanceOf(N8nTanyaAdiva::class);
 });
@@ -306,146 +269,23 @@ test('a command is one run of path A on Monitoring', function () {
     expect(WorkflowEvent::query()->sole()->only(['jenis', 'judul', 'data']))->toBe(['jenis' => 'EKSEKUSI', 'judul' => 'Perintah admin', 'data' => ['jalur' => 'A', 'pesan' => 1, 'sumber' => 'panel']]);
 });
 
-// ---------------------------------------------------------------- shipping through Mengantar
+// ---------------------------------------------------------------- shipping: expedition parcels are ONGKIR COD
 
-test('LUNAS of a courier order books the shipment, sends the waybill and notifies', function () {
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Diacc, ['invoice_number' => 'INV/2026/09/007', 'catatan_admin' => 'ACC 2026-09-28 10:00']);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Lunas, $order, $this->falah);
-
-    $order->refresh();
-
-    expect($order->status_order)->toBe(StatusOrder::Dikirim)
-        ->and($order->no_resi)->toBe('JNE999')
-        ->and($order->kurir_final)->toBe('JNE')
-        ->and($order->dikirim_at)->not->toBeNull()
-        ->and($order->catatan_admin)->toContain('ACC 2026-09-28 10:00 | LUNAS 2026-09-28 13:42 | DIKIRIM 2026-09-28 13:42 resi JNE999 (MENGANTAR ORDER M123 #a1b2c3d4e5f6a1b2c3d4e5f6, JNE, jemput 2026-09-29 13:00)')
-        ->and(collect($this->wa->terkirim)->pluck('teks')->last())->toContain('Nomor resi: *JNE999*', 'dijemput kurir besok (Selasa) sekitar jam 13.00')
-        ->and(Notifikasi::query()->where('jenis', 'PENGIRIMAN')->sole()->judul)->toBe('Pengiriman ORD-260928-014');
-
-    Http::assertSent(fn (Request $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/order')
-        && $r['courier'] === 'JNE' && $r['orders'][0]['customerPhone'] === '081234567890'
-        && $r['orders'][0]['customerAddressDataId'] === 'dst1' && $r['orders'][0]['weight'] === 2.5 && $r['orders'][0]['quantity'] === 15);
-});
-
-test('a destination in another region of the same name is not picked', function () {
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Lunas);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Kirim, $order, $this->falah);
-
-    // Dinoyo, Lowokwaru, Malang (East Java) and not Dinoyo in Aceh
-    Http::assertSent(fn (Request $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/order') && $r['orders'][0]['customerAddressDataId'] === 'dst1');
-});
-
-test('KIRIM without a waybill books it; an order that is not a courier\'s is left alone', function (array $ubah, bool $dipesan) {
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Diacc, $ubah);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Lunas, $order, $this->falah);
-
-    $dipanggil = collect(Http::recorded())->contains(fn ($par) => $par[0]->method() === 'POST' && str_ends_with($par[0]->url(), '/order'));
-
-    expect($dipanggil)->toBe($dipesan);
-})->with([
-    'a courier order' => [[], true],
-    'self pickup' => [['ambil_sendiri' => true, 'kurir_pilihan' => 'AMBIL SENDIRI - Toko Sawojajar'], false],
-    'the company\'s motorcycle' => [['kurir_pilihan' => 'KURIR MOTOR'], false],
-    'already has a waybill' => [['no_resi' => 'JNE111'], false],
-]);
-
-test('with the booking switched off nothing is booked and KIRIM asks for the waybill', function () {
-    ConfigToko::create(['kunci' => 'MENGANTAR_BUAT_ORDER', 'nilai' => 'MATI']);
-    Http::fake();
-    $order = ($this->buat)(StatusOrder::Lunas);
+test('KIRIM of an expedition parcel needs its waybill; the customer hears the shipping is COD', function () {
+    $order = ($this->buat)(StatusOrder::Lunas, ['metode_bayar' => 'TRANSFER (ONGKIR COD)', 'kurir_pilihan' => 'EKSPEDISI (ONGKIR COD) - JNE', 'ongkir' => 25000]);
 
     $this->actingAs($this->falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'KIRIM'])
         ->assertSessionHasErrors(['aksi' => 'Nomor resinya belum disertakan. Contoh: JNE1234567890']);
-
-    Http::assertNothingSent();
     expect($order->refresh()->status_order)->toBe(StatusOrder::Lunas);
-});
 
-test('UJI mode only previews the shipment and books nothing', function () {
-    ConfigToko::create(['kunci' => 'MENGANTAR_BUAT_ORDER', 'nilai' => 'UJI']);
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Lunas);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Kirim, $order, $this->falah);
-
-    expect($order->refresh()->status_order)->toBe(StatusOrder::Lunas)
-        ->and(Notifikasi::query()->where('jenis', 'PENGIRIMAN')->sole()->detail)->toContain('MODE UJI', 'TIDAK dibuat', 'Daerah Mengantar: DINOYO, LOWOKWARU, MALANG');
-
-    Http::assertNotSent(fn (Request $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/order'));
-});
-
-test('a shipment Mengantar books but cannot pay for is noted and left LUNAS', function () {
-    ($this->mengantar)(['POST /order' => Http::response(['data' => [['ORDER_ID' => 'M124', '_id' => 'a1b2c3d4e5f6a1b2c3d4e5f6']]])]);
-    $order = ($this->buat)(StatusOrder::Lunas, ['catatan_admin' => 'LUNAS 2026-09-28 10:00']);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Kirim, $order, $this->falah);
-
-    expect($order->refresh()->status_order)->toBe(StatusOrder::Lunas)
-        ->and($order->no_resi)->toBeNull()
-        ->and($order->catatan_admin)->toContain('MENGANTAR ORDER M124 #a1b2c3d4e5f6a1b2c3d4e5f6 BELUM DIBAYAR')
-        ->and(Notifikasi::query()->where('jenis', 'PENGIRIMAN')->sole()->detail)->toContain('BELUM DIBAYAR', 'saldo Mengantar kurang');
-});
-
-test('Mengantar refusing the booking says why, and the API key never reaches a notice', function () {
-    ($this->mengantar)(['POST /order' => Http::response(['success' => false, 'message' => 'key rahasia-kunci tidak valid', 'errors' => [['path' => 'orders.0.weight', 'message' => 'terlalu berat']]], 400)]);
-    $order = ($this->buat)(StatusOrder::Lunas);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Kirim, $order, $this->falah);
-
-    $detail = Notifikasi::query()->where('jenis', 'PENGIRIMAN')->sole()->detail;
-
-    expect($order->refresh()->status_order)->toBe(StatusOrder::Lunas)
-        ->and($detail)->toContain('BELUM dibuat', 'kode 400', 'orders.0.weight: terlalu berat', 'tidak valid')
-        ->not->toContain('rahasia-kunci');
-});
-
-test('a second booking for an order that already has one is refused', function () {
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Lunas, ['catatan_admin' => 'LUNAS 2026-09-28 10:00 | MENGANTAR ORDER M123 BELUM DIBAYAR 2026-09-28 10:05']);
-
-    app(PerintahOrder::class)->jalankan(AksiPesanan::Kirim, $order, $this->falah);
-
-    expect(Notifikasi::query()->where('jenis', 'PENGIRIMAN')->sole()->detail)->toContain('sudah pernah dibuat di Mengantar');
-    Http::assertNotSent(fn (Request $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/order'));
-});
-
-test('BATAL KIRIM cancels at Mengantar first, then puts the order back to LUNAS', function () {
-    ($this->mengantar)();
-    $order = ($this->buat)(StatusOrder::Dikirim, [
-        'no_resi' => 'JNE999', 'kurir_final' => 'JNE', 'dikirim_at' => now(),
-        'catatan_admin' => 'LUNAS 2026-09-28 10:00 | DIKIRIM 2026-09-28 10:01 resi JNE999 (MENGANTAR ORDER M123 #a1b2c3d4e5f6a1b2c3d4e5f6, JNE)',
-    ]);
-
-    $this->actingAs($this->falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'BATAL KIRIM'])->assertSessionHasNoErrors();
-
-    $order->refresh();
-
-    expect($order->status_order)->toBe(StatusOrder::Lunas)
-        ->and($order->no_resi)->toBeNull()
-        ->and($order->kurir_final)->toBeNull()
-        ->and($order->catatan_admin)->toEndWith('| BATAL KIRIM M123 2026-09-28 13:42');
-
-    Http::assertSent(fn (Request $r) => $r->method() === 'DELETE' && $r['courier'] === 'JNE' && $r['ids'] === ['a1b2c3d4e5f6a1b2c3d4e5f6']);
-});
-
-test('BATAL KIRIM refused by Mengantar leaves the order as it was and shows the reason', function () {
-    ($this->mengantar)(['DELETE /order' => Http::response(['deletedCount' => 0])]);
-    $order = ($this->buat)(StatusOrder::Dikirim, ['no_resi' => 'JNE999', 'catatan_admin' => 'DIKIRIM 2026-09-28 10:01 resi JNE999 (MENGANTAR ORDER M123)']);
-
-    $this->actingAs($this->falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'BATAL KIRIM'])
-        ->assertSessionHasErrors('aksi');
+    $this->actingAs($this->falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'KIRIM', 'catatan' => 'JNE999'])->assertSessionHasNoErrors();
 
     expect($order->refresh()->status_order)->toBe(StatusOrder::Dikirim)
-        ->and($order->no_resi)->toBe('JNE999');
+        ->and($order->no_resi)->toBe('JNE999')
+        ->and(Pesan::query()->latest('id')->first()->teks)->toContain('Nomor resi: *JNE999*', 'Ongkir dibayar *COD* ke kurir saat paket sampai (Rp25.000) ya kak.');
 });
 
-// ---------------------------------------------------------------- resending the invoice, and the rates
+// ---------------------------------------------------------------- resending the invoice
 
 test('"Kirim ulang ke customer" sends the PDF kept at ACC again', function () {
     $order = ($this->buat)();
@@ -465,43 +305,6 @@ test('there is no PDF to send again before the order is ACC\'d', function () {
 
     expect(fn () => app(LokalKirimUlangInvoice::class)->kirim($order, $this->falah))
         ->toThrow(PerintahGagal::class, 'PDF invoice belum dibuat');
-});
-
-test('the rates are cheapest first, with the special price and without what is hidden or unsupported', function () {
-    ($this->mengantar)();
-
-    $tarif = app(LokalCekOngkir::class)->cek('Dinoyo, Lowokwaru, Malang', 2.5);
-
-    // SAPLite (Rp9.975 whatever the weight) is hidden, Lion is unsupported, SiCepat charges its special price
-    expect(array_column($tarif, 'kurir'))->toBe(['SiCepat', 'JNE'])
-        ->and(array_column($tarif, 'harga'))->toBe([30000, 38000])
-        ->and($tarif[1]['estimasi'])->toBe('2-3 hari');
-});
-
-test('rates ask for the API key and the pickup address first', function () {
-    ConfigToko::query()->where('kunci', 'MENGANTAR_API_KEY')->delete();
-    Http::fake();
-
-    expect(fn () => app(LokalCekOngkir::class)->cek('Malang', 1))->toThrow(PerintahGagal::class, 'API key atau alamat asal Mengantar belum diisi');
-    Http::assertNothingSent();
-});
-
-test('a refused API key is said so, not shown as a server error', function () {
-    ($this->mengantar)(['GET /address/search' => Http::response(['message' => 'Unauthorized'], 401)]);
-
-    expect(fn () => app(LokalCekOngkir::class)->cek('Malang', 1))->toThrow(PerintahGagal::class, 'API key Mengantar ditolak');
-});
-
-test('without the pickup address id the origin is looked up by name', function () {
-    ConfigToko::query()->where('kunci', 'MENGANTAR_PICKUP_ADDRESS_ID')->delete();
-    ($this->mengantar)(['GET /address/search' => fn (Request $r) => Http::response(['data' => [
-        ['_id' => 'asal1', 'SUBDISTRICT_NAME' => 'LAWANG', 'DISTRICT_NAME' => 'LAWANG', 'CITY_NAME' => 'MALANG', 'PROVINCE_NAME' => 'JAWA TIMUR'],
-    ]])]);
-
-    $tarif = app(LokalCekOngkir::class)->cek('Lawang, Malang', 1);
-
-    expect(array_column($tarif, 'kurir'))->toBe(['SiCepat', 'JNE']);
-    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/order/estimate') === false || $r['origin_id'] === 'asal1');
 });
 
 test('ACC does not crash when no working hours were ever written', function () {

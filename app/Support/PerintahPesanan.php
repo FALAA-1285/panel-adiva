@@ -39,7 +39,6 @@ class PerintahPesanan
             self::revisiOngkir($aksi, $order, $ongkir) => null,
             $aksi === AksiPesanan::Acc && $order->status_order === StatusOrder::Diacc && $order->lunas_at === null => 'Order sudah di-ACC · tulis ongkir baru di catatan untuk revisi ongkir',
             ! in_array($order->status_order, $aksi->dariStatus(), true) => "{$aksi->value} tidak berlaku untuk status {$order->status_order->value}",
-            $aksi === AksiPesanan::BatalKirim && ! preg_match('/MENGANTAR ORDER [A-Za-z0-9]+/', (string) $order->catatan_admin) => 'Order ini tidak punya order pengiriman Mengantar yang dibuat bot',
             $aksi === AksiPesanan::Siap && $order->status_order === StatusOrder::Diacc && ! str_contains((string) $order->metode_bayar, 'BAYAR DI TEMPAT') => 'SIAP butuh LUNAS atau bayar di tempat',
             default => null,
         };
@@ -87,7 +86,6 @@ class PerintahPesanan
                 AksiPesanan::Siap => ['siap_diambil_at' => now(), 'catatan_admin' => $catatanBaru],
                 AksiPesanan::Selesai => ['selesai_at' => now(), 'catatan_admin' => $catatanBaru],
                 AksiPesanan::Batal, AksiPesanan::Tolak, AksiPesanan::Tutup => ['catatan_admin' => $catatanBaru],
-                AksiPesanan::BatalKirim => ['no_resi' => null],
             };
 
             $order->update([...$ubah, 'status_order' => $aksi->keStatus() ?? $order->status_order]);
@@ -169,10 +167,9 @@ class PerintahPesanan
                 default => "DIKIRIM {$waktu} resi {$rapi}",
             },
             AksiPesanan::Selesai => "SELESAI {$waktu}",
-            AksiPesanan::BatalKirim => '',
         };
 
-        return trim(((string) $order->catatan_admin !== '' && $baru !== '' ? $order->catatan_admin.' | ' : (string) $order->catatan_admin).$baru);
+        return trim(((string) $order->catatan_admin !== '' ? $order->catatan_admin.' | ' : '').$baru);
     }
 
     private static function boleh(AksiPesanan $aksi, LogOrder $order, User $oleh): bool
@@ -211,6 +208,15 @@ class PerintahPesanan
         }
 
         return [$sisa === '' ? null : $sisa, $nilai];
+    }
+
+    /**
+     * Whether KIRIM needs a waybill: a parcel sent by an expedition, not picked up, not the
+     * company's own courier or truck, not an employee order.
+     */
+    public static function butuhResi(LogOrder $order): bool
+    {
+        return ! $order->ambil_sendiri && self::kurirSendiri($order) === null && ! PesanPerintah::potongGaji($order);
     }
 
     /**

@@ -38,6 +38,7 @@ use App\Models\UjiAdiva;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowEvent;
+use App\Support\AturanKirim;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -380,18 +381,17 @@ class DemoSeeder extends Seeder
             'BATAS_BAYAR_JAM' => '5',
             'BATAS_BAYAR_PICKUP_JAM' => '24',
             'BATAS_KONFIRMASI_JAM' => '24',
-            'CATATAN_INVOICE' => 'Ongkir sudah termasuk dalam tagihan ini. Mohon transfer sesuai TOTAL, tidak perlu bayar lagi ke kurir.',
+            // as in the live CONFIG_TOKO
+            'REKENING' => 'BCA 3160094701 a.n. Fitriah Firana',
+            'CATATAN_INVOICE' => 'Mohon transfer sesuai TOTAL. Ongkir ekspedisi dibayar COD ke kurir saat paket sampai.',
             'JAM_PESAN_OTOMATIS' => '07:00-21:00',
             'HARI_LIBUR_OTOMATIS' => 'Minggu',
             'JEDA_FOLLOWUP_JAM' => '10',
             'JEDA_KESAN_HARI' => '2',
-            // a stand-in: the real key is entered on the server, never shown
-            'MENGANTAR_API_KEY' => 'demo-mengantar-key',
-            'MENGANTAR_KOTA_ASAL' => 'SAWOJAJAR, KEDUNGKANDANG, MALANG, JAWA TIMUR',
-            'MENGANTAR_PICKUP_ADDRESS_ID' => '5fc6390df8f44b34aa4c7fd7',
-            'MENGANTAR_JAM_PICKUP' => '13:00',
-            'MENGANTAR_VOLUME_PICKUP' => 'volumeMotor',
-            'KURIR_DIKECUALIKAN' => 'SAPLite',
+            // no packing fee, as live
+            'PACKING_PER_KG' => '0',
+            'PACKING_MINIMAL' => '0',
+            'PACKING_GRATIS_DI_ATAS' => '0',
             'SESI_UTAMA' => 'bangbana-waha',
             'ARSIP_ORDER_HARI' => '90',
             'ARSIP_CUSTOMER_HARI' => '365',
@@ -625,7 +625,7 @@ class DemoSeeder extends Seeder
             ['2026-09-28 13:02', 'Chat pertama · 3 pesan digabung', 'gray'],
             ['2026-09-28 13:03', 'Dikenali sebagai reseller · kantin sekolah', 'green'],
             ['2026-09-28 13:03', 'Foto Molreng Reguler dikirim otomatis', 'gray'],
-            ['2026-09-28 13:05', 'Ongkir dicek via Mengantar · pilih JNE REG', 'gray'],
+            ['2026-09-28 13:05', 'Info pengiriman dicek · ekspedisi JNE, ongkir COD', 'gray'],
             ['2026-09-28 13:06', 'Tahap → Order dibuat · skor HOT', 'blue'],
             ['2026-09-28 13:06', 'Order ORD-260928-014 dicatat · supervisor dikabari', 'blue'],
         ] as [$waktu, $teks, $nada]) {
@@ -780,7 +780,7 @@ class DemoSeeder extends Seeder
             'bagian' => 'KEBIJAKAN',
             'pertanyaan' => 'ongkir ke blitar brp kak? 5 bal kripca',
             'jawaban' => 'Untuk 5 bal Kripca (± 9 kg) ke Blitar, Adiva cek dulu ongkirnya ya kak. [Jawaban mengikuti isi kebijakan setelah diisi.]',
-            'catatan' => 'Tool dipakai: KB_Kebijakan (Ongkir & ekspedisi) lalu Cek_Ongkir_Mengantar',
+            'catatan' => 'Tool dipakai: KB_Kebijakan (Ongkir & ekspedisi) lalu Cek_Ongkir',
             'kebijakan_id' => $ongkir,
             'user_id' => User::query()->where('email', 'falah@bangbana.id')->value('id'),
         ]);
@@ -806,7 +806,7 @@ class DemoSeeder extends Seeder
                 [
                     ['2026-09-28 13:02', 'Chat pertama masuk (3 pesan digabung). Dikenali sebagai reseller untuk kantin sekolah.', ['jenis' => 'PERCAKAPAN']],
                     ['2026-09-28 13:03', 'Adiva mengirim foto Molreng Reguler Bawang Original dari katalog.', ['jenis' => 'PERCAKAPAN']],
-                    ['2026-09-28 13:05', 'Ongkir dicek lewat Mengantar: JNE REG Rp38.000 · SiCepat REG Rp36.000 · J&T EZ Rp40.000. Customer memilih JNE REG.', ['jenis' => 'PERCAKAPAN']],
+                    ['2026-09-28 13:05', 'Info pengiriman dicek: ekspedisi dengan ongkir COD ke kurir, packing Rp5.000. Customer memilih JNE.', ['jenis' => 'PERCAKAPAN']],
                     ['2026-09-28 13:06', 'Dicatat Adiva dari chat · supervisor dikabari dengan tombol ACC',
                         ['jenis' => 'DICATAT', 'nada' => 'blue', 'data' => ['lengkap' => 'Adiva mencatat order dan mengabari supervisor lewat WhatsApp dengan tombol ACC.']]],
                 ]],
@@ -841,6 +841,11 @@ class DemoSeeder extends Seeder
         ];
 
         foreach ($pesanan as [$orderId, $nama, $tanggal, $status, $metode, $kurir, $ongkir, $berat, $alamat, $item, $lain, $riwayat]) {
+            // an expedition parcel is ONGKIR COD, as Adiva writes it; the cost stays as information
+            if (AturanKirim::jadiCod($kurir, $metode)) {
+                [$kurir, $metode] = [AturanKirim::kurirCod($kurir), AturanKirim::METODE_COD];
+            }
+
             $customer = CrmCustomer::query()->where('nama', $nama)->sole();
             $order = LogOrder::create([
                 'order_id' => $orderId,
@@ -1717,7 +1722,7 @@ class DemoSeeder extends Seeder
                 ['c', 'Mau, kirim foto', '13:03'],
                 ['b', 'Molreng Reguler Bawang Original — harga turun di pembelian 10+ dan 50+ pcs ya kak.', '13:03', 'Molreng Reguler Bawang Original'],
                 ['c', 'ok aku ambil molreng 40, basreng 30. kirim ke Dinoyo Lowokwaru ya', '13:05'],
-                ['s', 'Tool dipakai: Cari_Produk_per_Kategori · Cek_Ongkir_Mengantar'],
+                ['s', 'Tool dipakai: Cari_Produk_per_Kategori · Cek_Ongkir'],
                 ['b', "Siap kak. Ongkir dari Sawojajar ke Dinoyo (±1,6 kg):\n• JNE REG Rp38.000 (2–3 hari)\n• SiCepat REG Rp35.000\n• GoSend Instant Rp27.000\nMau pakai kurir yang mana?", '13:05'],
                 ['c', 'JNE aja kak', '13:06'],
                 ['b', "Ringkasan pesanan kak Rina:\n• Molreng Reguler Bawang Original × 40\n• Basreng Pedas Daun Jeruk × 30\nTotal produk Rp1.245.000 + ongkir Rp38.000\nPesanan sudah diteruskan ke admin untuk dicek, invoice menyusul ya kak.", '13:06'],

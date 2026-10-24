@@ -26,7 +26,6 @@ final class IsianPengaturan
             ...$tersimpan,
             'DAFTAR_NOMOR_BOT' => 'bangbana-waha=Nomor Utama,bangbana-2=Nomor Lawang',
             'INVOICE_TERAKHIR' => 'INV/2026/09/141',
-            'MENGANTAR_API_KEY' => 'kunci-rahasia-mengantar',
         ] as $kunci => $nilai) {
             ConfigToko::create(['kunci' => $kunci, 'nilai' => $nilai]);
         }
@@ -62,11 +61,9 @@ final class IsianPengaturan
             'HARI_LIBUR_OTOMATIS' => ['Minggu'],
             'JEDA_FOLLOWUP_JAM' => '10',
             'JEDA_KESAN_HARI' => '2',
-            'MENGANTAR_KOTA_ASAL' => 'SAWOJAJAR, KEDUNGKANDANG, MALANG, JAWA TIMUR',
-            'MENGANTAR_PICKUP_ADDRESS_ID' => '5fc6390df8f44b34aa4c7fd7',
-            'MENGANTAR_JAM_PICKUP' => '13:00',
-            'MENGANTAR_VOLUME_PICKUP' => 'volumeMotor',
-            'KURIR_DIKECUALIKAN' => ['SAPLite'],
+            'PACKING_PER_KG' => '2000',
+            'PACKING_MINIMAL' => '5000',
+            'PACKING_GRATIS_DI_ATAS' => '',
             'SESI_UTAMA' => 'bangbana-waha',
             'ARSIP_ORDER_HARI' => '90',
             'ARSIP_CUSTOMER_HARI' => '365',

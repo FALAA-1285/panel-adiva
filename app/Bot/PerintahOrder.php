@@ -8,7 +8,7 @@ use App\Models\User;
 
 /**
  * Runs an order command from the panel (ACC, TOLAK, BATAL, LUNAS, SIAP, KIRIM, SELESAI,
- * TUTUP, BATAL KIRIM). The note carries the receipt number, the shipping cost for ACC,
+ * TUTUP). The note carries the receipt number, the shipping cost for ACC,
  * or the reason.
  * Whether it may run is checked before, by PerintahPesanan::alasanTidakBerlaku().
  */

@@ -16,11 +16,7 @@ import { InputKata } from '@/components/ui/input-kata';
 import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/utils';
 import { prompt, tim } from '@/routes';
-import {
-    kabarWa,
-    simpan,
-    ujiOngkir as rutUjiOngkir,
-} from '@/routes/pengaturan';
+import { kabarWa, simpan } from '@/routes/pengaturan';
 
 /** CONFIG_TOKO values on the page, by key (App\Http\Requests\SimpanPengaturanRequest::ISIAN). */
 type Nilai = {
@@ -39,20 +35,15 @@ type Nilai = {
     HARI_LIBUR_OTOMATIS: string[];
     JEDA_FOLLOWUP_JAM: string;
     JEDA_KESAN_HARI: string;
-    MENGANTAR_KOTA_ASAL: string;
-    MENGANTAR_PICKUP_ADDRESS_ID: string;
-    MENGANTAR_JAM_PICKUP: string;
-    MENGANTAR_VOLUME_PICKUP: string;
-    KURIR_DIKECUALIKAN: string[];
+    PACKING_PER_KG: string;
+    PACKING_MINIMAL: string;
+    PACKING_GRATIS_DI_ATAS: string;
     SESI_UTAMA: string;
     ARSIP_ORDER_HARI: string;
     ARSIP_CUSTOMER_HARI: string;
 };
 
-type KunciTeks = Exclude<
-    keyof Nilai,
-    'HARI_LIBUR_OTOMATIS' | 'KURIR_DIKECUALIKAN'
->;
+type KunciTeks = Exclude<keyof Nilai, 'HARI_LIBUR_OTOMATIS'>;
 
 type Ai = {
     AI_MODEL_UTAMA: string;
@@ -68,7 +59,6 @@ type Props = {
     ai: Ai;
     modelPilihan: string[];
     invoiceTerakhir: string | null;
-    apiKeyTersimpan: boolean;
     /** Notifikasi WhatsApp rows switched off */
     kabarWaMati: string[];
     staf: {
@@ -139,7 +129,6 @@ export default function Pengaturan({
     ai,
     modelPilihan,
     invoiceTerakhir,
-    apiKeyTersimpan,
     kabarWaMati,
     staf,
     nomorBot,
@@ -147,12 +136,9 @@ export default function Pengaturan({
     promptBagian,
     pj,
 }: Props) {
-    const form = useForm({ ...nilai, ai, MENGANTAR_API_KEY_BARU: '' });
+    const form = useForm({ ...nilai, ai });
     const [tabAktif, setTabAktif] = useState<TabPengaturan>('semua');
-    // "Ganti" on the Mengantar API key
-    const [gantiKunci, setGantiKunci] = useState(false);
     const galat = form.errors as Record<string, string | undefined>;
-    const ujiOngkir = useHttp<{ ongkir?: string }, { hasil: string }>({});
 
     /** The first error of a field, including the errors of its list items. */
     const salah = (kunci: string) =>
@@ -172,13 +158,7 @@ export default function Pengaturan({
         form.setData('ai', { ...form.data.ai, [kunci]: nilaiBaru });
 
     const simpanSemua = () =>
-        form.put(simpan.url(), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setGantiKunci(false);
-                form.setData('MENGANTAR_API_KEY_BARU', '');
-            },
-        });
+        form.put(simpan.url(), { preserveScroll: true });
 
     const adaKolom1 =
         tabAktif === 'semua' ||
@@ -589,176 +569,55 @@ export default function Pengaturan({
                     >
                         {(tabAktif === 'semua' ||
                             tabAktif === 'pengiriman') && (
-                            <KartuPengaturan
-                                judul="Ongkir (Mengantar)"
-                                aksi={
-                                    // n8n's Cek_Ongkir_Mengantar, from the warehouse to Dinoyo, 1 kg
-                                    <Button
-                                        ukuran="sm"
-                                        className="h-[34px] px-3"
-                                        aria-disabled={ujiOngkir.processing}
-                                        onClick={() =>
-                                            !ujiOngkir.processing &&
-                                            void ujiOngkir
-                                                .post(rutUjiOngkir.url())
-                                                .catch(() => {})
-                                        }
-                                    >
-                                        Uji cek ongkir
-                                    </Button>
-                                }
-                            >
-                                <IsianKunci
-                                    label="API key"
-                                    kunci="MENGANTAR_API_KEY"
-                                    sebagai="div"
-                                >
-                                    <span className="flex gap-2">
-                                        {gantiKunci ? (
-                                            // the new key goes with "Simpan perubahan"; the old one is never shown
-                                            <input
-                                                type="password"
-                                                aria-label="API key Mengantar baru"
-                                                autoComplete="off"
-                                                placeholder="Tempel API key baru"
-                                                className={cn(
-                                                    kelasIsian,
-                                                    'grow',
-                                                )}
-                                                value={
-                                                    form.data
-                                                        .MENGANTAR_API_KEY_BARU
-                                                }
-                                                onChange={(e) =>
-                                                    form.setData(
-                                                        'MENGANTAR_API_KEY_BARU',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        ) : (
-                                            <div className="box-border flex h-10 grow items-center gap-2 rounded-control border border-line bg-subtle px-3 text-body text-ink-3">
-                                                {apiKeyTersimpan && (
-                                                    <>
-                                                        <span className="tracking-[0.2em]">
-                                                            ••••••••••••
-                                                        </span>
-                                                        <span className="rounded-full bg-ok-bg px-2 py-px text-tag font-semibold whitespace-nowrap text-green-text">
-                                                            Tersimpan
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                        <Button
-                                            ukuran="sm"
-                                            className="h-10 rounded-[9px] px-3"
-                                            onClick={() => {
-                                                form.setData(
-                                                    'MENGANTAR_API_KEY_BARU',
-                                                    '',
-                                                );
-                                                setGantiKunci(!gantiKunci);
-                                            }}
-                                        >
-                                            {gantiKunci ? 'Batal' : 'Ganti'}
-                                        </Button>
-                                    </span>
-                                </IsianKunci>
-                                <IsianKunci
-                                    label="Kota asal"
-                                    kunci="MENGANTAR_KOTA_ASAL"
-                                    error={salah('MENGANTAR_KOTA_ASAL')}
-                                >
-                                    <input
-                                        type="text"
-                                        className={kelasIsian}
-                                        {...teks('MENGANTAR_KOTA_ASAL')}
-                                    />
-                                </IsianKunci>
-                                <IsianKunci
-                                    label="ID alamat pickup"
-                                    kunci="MENGANTAR_PICKUP_ADDRESS_ID"
-                                    error={salah('MENGANTAR_PICKUP_ADDRESS_ID')}
-                                >
-                                    <input
-                                        type="text"
-                                        className={cn(
-                                            kelasIsian,
-                                            'font-mono text-caption',
-                                        )}
-                                        {...teks('MENGANTAR_PICKUP_ADDRESS_ID')}
-                                    />
-                                </IsianKunci>
+                            <KartuPengaturan judul="Pengiriman & packing">
+                                <span className="text-caption leading-[1.45] text-muted">
+                                    Paket ekspedisi dikirim dengan ongkir COD:
+                                    ongkir dibayar customer ke kurir dan tidak
+                                    ikut ditagih. Yang ditransfer hanya produk
+                                    dan biaya packing di bawah ini. Kosongkan
+                                    kalau tidak ada biaya packing.
+                                </span>
                                 <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
                                     <IsianKunci
-                                        label="Jam pickup kurir"
-                                        kunci="MENGANTAR_JAM_PICKUP"
-                                        error={salah('MENGANTAR_JAM_PICKUP')}
+                                        label="Packing per kg"
+                                        kunci="PACKING_PER_KG"
+                                        error={salah('PACKING_PER_KG')}
                                     >
                                         <input
-                                            type="text"
+                                            type="number"
+                                            min={0}
+                                            inputMode="numeric"
                                             className={kelasIsian}
-                                            {...teks('MENGANTAR_JAM_PICKUP')}
+                                            {...teks('PACKING_PER_KG')}
                                         />
                                     </IsianKunci>
                                     <IsianKunci
-                                        label="Kendaraan pickup"
-                                        kunci="MENGANTAR_VOLUME_PICKUP"
-                                        error={salah('MENGANTAR_VOLUME_PICKUP')}
+                                        label="Packing minimal"
+                                        kunci="PACKING_MINIMAL"
+                                        error={salah('PACKING_MINIMAL')}
                                     >
                                         <input
-                                            type="text"
-                                            className={cn(
-                                                kelasIsian,
-                                                'font-mono text-caption',
-                                            )}
-                                            {...teks('MENGANTAR_VOLUME_PICKUP')}
+                                            type="number"
+                                            min={0}
+                                            inputMode="numeric"
+                                            className={kelasIsian}
+                                            {...teks('PACKING_MINIMAL')}
                                         />
                                     </IsianKunci>
                                 </div>
                                 <IsianKunci
-                                    label="Kurir disembunyikan"
-                                    kunci="KURIR_DIKECUALIKAN"
-                                    sebagai="div"
-                                    jarak="lebar"
-                                    error={salah('KURIR_DIKECUALIKAN')}
+                                    label="Packing gratis untuk belanja produk mulai"
+                                    kunci="PACKING_GRATIS_DI_ATAS"
+                                    error={salah('PACKING_GRATIS_DI_ATAS')}
                                 >
-                                    <InputKata
-                                        varian="pengaturan"
-                                        kata={form.data.KURIR_DIKECUALIKAN}
-                                        onUbah={(kata) =>
-                                            form.setData(
-                                                'KURIR_DIKECUALIKAN',
-                                                kata,
-                                            )
-                                        }
-                                        aria-label="Tambah kurir"
-                                        placeholder="Tambah kurir…"
-                                        className="border-line"
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        inputMode="numeric"
+                                        className={kelasIsian}
+                                        {...teks('PACKING_GRATIS_DI_ATAS')}
                                     />
-                                    <span className="text-tag text-muted">
-                                        Untuk kurir yang tarifnya dari Mengantar
-                                        tidak wajar. Asal pengiriman: gudang
-                                        Sawojajar.
-                                    </span>
                                 </IsianKunci>
-                                {(ujiOngkir.response ||
-                                    ujiOngkir.hasErrors) && (
-                                    <span
-                                        role="status"
-                                        className={cn(
-                                            'text-caption leading-[1.45]',
-                                            ujiOngkir.hasErrors
-                                                ? 'text-red-text'
-                                                : 'text-ink-3',
-                                        )}
-                                    >
-                                        {ujiOngkir.hasErrors
-                                            ? ujiOngkir.errors.ongkir
-                                            : ujiOngkir.response?.hasil}
-                                    </span>
-                                )}
                             </KartuPengaturan>
                         )}
 

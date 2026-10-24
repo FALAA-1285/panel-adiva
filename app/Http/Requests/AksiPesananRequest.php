@@ -19,8 +19,8 @@ class AksiPesananRequest extends FormRequest
     {
         return [
             'aksi' => ['required', Rule::enum(AksiPesanan::class)],
-            // "Catatan, nomor resi, atau alasan": the receipt number for KIRIM (none = n8n books
-            // the Mengantar shipment), the shipping cost for ACC, the reason for TOLAK / BATAL
+            // "Catatan, nomor resi, atau alasan": the receipt number for KIRIM (none for the
+            // company's own courier), the shipping cost for ACC, the reason for TOLAK / BATAL
             'catatan' => ['nullable', 'string', 'max:255'],
         ];
     }

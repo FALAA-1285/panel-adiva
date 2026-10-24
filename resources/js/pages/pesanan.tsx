@@ -79,7 +79,7 @@ type Detail = {
     dobel: boolean;
     riwayat: { waktu: string; teks: string }[];
     aksi: Aksi[];
-    /** "Lainnya": TUTUP, BATAL KIRIM */
+    /** "Lainnya": TUTUP */
     lainnya: Aksi[];
 };
 
@@ -348,7 +348,7 @@ function BarisPesanan({
 
 
 /**
- * The grid's eighth button: TUTUP and BATAL KIRIM, once WhatsApp commands only. Opens
+ * The grid's eighth button: TUTUP, once a WhatsApp command only. Opens
  * upwards; closes on a click outside or Esc.
  */
 function MenuLainnya({
@@ -493,10 +493,9 @@ function PanelDetail({
                 kode: 'KIRIM',
                 judul: 'Kirim Pesanan',
                 deskripsi:
-                    'Tandai pesanan telah dikirim. Masukkan nomor resi kurir, atau kosongkan jika pengiriman otomatis di-booking via Mengantar.',
-                labelInput: 'Nomor Resi Pengiriman (Opsional)',
-                placeholderInput:
-                    'Contoh: JNE0123456789 (kosongkan jika otomatis)',
+                    'Tandai pesanan telah dikirim. Paket ekspedisi wajib disertai nomor resinya. Untuk kurir motor atau armada Bang Bana, boleh tulis nama kurirnya atau kosongkan.',
+                labelInput: 'Nomor resi atau nama kurir',
+                placeholderInput: 'Contoh: JNE0123456789',
                 wajibInput: false,
                 tombolTeks: 'Konfirmasi Kirim',
                 varian: 'primary',

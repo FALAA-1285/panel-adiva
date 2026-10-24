@@ -66,7 +66,7 @@ class PesananController extends Controller
 
     /**
      * A command button: ACC, LUNAS, SIAP, KIRIM, SELESAI, BATAL, TOLAK, or under
-     * "Lainnya" TUTUP and BATAL KIRIM.
+     * "Lainnya" TUTUP.
      */
     public function aksi(AksiPesananRequest $request, LogOrder $order, PerintahOrder $perintah): RedirectResponse
     {
@@ -75,6 +75,11 @@ class PesananController extends Controller
 
         if ($alasan = PerintahPesanan::alasanTidakBerlaku($aksi, $order, $user, $request->validated('catatan'))) {
             throw ValidationException::withMessages(['aksi' => $alasan]);
+        }
+
+        // an expedition parcel is sent by the CS in the courier's app: KIRIM records its waybill
+        if ($aksi === AksiPesanan::Kirim && blank($request->validated('catatan')) && PerintahPesanan::butuhResi($order)) {
+            throw ValidationException::withMessages(['aksi' => 'Nomor resinya belum disertakan. Contoh: JNE1234567890']);
         }
 
         try {

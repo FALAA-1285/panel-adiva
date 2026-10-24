@@ -1,11 +1,8 @@
 <?php
 
-use App\Bot\CekOngkir;
 use App\Bot\KabarKonfig;
-use App\Bot\N8nCekOngkir;
 use App\Bot\N8nKabarKonfig;
 use App\Jobs\KabariKonfigN8n;
-use App\Models\ConfigToko;
 use App\Models\PromptVersi;
 use App\Models\User;
 use Illuminate\Http\Client\Request;
@@ -62,41 +59,4 @@ test('the notice goes to n8n signed as KONFIG_BERUBAH', function () {
     (new KabariKonfigN8n('PROMPT', ['versi' => 15]))->handle(app(KabarKonfig::class));
 
     Http::assertSent(fn (Request $r) => $r['perintah'] === 'KONFIG_BERUBAH' && $r['apa'] === 'PROMPT' && $r['versi'] === 15 && $r->hasHeader('X-Adiva-Signature'));
-});
-
-test('Uji cek ongkir asks n8n from the warehouse and puts the rates on one line', function () {
-    $this->app->bind(CekOngkir::class, N8nCekOngkir::class);
-    ConfigToko::create(['kunci' => 'MENGANTAR_KOTA_ASAL', 'nilai' => 'SAWOJAJAR, KEDUNGKANDANG, MALANG, JAWA TIMUR']);
-    Http::fake(['n8n.test/*' => Http::response(['ok' => true, 'tarif' => [
-        ['kurir' => 'JNE', 'layanan' => 'REG', 'harga' => 38000, 'estimasi' => '2–3 hari'],
-        ['kurir' => 'SiCepat', 'layanan' => 'REG', 'harga' => 35000],
-    ]])]);
-
-    $this->actingAs($this->falah)->postJson('/pengaturan/uji-ongkir')
-        ->assertOk()
-        ->assertExactJson(['hasil' => 'Ke Dinoyo, Malang · 1 kg: JNE REG Rp38.000 (2–3 hari) · SiCepat REG Rp35.000']);
-
-    Http::assertSent(fn (Request $r) => $r['perintah'] === 'CEK_ONGKIR'
-        && $r['asal'] === 'SAWOJAJAR, KEDUNGKANDANG, MALANG, JAWA TIMUR'
-        && $r['tujuan'] === 'DINOYO, LOWOKWARU, MALANG, JAWA TIMUR'
-        && $r['berat_kg'] === 1);
-});
-
-test('Uji cek ongkir says why it failed', function () {
-    $this->app->bind(CekOngkir::class, N8nCekOngkir::class);
-    Http::fake(['n8n.test/*' => Http::sequence()
-        ->push(['ok' => false, 'alasan' => 'API key Mengantar ditolak'])
-        ->push(['ok' => true, 'tarif' => []])]);
-
-    $this->actingAs($this->falah)->postJson('/pengaturan/uji-ongkir')->assertJsonValidationErrors(['ongkir' => 'API key Mengantar ditolak']);
-    $this->actingAs($this->falah)->postJson('/pengaturan/uji-ongkir')->assertJsonValidationErrors(['ongkir' => 'Mengantar tidak memberi tarif untuk tujuan uji.']);
-});
-
-test('the stand-in rates are the ones Adiva quotes in the design, and only supervisors may check', function () {
-    Http::fake();
-
-    $this->actingAs($this->falah)->postJson('/pengaturan/uji-ongkir')
-        ->assertExactJson(['hasil' => 'Ke Dinoyo, Malang · 1 kg: JNE REG Rp38.000 (2–3 hari) · SiCepat REG Rp35.000 · GoSend Instant Rp27.000']);
-    $this->actingAs(User::factory()->create())->postJson('/pengaturan/uji-ongkir')->assertForbidden();
-    Http::assertNothingSent();
 });

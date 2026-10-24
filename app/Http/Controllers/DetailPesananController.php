@@ -171,7 +171,12 @@ class DetailPesananController extends Controller
                 str_replace(':', '.', $jamKerja->mulai).'–'.str_replace(':', '.', $jamKerja->selesai),
                 $jamKerja->libur !== [] ? implode(', ', $jamKerja->libur).' tidak dihitung' : null,
             ])->filter()->implode(', ').')',
-            'catatan' => $o->ambil_sendiri ? null : $config['CATATAN_INVOICE'],
+            // a COD parcel always says so, whatever CATATAN_INVOICE says about the shipping cost
+            'catatan' => match (true) {
+                $o->ambil_sendiri => null,
+                $o->ongkirCod() => 'Ongkir ekspedisi dibayar COD ke kurir saat paket sampai, tidak ikut ditransfer.',
+                default => $config['CATATAN_INVOICE'],
+            },
         ];
     }
 

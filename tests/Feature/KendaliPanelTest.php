@@ -44,39 +44,36 @@ function n8nPalsu(): void
 
 // ---------------------------------------------------------------- order commands once WhatsApp-only
 
-test('TUTUP, BATAL KIRIM and ACC with a shipping cost reach n8n as the commands it parses', function () {
+test('TUTUP and ACC with a shipping cost reach n8n as the commands it parses', function () {
     n8nPalsu();
     $this->app->bind(PerintahOrder::class, N8nPerintahOrder::class);
     LogOrder::factory()->create(['order_id' => 'ORD-1']);
-    LogOrder::factory()->status(StatusOrder::Lunas)->create(['order_id' => 'ORD-2', 'catatan_admin' => 'LUNAS 28 Sep | MENGANTAR ORDER MGA123']);
     LogOrder::factory()->status(StatusOrder::Diacc)->create(['order_id' => 'ORD-3', 'invoice_number' => 'INV/2026/09/140']);
 
     $this->actingAs($this->falah)->post('/pesanan/ORD-1/aksi', ['aksi' => 'TUTUP', 'catatan' => 'pindah ke CS lain'])->assertSessionHasNoErrors();
-    $this->actingAs($this->falah)->post('/pesanan/ORD-2/aksi', ['aksi' => 'BATAL KIRIM'])->assertSessionHasNoErrors();
     // a revised cost on an order already ACC'd
     $this->actingAs($this->falah)->post('/pesanan/ORD-3/aksi', ['aksi' => 'ACC', 'catatan' => '25rb'])->assertSessionHasNoErrors();
 
     expect(collect(Http::recorded())->map(fn (array $r) => array_values(array_intersect_key(json_decode($r[0]->body(), true), array_flip(['perintah', 'order_id', 'catatan']))))->all())->toBe([
         ['TUTUP', 'ORD-1', 'pindah ke CS lain'],
-        ['BATAL KIRIM', 'ORD-2', null],
         ['ACC', 'ORD-3', '25rb'],
     ])->and(ActivityLog::query()->orderBy('id')->pluck('detail')->all())->toBe([
         'ORD-1 · ditutup tanpa chat ke customer · pindah ke CS lain',
-        'ORD-2 · order pengiriman Mengantar dibatalkan',
         'ORD-3 · invoice INV/2026/09/140 terkirim · ongkir Rp25.000',
     ]);
 });
 
-test('BATAL KIRIM needs a shipment the bot booked, and KIRIM no longer needs a receipt', function () {
-    LogOrder::factory()->status(StatusOrder::Dikirim)->create(['order_id' => 'ORD-X']);
-    LogOrder::factory()->status(StatusOrder::Lunas)->create(['order_id' => 'ORD-Y']);
+test('KIRIM of an expedition parcel needs its waybill; the company\'s own courier does not', function () {
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['order_id' => 'ORD-X', 'kurir_pilihan' => 'EKSPEDISI (ONGKIR COD) - JNE']);
+    LogOrder::factory()->status(StatusOrder::Lunas)->create(['order_id' => 'ORD-Y', 'kurir_pilihan' => 'KURIR MOTOR']);
 
-    $this->actingAs($this->falah)->post('/pesanan/ORD-X/aksi', ['aksi' => 'BATAL KIRIM'])
-        ->assertSessionHasErrors(['aksi' => 'Order ini tidak punya order pengiriman Mengantar yang dibuat bot']);
-    // no receipt: n8n books the Mengantar shipment
+    $this->actingAs($this->falah)->post('/pesanan/ORD-X/aksi', ['aksi' => 'KIRIM'])
+        ->assertSessionHasErrors(['aksi' => 'Nomor resinya belum disertakan. Contoh: JNE1234567890']);
+    $this->actingAs($this->falah)->post('/pesanan/ORD-X/aksi', ['aksi' => 'KIRIM', 'catatan' => 'JNE999'])->assertSessionHasNoErrors();
     $this->actingAs($this->falah)->post('/pesanan/ORD-Y/aksi', ['aksi' => 'KIRIM'])->assertSessionHasNoErrors();
 
-    expect(LogOrder::query()->where('order_id', 'ORD-Y')->sole()->status_order)->toBe(StatusOrder::Dikirim);
+    expect(LogOrder::query()->where('order_id', 'ORD-X')->sole()->no_resi)->toBe('JNE999')
+        ->and(LogOrder::query()->where('order_id', 'ORD-Y')->sole()->status_order)->toBe(StatusOrder::Dikirim);
 });
 
 test('a revised shipping cost keeps the invoice number and the counter', function () {
@@ -93,7 +90,7 @@ test('a revised shipping cost keeps the invoice number and the counter', functio
         ->and(ConfigToko::query()->where('kunci', 'INVOICE_TERAKHIR')->value('nilai'))->toBe('INV/2026/09/141');
 });
 
-test('the order panel offers TUTUP and BATAL KIRIM under Lainnya, and ACC again once a cost is typed', function () {
+test('the order panel offers TUTUP under Lainnya, and ACC again once a cost is typed', function () {
     LogOrder::factory()->status(StatusOrder::Diacc)->create(['order_id' => 'ORD-260928-014']);
 
     $this->actingAs($this->falah)
@@ -102,7 +99,7 @@ test('the order panel offers TUTUP and BATAL KIRIM under Lainnya, and ACC again 
             ->where('detail.aksi.0', ['kode' => 'ACC', 'boleh' => false, 'bolehDenganOngkir' => true, 'judul' => 'Order sudah di-ACC · tulis ongkir baru di catatan untuk revisi ongkir', 'gaya' => 'utama'])
             ->where('detail.lainnya.0.kode', 'TUTUP')
             ->where('detail.lainnya.0.boleh', true)
-            ->where('detail.lainnya.1', ['kode' => 'BATAL KIRIM', 'boleh' => false, 'bolehDenganOngkir' => false, 'judul' => 'BATAL KIRIM tidak berlaku untuk status DIACC', 'gaya' => 'bahaya']));
+            ->has('detail.lainnya', 1));
 });
 
 // ---------------------------------------------------------------- Jawab lewat Adiva

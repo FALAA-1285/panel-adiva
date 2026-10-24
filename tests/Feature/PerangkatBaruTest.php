@@ -1,11 +1,9 @@
 <?php
 
-use App\Models\ActivityLog;
 use App\Models\ConfigToko;
 use App\Models\User;
 use App\Support\PerangkatDikenal;
 use Inertia\Testing\AssertableInertia as Assert;
-use Tests\Support\IsianPengaturan;
 use Tests\Support\PengirimRekam;
 
 beforeEach(function () {
@@ -61,20 +59,4 @@ test('signing in with the WhatsApp code also marks the device as known', functio
     $this->postJson('/masuk/kode', ['email' => 'falah@bangbana.id']);
 
     $this->post('/masuk/kode/verifikasi', ['kode' => $rekam->kodeTerakhir()])->assertCookie(PerangkatDikenal::COOKIE);
-});
-
-test('a new Mengantar API key is saved and the log never holds it', function () {
-    ConfigToko::query()->delete();
-    IsianPengaturan::simpanAwal();
-
-    $this->actingAs($this->falah)->put('/pengaturan', IsianPengaturan::form(['MENGANTAR_API_KEY_BARU' => 'kunci-baru-123']))->assertSessionHasNoErrors();
-
-    expect(ConfigToko::query()->where('kunci', 'MENGANTAR_API_KEY')->value('nilai'))->toBe('kunci-baru-123');
-    $log = ActivityLog::query()->where('detail', 'API key Mengantar diganti')->sole();
-    expect(json_encode($log->data))->not->toContain('kunci-baru-123')
-        ->and(json_encode($log->data))->not->toContain('kunci-rahasia-mengantar');
-
-    // left empty: the old key stays
-    $this->actingAs($this->falah)->put('/pengaturan', IsianPengaturan::form(['MENGANTAR_API_KEY_BARU' => '']));
-    expect(ConfigToko::query()->where('kunci', 'MENGANTAR_API_KEY')->value('nilai'))->toBe('kunci-baru-123');
 });

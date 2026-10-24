@@ -158,7 +158,7 @@ test('the automated messages and Status Adiva read today\'s runs', function () {
                 ['label' => 'WhatsApp (WAHA)', 'nilai' => '2 nomor · dicek 13:30', 'nada' => 'green'],
                 ['label' => 'Model utama', 'nilai' => 'Gemini 3.6 Flash · 1,4 dtk'],
                 ['label' => 'Model cadangan', 'nilai' => 'Dipakai 1× hari ini', 'nada' => 'amber'],
-                ['label' => 'Ongkir Mengantar', 'nilai' => '1 cek hari ini'],
+                ['label' => 'Info pengiriman', 'nilai' => '1 cek hari ini'],
                 ['label' => 'Sedang dijeda', 'nilai' => '1 customer', 'href' => '/jeda'],
             ]));
 });

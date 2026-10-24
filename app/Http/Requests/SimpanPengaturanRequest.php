@@ -26,7 +26,7 @@ class SimpanPengaturanRequest extends FormRequest
         'NAMA_TOKO', 'REKENING', 'BATAS_BAYAR_JAM', 'BATAS_BAYAR_PICKUP_JAM', 'BATAS_KONFIRMASI_JAM', 'CATATAN_INVOICE', 'LINK_ULASAN',
         'AMBIL_TOKO_SAWOJAJAR', 'AMBIL_PABRIK_LAWANG',
         'JAM_PESAN_OTOMATIS', 'HARI_LIBUR_OTOMATIS', 'JEDA_FOLLOWUP_JAM', 'JEDA_KESAN_HARI',
-        'MENGANTAR_KOTA_ASAL', 'MENGANTAR_PICKUP_ADDRESS_ID', 'MENGANTAR_JAM_PICKUP', 'MENGANTAR_VOLUME_PICKUP', 'KURIR_DIKECUALIKAN',
+        'PACKING_PER_KG', 'PACKING_MINIMAL', 'PACKING_GRATIS_DI_ATAS',
         'SESI_UTAMA',
         'ARSIP_ORDER_HARI', 'ARSIP_CUSTOMER_HARI',
     ];
@@ -36,7 +36,7 @@ class SimpanPengaturanRequest extends FormRequest
      *
      * @var list<string>
      */
-    public const DAFTAR = ['HARI_LIBUR_OTOMATIS', 'KURIR_DIKECUALIKAN'];
+    public const DAFTAR = ['HARI_LIBUR_OTOMATIS'];
 
     /**
      * "Tanggal merah ditulis seperti 2026-12-25", or a weekday.
@@ -85,17 +85,13 @@ class SimpanPengaturanRequest extends FormRequest
             }],
             'JEDA_FOLLOWUP_JAM' => $jumlah,
             'JEDA_KESAN_HARI' => $jumlah,
-            'MENGANTAR_KOTA_ASAL' => ['required', 'string', 'max:200'],
-            'MENGANTAR_PICKUP_ADDRESS_ID' => ['required', 'string', 'max:100'],
-            'MENGANTAR_JAM_PICKUP' => ['required', "regex:/^{$jam}$/"],
-            'MENGANTAR_VOLUME_PICKUP' => ['required', 'string', 'max:50'],
-            'KURIR_DIKECUALIKAN' => ['present', 'array'],
-            'KURIR_DIKECUALIKAN.*' => ['string', 'max:50', 'distinct'],
+            // packing of an expedition parcel; empty = no packing fee
+            'PACKING_PER_KG' => ['nullable', 'integer', 'min:0'],
+            'PACKING_MINIMAL' => ['nullable', 'integer', 'min:0'],
+            'PACKING_GRATIS_DI_ATAS' => ['nullable', 'integer', 'min:0'],
             'SESI_UTAMA' => ['required', Rule::in(array_keys(NomorBot::daftar()))],
             'ARSIP_ORDER_HARI' => $jumlah,
             'ARSIP_CUSTOMER_HARI' => $jumlah,
-            // "Ganti" on the Mengantar API key: only sent when a new key is typed
-            'MENGANTAR_API_KEY_BARU' => ['nullable', 'string', 'max:255'],
             'ai' => ['required', 'array'],
             'ai.AI_MODEL_UTAMA' => ['required', Rule::in(PengaturanAi::MODEL)],
             'ai.AI_MODEL_CADANGAN' => ['required', Rule::in(PengaturanAi::MODEL)],
@@ -138,7 +134,6 @@ class SimpanPengaturanRequest extends FormRequest
             'ADMIN_WA.regex' => 'Tulis nomor WhatsApp seperti 6281234567890.',
             'SARAH_WA.regex' => 'Tulis nomor WhatsApp seperti 6281234567890.',
             'JAM_PESAN_OTOMATIS.regex' => 'Tulis seperti 07:00-21:00.',
-            'MENGANTAR_JAM_PICKUP.regex' => 'Tulis seperti 13:00.',
         ];
     }
 }

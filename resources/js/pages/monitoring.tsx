@@ -365,7 +365,7 @@ export default function Monitoring({
                             </BarisIntegrasi>
                             <BarisIntegrasi
                                 titik="bg-green-dot"
-                                label="API ongkir Mengantar"
+                                label="Info pengiriman (ongkir COD)"
                             >
                                 <span className="text-caption text-ink-3">
                                     {integrasi.ongkir}

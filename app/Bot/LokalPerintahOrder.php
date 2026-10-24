@@ -4,13 +4,10 @@ namespace App\Bot;
 
 use App\Enums\AksiPesanan;
 use App\Enums\JenisNotifikasi;
-use App\Enums\KategoriAktivitas;
 use App\Enums\TahapFunnel;
-use App\Jobs\BuatPengirimanMengantar;
 use App\Models\CrmCustomer;
 use App\Models\LogOrder;
 use App\Models\User;
-use App\Support\Aktivitas;
 use App\Support\KabarBot;
 use App\Support\PengaturanToko;
 use App\Support\PerintahPesanan;
@@ -23,17 +20,15 @@ use App\Support\SimpanCrm;
  *
  * The order changes first, in one transaction (PerintahPesanan::jalankan: status, invoice
  * number, history, activity log). What follows reaches outside and never undoes it: the
- * invoice PDF (ACC), the message to the customer, the CRM (SELESAI, TUTUP) and the shipment
- * at Mengantar (LUNAS, KIRIM). A message WhatsApp refuses is a notice to the supervisor, not
- * a failed command.
+ * invoice PDF (ACC), the message to the customer and the CRM (SELESAI, TUTUP). A message
+ * WhatsApp refuses is a notice to the supervisor, not a failed command. Expedition parcels
+ * are sent by the CS in the courier's own app (ONGKIR COD); KIRIM records the waybill.
  */
 class LokalPerintahOrder implements PerintahOrder
 {
     public function __construct(
         private PesanKeluar $pesan,
         private PengirimInvoice $invoice,
-        private PengirimanMengantar $mengantar,
-        private LaporPengiriman $lapor,
     ) {}
 
     public function jalankan(AksiPesanan $aksi, LogOrder $order, User $oleh, ?string $catatan = null): void
@@ -42,21 +37,6 @@ class LokalPerintahOrder implements PerintahOrder
         $order->load('items');
 
         $this->periksa($aksi, $order, $catatan);
-
-        if ($aksi === AksiPesanan::BatalKirim) {
-            $this->batalKirim($order, $oleh);
-
-            return;
-        }
-
-        // KIRIM without a waybill: the bot books the shipment, which takes a while
-        if ($aksi === AksiPesanan::Kirim && $catatan === null && $this->bookingMengantar($order)) {
-            Aktivitas::catat($oleh, KategoriAktivitas::Pesanan, 'KIRIM order', "{$order->order_id} · membuat order pengiriman Mengantar", $order);
-            BuatPengirimanMengantar::dispatch($order->id);
-            $this->catatEksekusi($order);
-
-            return;
-        }
 
         // the words are chosen from the order as it is now: BATAL, for one, depends on the old status
         $pesanCustomer = PesanPerintah::untukCustomer($aksi, $order, $catatan);
@@ -74,11 +54,6 @@ class LokalPerintahOrder implements PerintahOrder
 
         if ($pesanCustomer !== null) {
             $this->kabari($order, $pesanCustomer);
-        }
-
-        // an order sent by courier is booked as soon as it is paid
-        if ($aksi === AksiPesanan::Lunas && $this->bookingMengantar($order)) {
-            BuatPengirimanMengantar::dispatch($order->id);
         }
 
         $this->catatEksekusi($order);
@@ -107,44 +82,10 @@ class LokalPerintahOrder implements PerintahOrder
             }
         }
 
-        // with the booking switched off the waybill has to be typed
-        if ($aksi === AksiPesanan::Kirim && $catatan === null && $sendiri === null && ! $order->ambil_sendiri && PengirimanMengantar::mode() === 'MATI') {
+        // an expedition parcel is always sent with its waybill
+        if ($aksi === AksiPesanan::Kirim && $catatan === null && PerintahPesanan::butuhResi($order)) {
             throw new PerintahGagal('Nomor resinya belum disertakan. Contoh: JNE1234567890');
         }
-    }
-
-    /**
-     * Whether the bot books this order's shipment at Mengantar: sent by a courier it books
-     * (not pickup, not the company's own, not an employee order), not yet with a waybill,
-     * and the switch is not off.
-     */
-    private function bookingMengantar(LogOrder $order): bool
-    {
-        return ! $order->ambil_sendiri
-            && PerintahPesanan::kurirSendiri($order) === null
-            && ! PesanPerintah::potongGaji($order)
-            && PengirimanMengantar::mode() !== 'MATI'
-            && trim((string) $order->no_resi) === '';
-    }
-
-    /**
-     * BATAL KIRIM: cancel the booking at Mengantar first, and only then change the order.
-     *
-     * @throws PerintahGagal
-     */
-    private function batalKirim(LogOrder $order, User $oleh): void
-    {
-        $hasil = $this->mengantar->batal($order);
-
-        if (! $hasil->ok) {
-            $this->lapor->terapkan($order, $hasil);
-
-            throw new PerintahGagal($hasil->alasan !== '' ? $hasil->alasan : 'Order pengiriman Mengantar belum bisa dibatalkan.');
-        }
-
-        PerintahPesanan::jalankan(AksiPesanan::BatalKirim, $order, $oleh);
-        $this->lapor->terapkan($order->refresh(), $hasil);
-        $this->catatEksekusi($order);
     }
 
     /**

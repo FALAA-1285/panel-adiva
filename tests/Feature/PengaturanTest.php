@@ -27,7 +27,7 @@ test('only supervisors may open and save Pengaturan', function (Peran $peran) {
     $this->actingAs($staf)->get('/katalog')->assertInertia(fn (Assert $page) => $page->where('panel.akses.pengaturan', false));
 })->with([Peran::StafCs, Peran::PjKaryawan]);
 
-test('the page shows every setting, without the API key itself', function () {
+test('the page shows every setting', function () {
     PromptVersi::create(['versi' => 14, 'ringkasan' => 'v14', 'status' => 'AKTIF', 'bagian' => array_map(fn ($no) => ['no' => $no, 'judul' => "Bagian {$no}", 'teks' => ''], range(0, 17))]);
 
     $respons = $this->actingAs(User::factory()->falah()->create())->get('/pengaturan');
@@ -37,15 +37,12 @@ test('the page shows every setting, without the API key itself', function () {
             ->component('pengaturan')
             ->where('nilai.ADMIN_WA', '6281234560007')
             ->where('nilai.HARI_LIBUR_OTOMATIS', ['Minggu'])
-            ->where('nilai.KURIR_DIKECUALIKAN', ['SAPLite'])
+            ->where('nilai.PACKING_PER_KG', '2000')
             ->where('nilai.REKENING', '')
             ->where('ai.AI_TEMPERATURE', '0.4')
             ->where('ai.AI_INGATAN_CHAT', '60')
             ->where('invoiceTerakhir', 'INV/2026/09/141')
-            ->where('apiKeyTersimpan', true)
             ->where('promptBagian', 18));
-
-    expect($respons->getContent())->not->toContain('kunci-rahasia-mengantar');
 });
 
 test('staff are listed with what their number may do on WhatsApp', function () {
@@ -91,7 +88,7 @@ test('Simpan perubahan writes and logs only what changed', function () {
             'SARAH_WA' => '0812 9876 0000',
             'BATAS_BAYAR_JAM' => '6',
             'HARI_LIBUR_OTOMATIS' => ['Minggu', '2026-12-25'],
-            'KURIR_DIKECUALIKAN' => [],
+            'PACKING_MINIMAL' => '6000',
             'ai' => ['AI_TEMPERATURE' => '0.7'],
         ]))
         ->assertRedirect();
@@ -100,7 +97,7 @@ test('Simpan perubahan writes and logs only what changed', function () {
     expect($nilai['SARAH_WA'])->toBe('6281298760000')
         ->and($nilai['BATAS_BAYAR_JAM'])->toBe('6')
         ->and($nilai['HARI_LIBUR_OTOMATIS'])->toBe('Minggu,2026-12-25')
-        ->and($nilai['KURIR_DIKECUALIKAN'])->toBe('')
+        ->and($nilai['PACKING_MINIMAL'])->toBe('6000')
         ->and(Workflow::query()->where('kode', 'chatbot')->value('pengaturan')['temperature'])->toBe(0.7);
 
     // empty fields that had no row are not "changes"
@@ -108,7 +105,7 @@ test('Simpan perubahan writes and logs only what changed', function () {
         'PJ program karyawan: 6281298760646 → 6281298760000',
         'Batas bayar (kirim): 5 → 6 jam kerja',
         'Hari libur: Minggu → Minggu,2026-12-25',
-        'Kurir disembunyikan: SAPLite → —',
+        'Packing minimal: 5000 → 6000 rupiah',
         'Temperature: 0.4 → 0.7',
     ]);
 
@@ -140,7 +137,7 @@ test('invalid values are refused with a message per field', function (array $uba
     'batas bayar' => [['BATAS_BAYAR_JAM' => '0'], 'BATAS_BAYAR_JAM', 'Batas bayar (kirim) minimal 1.'],
     'link ulasan' => [['LINK_ULASAN' => 'bukan tautan'], 'LINK_ULASAN', null],
     'nomor' => [['ADMIN_WA' => '12345'], 'ADMIN_WA', 'Tulis nomor WhatsApp seperti 6281234567890.'],
-    'jam pickup' => [['MENGANTAR_JAM_PICKUP' => '25:00'], 'MENGANTAR_JAM_PICKUP', null],
+    'packing' => [['PACKING_PER_KG' => '-1'], 'PACKING_PER_KG', 'Packing per kg minimal 0.'],
     'sesi' => [['SESI_UTAMA' => 'bangbana-9'], 'SESI_UTAMA', null],
     'temperature' => [['ai' => ['AI_TEMPERATURE' => '1.5']], 'ai.AI_TEMPERATURE', 'Temperature harus antara 0 dan 1.'],
     'model' => [['ai' => ['AI_MODEL_UTAMA' => 'gpt-lain']], 'ai.AI_MODEL_UTAMA', null],

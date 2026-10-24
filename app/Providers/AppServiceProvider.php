@@ -2,16 +2,13 @@
 
 namespace App\Providers;
 
-use App\Bot\CekOngkir;
 use App\Bot\JawabAdiva;
 use App\Bot\KabarKonfig;
 use App\Bot\KirimUlangInvoice;
-use App\Bot\LokalCekOngkir;
 use App\Bot\LokalJawabAdiva;
 use App\Bot\LokalKirimUlangInvoice;
 use App\Bot\LokalPerintahOrder;
 use App\Bot\MetaPengirim;
-use App\Bot\N8nCekOngkir;
 use App\Bot\N8nJawabAdiva;
 use App\Bot\N8nKabarKonfig;
 use App\Bot\N8nKirimUlangInvoice;
@@ -22,7 +19,6 @@ use App\Bot\PengirimWa;
 use App\Bot\PerintahOrder;
 use App\Bot\SesiWaha;
 use App\Bot\TanyaAdiva;
-use App\Bot\TiruanCekOngkir;
 use App\Bot\TiruanJawabAdiva;
 use App\Bot\TiruanKabarKonfig;
 use App\Bot\TiruanKirimUlangInvoice;
@@ -76,7 +72,6 @@ class AppServiceProvider extends ServiceProvider
             PengirimWa::class => [WahaPengirim::class, TiruanPengirim::class],
             SesiWaha::class => [WahaSesi::class, TiruanSesi::class],
             TanyaAdiva::class => [N8nTanyaAdiva::class, TiruanTanyaAdiva::class],
-            CekOngkir::class => [N8nCekOngkir::class, TiruanCekOngkir::class, LokalCekOngkir::class],
             KabarKonfig::class => [N8nKabarKonfig::class, TiruanKabarKonfig::class],
             KirimUlangInvoice::class => [N8nKirimUlangInvoice::class, TiruanKirimUlangInvoice::class, LokalKirimUlangInvoice::class],
             JawabAdiva::class => [N8nJawabAdiva::class, TiruanJawabAdiva::class, LokalJawabAdiva::class],

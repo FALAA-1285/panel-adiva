@@ -93,7 +93,7 @@ const tool = [
     ['KB_Kebijakan', 'Kebijakan'],
     ['KB_Harga_Karyawan', 'Program karyawan'],
     ['Cek_Order_Saya', 'Pesanan'],
-    ['Cek_Ongkir_Mengantar', 'API Mengantar'],
+    ['Cek_Ongkir', 'Info pengiriman (ongkir COD)'],
 ];
 
 export default function KatalogProduk({ tab, produk, uji }: Props) {

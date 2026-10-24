@@ -39,12 +39,10 @@ class KunciPengaturan
         'HARI_LIBUR_OTOMATIS' => ['nama' => 'Hari libur', 'judul' => 'Hari libur'],
         'JEDA_FOLLOWUP_JAM' => ['nama' => 'Sapa ulang prospek setelah', 'judul' => 'Sapa ulang prospek setelah', 'satuan' => 'jam diam'],
         'JEDA_KESAN_HARI' => ['nama' => 'Tanya kesan setelah SELESAI', 'judul' => 'Tanya kesan setelah SELESAI', 'satuan' => 'hari'],
-        // Ongkir (Mengantar)
-        'MENGANTAR_KOTA_ASAL' => ['nama' => 'Kota asal', 'judul' => 'Kota asal pengiriman'],
-        'MENGANTAR_PICKUP_ADDRESS_ID' => ['nama' => 'ID alamat pickup', 'judul' => 'ID alamat pickup'],
-        'MENGANTAR_JAM_PICKUP' => ['nama' => 'Jam pickup kurir', 'judul' => 'Jam pickup kurir'],
-        'MENGANTAR_VOLUME_PICKUP' => ['nama' => 'Kendaraan pickup', 'judul' => 'Kendaraan pickup'],
-        'KURIR_DIKECUALIKAN' => ['nama' => 'Kurir disembunyikan', 'judul' => 'Kurir disembunyikan'],
+        // Pengiriman: an expedition parcel's shipping cost is paid COD to the courier; only the packing is billed
+        'PACKING_PER_KG' => ['nama' => 'Packing per kg', 'judul' => 'Biaya packing per kg (ekspedisi)', 'satuan' => 'rupiah'],
+        'PACKING_MINIMAL' => ['nama' => 'Packing minimal', 'judul' => 'Biaya packing minimal (ekspedisi)', 'satuan' => 'rupiah'],
+        'PACKING_GRATIS_DI_ATAS' => ['nama' => 'Packing gratis mulai', 'judul' => 'Packing gratis untuk belanja produk mulai', 'satuan' => 'rupiah'],
         // Nomor WhatsApp bot
         'SESI_UTAMA' => ['nama' => 'Nomor untuk pesan terjadwal', 'judul' => 'Nomor untuk pesan terjadwal'],
         // Arsip data

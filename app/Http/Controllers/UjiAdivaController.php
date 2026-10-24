@@ -95,7 +95,7 @@ class UjiAdivaController extends Controller
     }
 
     /**
-     * "Tool dipakai: KB_Kebijakan (Ongkir & ekspedisi) lalu Cek_Ongkir_Mengantar" and
+     * "Tool dipakai: KB_Kebijakan (Ongkir & ekspedisi) lalu Cek_Ongkir" and
      * "… · dinilai Reseller · Tanya harga · WARM" (Katalog.dc.html, Kebijakan.dc.html).
      */
     private function catatan(HasilUji $hasil): ?string

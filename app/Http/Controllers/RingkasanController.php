@@ -419,7 +419,7 @@ class RingkasanController extends Controller
             $model['cadangan'] > 0
                 ? ['label' => 'Model cadangan', 'nilai' => "Dipakai {$model['cadangan']}× hari ini", 'nada' => 'amber']
                 : ['label' => 'Model cadangan', 'nilai' => 'Tidak dipakai hari ini'],
-            ['label' => 'Ongkir Mengantar', 'nilai' => "{$model['ongkir']} cek hari ini"],
+            ['label' => 'Info pengiriman', 'nilai' => "{$model['ongkir']} cek hari ini"],
             ['label' => 'Sedang dijeda', 'nilai' => JedaBot::query()->menahan()->count().' customer', 'href' => route('jeda', absolute: false)],
         ];
     }
