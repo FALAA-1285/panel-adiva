@@ -87,13 +87,13 @@ docker compose -f compose.bot.yml --env-file .env.bot up -d
 
 `N8N_ENCRYPTION_KEY` **harus dibuat sekali lalu tidak pernah diganti** — kalau hilang, semua credential di dalamnya tidak bisa didekripsi lagi dan harus diisi ulang. Volume `waha` berisi sesi WhatsApp yang sudah dipindai QR; kalau terhapus, nomornya harus dipindai ulang. `.env.bot` sudah masuk `.gitignore`.
 
-Karena hanya terikat `127.0.0.1`, UI-nya dibuka lewat SSH tunnel dari laptop:
+Keduanya hanya terikat `127.0.0.1`. UI n8n dibuka lewat Caddy yang sudah ada di VPS (`n8n-bangbana.tokobangbana.com`, lihat `docs/deploy-vps.md`); WAHA tidak diberi subdomain karena dashboard-nya jarang dibuka, jadi cukup SSH tunnel saat perlu:
 
 ```bash
-ssh -L 5679:127.0.0.1:5679 -L 3002:127.0.0.1:3002 root@158.220.117.56
+ssh -L 3002:127.0.0.1:3002 root@158.220.117.56
 ```
 
-lalu buka `http://127.0.0.1:5679` dan `http://127.0.0.1:3002`. Panel di VPS memanggil keduanya dengan `N8N_API_URL=http://host.docker.internal:5679` dan `WAHA_URL=http://host.docker.internal:3002`.
+lalu buka `http://127.0.0.1:3002`. Panel di VPS memanggil keduanya dengan `N8N_API_URL=http://host.docker.internal:5679` dan `WAHA_URL=http://host.docker.internal:3002`.
 
 WAHA Core sudah tidak punya batas sesi sejak split Core/Plus dihapus — dua nomor bot Bang Bana muat di image gratisnya, lengkap dengan pengiriman media.
 

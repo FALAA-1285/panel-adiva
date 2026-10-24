@@ -43,7 +43,9 @@ services:
             migrasi:
                 condition: service_completed_successfully
         ports:
-            - '8080:8080'
+            # hanya loopback: Caddy di host yang menghadap internet dan mengurus
+            # TLS-nya. Tidak ada alasan membuka 8080 ke publik.
+            - '127.0.0.1:8080:8080'
         healthcheck:
             test:
                 [

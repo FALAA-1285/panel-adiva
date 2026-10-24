@@ -119,31 +119,45 @@ docker compose up -d --build
 
 Migrasi jalan sendiri lewat container `panel-migrasi`, yang sekali jalan lalu berhenti. Container lain menunggu sampai ia selesai, jadi migrasi tidak pernah tereksekusi dua kali bersamaan.
 
-## Yang belum aman, dan cara membereskannya
+## Caddy: panel di balik HTTPS
 
-**Panel berjalan tanpa HTTPS.** Kata sandi staf dan cookie sesi terkirim polos di jaringan; cookie yang tercuri berarti akses supervisor penuh. Dua cara menutupnya:
+VPS sudah menjalankan Caddy di port 80/443 dengan `/etc/caddy/Caddyfile`, yang saat ini memetakan `n8n.tktbanafood.com` dan `n8n.tokobangbana.com` ke `localhost:5678`. Panel ikut di belakangnya, jadi tidak perlu container Caddy tambahan dan tidak perlu SSH tunnel.
 
-*Sementara* — batasi port 8080 hanya untuk IP Anda:
+Tambahkan blok ini ke `/etc/caddy/Caddyfile`:
+
+```
+panel.tokobangbana.com {
+        encode zstd gzip
+        reverse_proxy localhost:8080
+}
+
+n8n-bangbana.tokobangbana.com {
+        encode zstd gzip
+        reverse_proxy localhost:5679
+}
+```
+
+Lalu arahkan A record kedua subdomain itu ke `158.220.117.56` dan muat ulang:
 
 ```bash
-ufw allow from <ip-kantor-anda> to any port 8080 proto tcp
-ufw deny 8080/tcp
+caddy validate --config /etc/caddy/Caddyfile
+systemctl reload caddy
 ```
 
-*Benar* — pasang domain dan Caddy. Arahkan A record ke `158.220.117.56`, lalu tambahkan satu service di `compose.yml`:
+Caddy mengurus sertifikat Let's Encrypt sendiri — gratis, otomatis diperpanjang, tanpa konfigurasi tambahan.
 
-```yaml
-    caddy:
-        image: caddy:2-alpine
-        restart: unless-stopped
-        ports: ['80:80', '443:443']
-        command: caddy reverse-proxy --from panel.domain-anda.id --to web:8080
-        volumes: ['caddy:/data']
-```
+Container panel dan n8n Bang Bana sengaja hanya terikat `127.0.0.1`, jadi port 8080 dan 5679 tidak pernah terbuka ke internet; hanya Caddy yang menghadap keluar. `bootstrap/app.php` sudah memuat `trustProxies(at: '*')` dan `AppServiceProvider` memanggil `URL::forceScheme('https')` saat `APP_URL` berawalan `https://`, jadi tidak ada perubahan kode yang diperlukan.
 
-Caddy mengurus sertifikat Let's Encrypt sendiri, gratis dan otomatis diperpanjang. Setelah itu ubah `APP_URL` ke `https://…`, `SESSION_SECURE_COOKIE=true`, hapus `ports` dari service `web`, lalu `docker compose up -d`.
+Setelah HTTPS hidup, pastikan `.env.produksi` memakai `APP_URL=https://panel.tokobangbana.com` dan `SESSION_SECURE_COOKIE=true`. Kalau nilai kedua itu `true` sementara panel masih diakses lewat `http://` polos, browser menolak mengirim cookie dan **login selalu gagal tanpa pesan yang masuk akal**.
 
-Catatan lain: n8n (5678) dan WAHA (3001) milik proyek lain terbuka ke internet tanpa TLS. Yang milik Bang Bana sengaja hanya terikat `127.0.0.1` dan diakses lewat SSH tunnel, jadi tidak menambah permukaan serang. Begitu Caddy ada, port milik proyek lain sebaiknya ikut ditutup dan dialihkan ke belakangnya.
+### Dua hal yang perlu Anda periksa
+
+1. **`n8n.tokobangbana.com` saat ini menunjuk n8n proyek lain** (`localhost:5678`). Subdomain itu memakai domain Bang Bana tapi melayani proyek lain. Kalau itu tidak disengaja, pemetaannya perlu ditukar.
+2. **WAHA (3001) milik proyek lain masih terbuka langsung ke internet tanpa TLS**, di luar Caddy. Sebaiknya ikut dipindah ke belakang Caddy lalu portnya ditutup:
+   ```bash
+   ufw deny 3001/tcp
+   ufw deny 5678/tcp
+   ```
 
 ## Kalau suatu saat pindah ke platform berbayar
 
