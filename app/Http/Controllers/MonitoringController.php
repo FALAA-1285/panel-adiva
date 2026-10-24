@@ -132,7 +132,7 @@ class MonitoringController extends Controller
             ],
             [
                 'label' => 'Perlu tindakan',
-                'nilai' => (string) WorkflowEvent::query()->where('jenis', 'INSIDEN')->where('status', 'PERLU_TINDAKAN')->count(),
+                'nilai' => (string) WorkflowEvent::query()->where('jenis', 'INSIDEN')->where('status', 'PERLU_TINDAKAN')->where('waktu', '>=', $dari)->count(),
                 'meta' => 'balasan belum terkirim ke customer',
             ],
         ];

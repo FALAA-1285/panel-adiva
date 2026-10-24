@@ -178,7 +178,7 @@ class KatalogController extends Controller
     }
 
     /**
-     * Price per tier, or the design's placeholder while prices are not filled in.
+     * Price per tier, "—" for a tier whose price is not filled in yet.
      */
     private function teksHarga(Produk $produk): ?string
     {
@@ -188,10 +188,10 @@ class KatalogController extends Controller
             return null;
         }
 
-        if ($tier->contains(fn (array $t) => ($t['harga'] ?? null) === null)) {
-            return '[harga per tier]';
+        if ($tier->every(fn (array $t) => ($t['harga'] ?? null) === null)) {
+            return 'Harga belum diisi';
         }
 
-        return $tier->map(fn (array $t) => Rupiah::teks((int) $t['harga']))->implode(' · ');
+        return $tier->map(fn (array $t) => ($t['harga'] ?? null) === null ? '—' : Rupiah::teks((int) $t['harga']))->implode(' · ');
     }
 }

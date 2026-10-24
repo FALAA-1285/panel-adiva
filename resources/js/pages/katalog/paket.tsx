@@ -65,7 +65,7 @@ const kolom: KolomTabel<Paket>[] = [
             row.original.hargaTeks ? (
                 <T1>{row.original.hargaTeks}</T1>
             ) : (
-                <T1 className="font-normal text-muted">[harga paket]</T1>
+                <T1 className="font-normal text-muted">Belum diisi</T1>
             ),
     },
     {
@@ -339,7 +339,7 @@ function PenyuntingPaket({
                     <Field label="Harga paket" htmlFor="harga">
                         <Input
                             id="harga"
-                            placeholder="[harga paket]"
+                            placeholder="Harga (Rp)"
                             value={form.data.harga}
                             onChange={(e) =>
                                 form.setData('harga', e.target.value)

@@ -79,7 +79,8 @@ test('an order waiting for ACC shows its steps, items, delivery, history and a d
             ->where('invoice.rekening', '[Bank] · [nomor rekening] a.n. CV TKT Bana Food')
             ->where('invoice.ditahan', '5 jam kerja (07.00–21.00, Minggu tidak dihitung)')
             ->where('invoice.catatan', 'Ongkir sudah termasuk dalam tagihan ini.')
-            ->where('aksi', ['TOLAK', 'ACC']));
+            ->where('aksi', fn ($aksi) => collect($aksi)->pluck('kode')->all() === ['TOLAK', 'BATAL', 'ACC'])
+            ->where('aksi.2', ['kode' => 'ACC', 'label' => 'ACC & kirim invoice', 'bahaya' => false]));
 });
 
 test('after ACC the invoice is final and only Tolak is left', function () {
@@ -100,8 +101,8 @@ test('after ACC the invoice is final and only Tolak is left', function () {
             ->where('invoice.draf', false)
             ->where('invoice.tanggal', '27 September 2026')
             ->where('invoice.rekening', 'BCA 1234567890 a.n. CV TKT Bana Food')
-            // TOLAK still applies while it is unpaid, as on Pesanan
-            ->where('aksi', ['TOLAK']));
+            // TOLAK still applies while it is unpaid, as on Pesanan; the next step is LUNAS
+            ->where('aksi', fn ($aksi) => collect($aksi)->pluck('kode')->all() === ['TOLAK', 'BATAL', 'LUNAS']));
 });
 
 test('a pickup order has no shipping cost and its own payment time', function () {

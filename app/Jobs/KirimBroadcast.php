@@ -139,7 +139,7 @@ class KirimBroadcast implements ShouldQueue
         $customer = $penerima->customer;
         $lewati = match (true) {
             (bool) $customer?->status_optout => 'dilewati: opt-out',
-            JedaBot::query()->aktif()->where('chat_id', $penerima->chat_id)->exists() => 'dilewati: sedang dijeda',
+            JedaBot::query()->menahan()->where('chat_id', $penerima->chat_id)->exists() => 'dilewati: sedang dijeda',
             default => null,
         };
 

@@ -261,7 +261,7 @@ class PelangganController extends Controller
      */
     private function profil(CrmCustomer $c): array
     {
-        $dijeda = JedaBot::query()->aktif()->where('chat_id', $c->chat_id)->exists();
+        $dijeda = JedaBot::query()->menahan()->where('chat_id', $c->chat_id)->exists();
         $config = PengaturanToko::nilaiBanyak(['JEDA_FOLLOWUP_JAM', 'JEDA_KESAN_HARI']);
         $sejak = isset($c->tahap_sejak[TahapFunnel::Baru->value]) ? CarbonImmutable::parse($c->tahap_sejak[TahapFunnel::Baru->value]) : $c->created_at;
 
@@ -305,7 +305,7 @@ class PelangganController extends Controller
                 'butuh_admin' => (bool) $c->butuh_admin,
                 'alasan_butuh_admin' => (string) $c->alasan_butuh_admin,
             ],
-            'jedaId' => JedaBot::query()->aktif()->where('chat_id', $c->chat_id)->value('id'),
+            'jedaId' => JedaBot::query()->menahan()->where('chat_id', $c->chat_id)->value('id'),
             'nomorWa' => $c->nomor_wa,
             'ringkasan' => $c->ringkasan_terakhir,
             'catatanTetap' => $c->catatan_tetap,

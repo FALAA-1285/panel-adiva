@@ -54,7 +54,7 @@ test('the list shows who wrote, latest message first, with what needs attention'
     tulis($lama, PengirimPesan::Customer, 'kak', '2026-09-26 09:13');
     // only Adiva wrote to this one: not a conversation
     tulis(CrmCustomer::factory()->create(), PengirimPesan::Adiva, 'Halo kak', '2026-09-28 13:30');
-    // waiting for an admin without a chat: only under "Butuh admin"
+    // waiting for an admin without a chat: still under "Semua", so no tab outnumbers it
     CrmCustomer::factory()->create(['nama' => 'Customer demo 1', 'butuh_admin' => true, 'tgl_interaksi_terakhir' => '2026-09-20 09:00']);
 
     $falah = User::factory()->falah()->create();
@@ -63,9 +63,9 @@ test('the list shows who wrote, latest message first, with what needs attention'
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('percakapan')
-            ->where('jumlah.status', ['semua' => 5, 'belum-dibalas' => 4, 'butuh-admin' => 2, 'dijeda' => 1])
-            ->where('jumlah.tipe', ['RESELLER' => 0, 'RETAIL' => 0, 'KARYAWAN' => 1, 'BELUM_JELAS' => 4])
-            ->where('muat', ['batas' => 200, 'tampil' => 5, 'total' => 5])
+            ->where('jumlah.status', ['semua' => 6, 'belum-dibalas' => 4, 'butuh-admin' => 2, 'dijeda' => 1])
+            ->where('jumlah.tipe', ['RESELLER' => 0, 'RETAIL' => 0, 'KARYAWAN' => 1, 'BELUM_JELAS' => 5])
+            ->where('muat', ['batas' => 200, 'tampil' => 6, 'total' => 6])
             ->where('daftar.0', [
                 'id' => $rina->id, 'inisial' => 'RM', 'nama' => 'Rina Maharani', 'waktu' => '13:06', 'pratinjau' => 'JNE aja kak',
                 'skor' => 'HOT', 'tahap' => 'Order dibuat', 'menunggu' => 1, 'tanda' => ['teks' => 'Menunggu ACC', 'nada' => 'amber'],
@@ -140,7 +140,7 @@ test('the fields follow the customer: prospect, paused, employee', function () {
         ->and($isian($wati)['jeda'])->toBe($jeda->id)
         ->and($isian($wati)['petunjuk'])->toBe('Bot sedang dijeda — balasan Anda dikirim langsung lewat WAHA.')
         ->and($isian($yoga)['isian'])->toContain(['Pembayaran', 'Potong gaji'], ['PJ program', 'Bu Sarah'])
-        ->and($isian($yoga)['nomor'])->toBe('ID @lid → nomor ditemukan')
+        ->and($isian($yoga)['nomor'])->toBe('0896-1200-••77 (Terverifikasi)')
         ->and($isian($yoga)['pesanan'])->toBe([]);
 });
 

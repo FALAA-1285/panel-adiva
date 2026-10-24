@@ -75,7 +75,7 @@ class PercakapanController extends Controller
     {
         $tab = in_array($request->query('tab'), self::TAB, true) ? (string) $request->query('tab') : 'semua';
         $tipe = TipeCustomer::tryFrom((string) $request->query('tipe'));
-        $jeda = JedaBot::query()->aktif()->orderBy('sejak')->get()->keyBy('chat_id');
+        $jeda = JedaBot::query()->menahan()->orderBy('sejak')->get()->keyBy('chat_id');
         $menunggu = $this->belumDibalas();
         $daftar = fn () => $this->daftar($request, $tab, $tipe, $jeda, $menunggu);
 
@@ -133,7 +133,10 @@ class PercakapanController extends Controller
             'status_kirim' => 'MENUNGGU',
         ]);
 
-        if (! JedaBot::query()->aktif()->where('chat_id', $customer->chat_id)->exists()) {
+        if (! JedaBot::query()->menahan()->where('chat_id', $customer->chat_id)->exists()) {
+            // a pause that ran out may still be open: close it, or there would be two
+            JedaBot::akhiriKedaluwarsa((string) ($customer->nomor_wa ?: $customer->chat_id), $customer->chat_id);
+
             JedaBot::create([
                 'crm_customer_id' => $customer->id,
                 'nomor' => $customer->nomor_wa,
@@ -274,8 +277,11 @@ class PercakapanController extends Controller
         $angka = preg_replace('/\D/', '', $cari) ?? '';
 
         return CrmCustomer::query()
-            // "Semua" is the chats; the other tabs also show someone flagged without one
-            ->when($tab === 'semua', fn (Builder $q) => $q->whereHas('pesan', fn (Builder $p) => $p->where('pengirim', PengirimPesan::Customer)))
+            // "Semua" is the chats and anyone flagged or paused
+            ->when($tab === 'semua', fn (Builder $q) => $q->where(fn (Builder $sq) => $sq
+                ->whereHas('pesan', fn ($q) => $q->where('pengirim', PengirimPesan::Customer))
+                ->orWhere('butuh_admin', true)
+                ->orWhereIn('chat_id', $jeda->keys())))
             ->when($tab === 'belum-dibalas', fn (Builder $q) => $q->whereIn('id', $menunggu->keys()))
             ->when($tab === 'butuh-admin', fn (Builder $q) => $q->where('butuh_admin', true))
             ->when($tab === 'dijeda', fn (Builder $q) => $q->whereIn('chat_id', $jeda->keys()))
@@ -311,10 +317,16 @@ class PercakapanController extends Controller
     private function jumlah(string $tab, ?TipeCustomer $tipe, SupportCollection $jeda, SupportCollection $menunggu): array
     {
         $dasar = fn () => CrmCustomer::query()->when($tipe !== null, fn (Builder $q) => $q->where('tipe_customer', $tipe));
-        $punyaChat = fn (Builder $q) => $q->whereHas('pesan', fn (Builder $p) => $p->where('pengirim', PengirimPesan::Customer));
+        $punyaChat = fn (Builder $q) => $q->where(fn (Builder $sq) => $sq
+            ->whereHas('pesan', fn ($q) => $q->where('pengirim', PengirimPesan::Customer))
+            ->orWhere('butuh_admin', true)
+            ->orWhereIn('chat_id', $jeda->keys()));
 
         $perTipe = CrmCustomer::query()->toBase()
-            ->when($tab === 'semua', fn ($q) => $q->whereExists(fn ($s) => $s->selectRaw('1')->from('pesan')->whereColumn('pesan.crm_customer_id', 'crm_customer.id')->where('pengirim', PengirimPesan::Customer->value)))
+            ->when($tab === 'semua', fn ($q) => $q->where(fn ($sq) => $sq
+                ->whereExists(fn ($s) => $s->selectRaw('1')->from('pesan')->whereColumn('pesan.crm_customer_id', 'crm_customer.id')->where('pengirim', PengirimPesan::Customer->value))
+                ->orWhere('butuh_admin', true)
+                ->orWhereIn('chat_id', $jeda->keys())))
             ->when($tab === 'belum-dibalas', fn ($q) => $q->whereIn('id', $menunggu->keys()))
             ->when($tab === 'butuh-admin', fn ($q) => $q->where('butuh_admin', true))
             ->when($tab === 'dijeda', fn ($q) => $q->whereIn('chat_id', $jeda->keys()))
@@ -411,8 +423,9 @@ class PercakapanController extends Controller
             // what {nama} becomes in a reply template
             'panggilan' => $c->nama ? Nama::panggilan($c->nama) : 'kak',
             'nomor' => match (true) {
-                Str::endsWith($c->chat_id, '@lid') && $c->nomor_wa => 'ID @lid → nomor ditemukan',
+                Str::endsWith($c->chat_id, '@lid') && $c->nomor_wa => NomorWa::samarkanUjung((string) $c->nomor_wa).' (Terverifikasi)',
                 (bool) $c->nomor_wa => NomorWa::samarkanUjung((string) $c->nomor_wa),
+                Str::endsWith($c->chat_id, '@lid') => 'Nomor disembunyikan WhatsApp',
                 default => $c->chat_id,
             },
             'status' => match (true) {

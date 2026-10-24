@@ -82,10 +82,10 @@ class DetailPesananController extends Controller
                 'nada' => $r->nada,
             ]),
             'invoice' => $this->invoice($order),
-            // "Tolak" and "ACC & kirim invoice", while they apply
-            'aksi' => collect([AksiPesanan::Tolak, AksiPesanan::Acc])
+            // the commands that apply now: the ones ending the order first, the next step last
+            'aksi' => collect([AksiPesanan::Tolak, AksiPesanan::Batal, AksiPesanan::Acc, AksiPesanan::Lunas, AksiPesanan::Siap, AksiPesanan::Kirim, AksiPesanan::Selesai])
                 ->filter(fn (AksiPesanan $a) => PerintahPesanan::alasanTidakBerlaku($a, $order, $user) === null)
-                ->map(fn (AksiPesanan $a) => $a->value)
+                ->map(fn (AksiPesanan $a) => ['kode' => $a->value, 'label' => $a->label(), 'bahaya' => $a->gaya() === 'bahaya'])
                 ->values(),
         ]);
     }

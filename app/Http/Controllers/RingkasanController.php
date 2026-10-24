@@ -37,6 +37,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class RingkasanController extends Controller
 {
     /**
+     * How far back "Perlu tindakan" looks for matters that are still open.
+     */
+    private const HARI_TINDAKAN = 14;
+
+    /**
      * The period picker: label and days back (today included).
      *
      * @var array<string, array{label: string, hari: int, banding: string}>
@@ -283,10 +288,20 @@ class RingkasanController extends Controller
 
         return array_values(Notifikasi::query()
             ->whereIn('jenis', $jenis)
-            ->where('waktu', '>=', now()->startOfDay())
+            // whatever is still open, not only what came in today: an order that arrived
+            // at 23:00 and still waits for ACC must not drop off this list at midnight.
+            // itemTindakan() decides per row whether the matter is still open.
+            ->where('waktu', '>=', now()->subDays(self::HARI_TINDAKAN)->startOfDay())
+            ->whereNull('selesai_at')
             ->with(['customer', 'order.items'])
             ->orderByDesc('waktu')
             ->get()
+            // one row per matter: three "butuh admin" for the same customer are one thing to do
+            ->unique(fn (Notifikasi $n) => $n->jenis.'|'.match (true) {
+                $n->log_order_id !== null => 'o'.$n->log_order_id,
+                $n->crm_customer_id !== null => 'c'.$n->crm_customer_id,
+                default => 'n'.$n->id,
+            })
             ->sortBy(fn (Notifikasi $n) => array_search($n->jenis, $jenis, true))
             ->map(fn (Notifikasi $n) => $this->itemTindakan($n, $pj, $user))
             ->filter()
@@ -300,7 +315,8 @@ class RingkasanController extends Controller
     {
         $c = $n->customer;
         $o = $n->order;
-        $dasar = ['id' => $n->id, 'judul' => $n->judul, 'nada' => self::TINDAKAN[$n->jenis], 'waktu' => $n->waktu->format('H:i')];
+        // "13:41" today, "Kemarin 20:00", "27 Sep 01:00": the list now reaches back past today
+        $dasar = ['id' => $n->id, 'judul' => $n->judul, 'nada' => self::TINDAKAN[$n->jenis], 'waktu' => Waktu::relatif($n->waktu)];
 
         return match (JenisNotifikasi::from($n->jenis)) {
             JenisNotifikasi::OrderBaru => $o?->status_order === StatusOrder::MenungguKonfirmasi ? [
@@ -348,7 +364,7 @@ class RingkasanController extends Controller
                     ['label' => 'Kirim ulang', 'garis' => true, 'kirimUlang' => Pesan::query()->where('crm_customer_id', $c->id)->where('status_kirim', 'GAGAL')->latest('waktu')->value('id')],
                 ],
             ] : null,
-            JenisNotifikasi::JedaChat => ($jeda = $c ? JedaBot::query()->aktif()->where('chat_id', $c->chat_id)->latest('sejak')->first() : null) ? [
+            JenisNotifikasi::JedaChat => ($jeda = $c ? JedaBot::query()->menahan()->where('chat_id', $c->chat_id)->latest('sejak')->first() : null) ? [
                 ...$dasar,
                 'nama' => $c->namaTampil(),
                 'info' => $c->tipe_customer->label(),
@@ -375,23 +391,36 @@ class RingkasanController extends Controller
         $model = $status->modelHariIni();
         $koneksi = $status->koneksiTerakhir();
         $terhubung = collect($koneksi)->filter(fn (?WorkflowEvent $e) => $e?->status === 'TERHUBUNG')->count();
+        $putus = collect($koneksi)->filter(fn (?WorkflowEvent $e) => $e?->status === 'PUTUS')->count();
         $dicek = $status->terakhirDicek();
 
+        $nilaiWa = match (true) {
+            $putus > 0 => "{$putus} dari ".count($koneksi).' nomor putus',
+            $terhubung === count($koneksi) => count($koneksi).' nomor'.($dicek ? ' · dicek '.$dicek->format($dicek->isToday() ? 'H:i' : 'j M H:i') : ''),
+            $terhubung > 0 => "{$terhubung} terhubung · ".(count($koneksi) - $terhubung).' belum dicek',
+            default => count($koneksi).' nomor · belum dicek',
+        };
+        $nadaWa = match (true) {
+            $putus > 0 => 'red',
+            $terhubung === count($koneksi) => 'green',
+            default => 'blue',
+        };
+
         return [
-            ['label' => 'Workflow n8n', 'nilai' => "{$status->workflowAktif()} aktif", 'nada' => 'green'],
+            $status->workflowAktif() > 0
+                ? ['label' => 'Workflow n8n', 'nilai' => "{$status->workflowAktif()} aktif", 'nada' => 'green']
+                : ['label' => 'Workflow n8n', 'nilai' => 'Tidak ada yang aktif', 'nada' => 'amber'],
             [
                 'label' => 'WhatsApp (WAHA)',
-                'nilai' => $terhubung === count($koneksi)
-                    ? count($koneksi).' nomor'.($dicek ? ' · dicek '.$dicek->format('H:i') : '')
-                    : (count($koneksi) - $terhubung).' dari '.count($koneksi).' nomor putus',
-                'nada' => $terhubung === count($koneksi) ? 'green' : 'red',
+                'nilai' => $nilaiWa,
+                'nada' => $nadaWa,
             ],
             ['label' => 'Model utama', 'nilai' => $status->namaModel('model_utama').' · '.number_format($model['p50'], 1, ',', '.').' dtk'],
             $model['cadangan'] > 0
                 ? ['label' => 'Model cadangan', 'nilai' => "Dipakai {$model['cadangan']}× hari ini", 'nada' => 'amber']
                 : ['label' => 'Model cadangan', 'nilai' => 'Tidak dipakai hari ini'],
             ['label' => 'Ongkir Mengantar', 'nilai' => "{$model['ongkir']} cek hari ini"],
-            ['label' => 'Sedang dijeda', 'nilai' => JedaBot::query()->aktif()->count().' customer', 'href' => route('jeda', absolute: false)],
+            ['label' => 'Sedang dijeda', 'nilai' => JedaBot::query()->menahan()->count().' customer', 'href' => route('jeda', absolute: false)],
         ];
     }
 

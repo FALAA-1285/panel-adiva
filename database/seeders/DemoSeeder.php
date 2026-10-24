@@ -175,28 +175,27 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Katalog & pengetahuan. Products as in Katalog.dc.html (prices stay empty: the
-     * design only shows "[harga per tier]"); tab counts Paket 3, Kebijakan 9,
-     * Program karyawan 12.
+     * Katalog & pengetahuan. Products as in Katalog.dc.html, with example prices so the
+     * showcase has no empty columns; tab counts Paket 3, Kebijakan 9, Program karyawan 12.
      */
     protected function katalog(): void
     {
+        // [min, max, harga] per tier
         $tier = fn (string $satuan, array $batas) => [
             'satuan' => $satuan,
-            'tier' => array_map(fn (array $b) => ['min' => $b[0], 'max' => $b[1] ?? null, 'harga' => null], $batas),
+            'tier' => array_map(fn (array $b) => ['min' => $b[0], 'max' => $b[1], 'harga' => $b[2]], $batas),
         ];
-        $tigaTier = $tier('pcs', [[1, 9], [10, 49], [50]]);
-        $duaTier = $tier('pcs', [[1, 9], [10]]);
+        $duaTier = fn (int $eceran, int $grosir) => $tier('pcs', [[1, 9, $eceran], [10, null, $grosir]]);
 
         $produk = [
-            ['Molreng Reguler', 'Molreng', 'Pack', '250 g', 'Bawang original, pedas', $tigaTier, 'Kantin sekolah, warung'],
-            ['Basreng Pedas Daun Jeruk', 'Basreng', 'Pack', '250 g', 'Pedas daun jeruk', $duaTier, 'Reseller online, oleh-oleh'],
-            ['Kripca 1,8 kg', 'Keripik kaca', 'Bal', '1,8 kg', 'Original, pedas', $tier('bal', [[1, 29], [30]]), 'Grosir, repack'],
-            ['Seblak Kering', 'Seblak', 'Pack', '200 g', 'Original, pedas', $duaTier, 'Konsumen akhir'],
-            ['Makaroni Bantat', 'Makaroni', 'Pack', '250 g', 'Balado, asin', $duaTier, 'Warung, kantin'],
-            ['Kentang Balado', 'Kentang balado', 'Pack', '200 g', 'Balado', $duaTier, 'Oleh-oleh'],
-            ['Kerupuk Rujak', 'Kerupuk rujak', 'Pack', '150 g', 'Rujak', $duaTier, 'Warung'],
-            ['Usus Crispy', 'Usus', 'Pack', '100 g', 'Original, pedas', $duaTier, 'Konsumen akhir'],
+            ['Molreng Reguler', 'Molreng', 'Pack', '250 g', 'Bawang original, pedas', $tier('pcs', [[1, 9, 12000], [10, 49, 11000], [50, null, 10000]]), 'Kantin sekolah, warung'],
+            ['Basreng Pedas Daun Jeruk', 'Basreng', 'Pack', '250 g', 'Pedas daun jeruk', $duaTier(15000, 14000), 'Reseller online, oleh-oleh'],
+            ['Kripca 1,8 kg', 'Keripik kaca', 'Bal', '1,8 kg', 'Original, pedas', $tier('bal', [[1, 29, 92000], [30, null, 87000]]), 'Grosir, repack'],
+            ['Seblak Kering', 'Seblak', 'Pack', '200 g', 'Original, pedas', $duaTier(10000, 9000), 'Konsumen akhir'],
+            ['Makaroni Bantat', 'Makaroni', 'Pack', '250 g', 'Balado, asin', $duaTier(9000, 8000), 'Warung, kantin'],
+            ['Kentang Balado', 'Kentang balado', 'Pack', '200 g', 'Balado', $duaTier(13000, 12000), 'Oleh-oleh'],
+            ['Kerupuk Rujak', 'Kerupuk rujak', 'Pack', '150 g', 'Rujak', $duaTier(7000, 6000), 'Warung'],
+            ['Usus Crispy', 'Usus', 'Pack', '100 g', 'Original, pedas', $duaTier(11000, 10000), 'Konsumen akhir'],
         ];
 
         foreach ($produk as [$nama, $kategori, $kemasan, $gramasi, $rasa, $harga, $target]) {
@@ -213,18 +212,19 @@ class DemoSeeder extends Seeder
 
         // Paket.dc.html (the editor shows PKT-A)
         $paket = [
-            ['PKT-A', 'Paket Kantin', 'Molreng 20 + Basreng 20', 'Kantin sekolah, modal kecil', '± 1 kg'],
-            ['PKT-B', 'Paket Warung Campur', '6 varian × 10 pcs', 'Warung kelontong', '± 1,5 kg'],
-            ['PKT-C', 'Paket Repack', 'Kripca 1,8 kg × 10 bal', 'Repack / grosir', '18 kg · sarankan kargo'],
+            ['PKT-A', 'Paket Kantin', 'Molreng 20 + Basreng 20', 'Kantin sekolah, modal kecil', '± 1 kg', 480000],
+            ['PKT-B', 'Paket Warung Campur', '6 varian × 10 pcs', 'Warung kelontong', '± 1,5 kg', 590000],
+            ['PKT-C', 'Paket Repack', 'Kripca 1,8 kg × 10 bal', 'Repack / grosir', '18 kg · sarankan kargo', 900000],
         ];
 
-        foreach ($paket as [$kode, $nama, $isi, $cocok, $berat]) {
+        foreach ($paket as [$kode, $nama, $isi, $cocok, $berat, $harga]) {
             PaketReseller::create([
                 'kode_paket' => $kode,
                 'nama_paket' => $nama,
                 'isi' => $isi,
                 'cocok_untuk' => $cocok,
                 'berat' => $berat,
+                'harga' => $harga,
                 'status_data' => StatusData::Aktif->value,
             ]);
         }
@@ -315,23 +315,23 @@ class DemoSeeder extends Seeder
             Karyawan::create(['nama' => 'Karyawan demo '.$i, 'nomor_wa' => '62800000010'.$i, 'bagian' => 'Produksi', 'status' => StatusData::Aktif->value]);
         }
 
-        // Karyawan.dc.html: Harga karyawan (prices stay empty: the design only shows "[harga karyawan]")
+        // Karyawan.dc.html: Harga karyawan (example prices)
         $hargaKaryawan = [
-            ['Basreng Original', 'BSR-O', '4 pack / minggu'],
-            ['Basreng Pedas', 'BSR-P', '4 pack / minggu'],
-            ['Molreng Reguler', 'MLR', '4 pack / minggu'],
-            ['Kripca 1,8 kg', 'KRC', '2 bal / bulan'],
+            ['Basreng Original', 'BSR-O', '4 pack / minggu', 11000],
+            ['Basreng Pedas', 'BSR-P', '4 pack / minggu', 11000],
+            ['Molreng Reguler', 'MLR', '4 pack / minggu', 8500],
+            ['Kripca 1,8 kg', 'KRC', '2 bal / bulan', 80000],
         ];
 
-        foreach ($hargaKaryawan as [$varian, $singkatan, $batas]) {
-            HargaKaryawan::create(['varian_produk' => $varian, 'singkatan' => $singkatan, 'batas' => $batas]);
+        foreach ($hargaKaryawan as [$varian, $singkatan, $batas, $harga]) {
+            HargaKaryawan::create(['varian_produk' => $varian, 'singkatan' => $singkatan, 'batas' => $batas, 'harga_karyawan' => $harga]);
         }
 
         // Katalog.dc.html: Uji tanya Adiva (and the highlighted Kripca row).
         UjiAdiva::create([
             'bagian' => 'KATALOG',
             'pertanyaan' => 'kripca 1,8 kg kalau ambil 30 harganya brp?',
-            'jawaban' => 'Untuk Kripca 1,8 kg pembelian 30 bal harganya [harga tier 30+] per bal ya kak. Mau yang Original, Pedas, atau campur?',
+            'jawaban' => 'Untuk Kripca 1,8 kg pembelian 30 bal harganya Rp87.000 per bal ya kak. Mau yang Original, Pedas, atau campur?',
             'catatan' => 'Tool dipakai: Cari_Produk_per_Kategori (Keripik kaca) · dinilai Reseller · Tanya harga · WARM',
             'produk_id' => Produk::query()->where('jenis_produk', 'Kripca 1,8 kg')->value('id'),
             'user_id' => User::query()->where('email', 'falah@bangbana.id')->value('id'),

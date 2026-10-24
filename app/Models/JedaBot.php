@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\JenisNotifikasi;
 use App\Models\Concerns\ZonaWaktuAplikasi;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -16,6 +18,7 @@ use Illuminate\Support\Carbon;
  * same table is the pause history; sampai = null means "tanpa batas".
  *
  * @property int $id
+ * @property int|null $crm_customer_id
  * @property string|null $nomor
  * @property string $chat_id
  * @property string|null $nama
@@ -113,6 +116,33 @@ class JedaBot extends Model
     }
 
     /**
+     * Pauses that are over: ended with LANJUT, or past their end time even though nobody
+     * has closed them yet. A pause that runs out is only closed when the customer writes
+     * again (AlurPesanMasuk), so without this it would sit in neither list: no longer
+     * holding the bot back, yet not in the history either.
+     *
+     * @param  Builder<JedaBot>  $query
+     */
+    #[Scope]
+    protected function berakhir(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q->whereNotNull('selesai_at')
+            ->orWhere(fn (Builder $q) => $q->whereNotNull('sampai')->where('sampai', '<=', now())));
+    }
+
+    /**
+     * When the pause ended: by LANJUT, or else when its time ran out. Null while it holds.
+     */
+    public function akhir(): ?CarbonInterface
+    {
+        if ($this->selesai_at !== null) {
+            return $this->selesai_at;
+        }
+
+        return $this->sampai !== null && $this->sampai->lessThanOrEqualTo(now()) ? $this->sampai : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -123,5 +153,20 @@ class JedaBot extends Model
             'sudah_diberi_tahu' => 'boolean',
             'selesai_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A pause that ends (LANJUT, or closed as run out) no longer needs an admin to reply.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (JedaBot $jeda) {
+            if ($jeda->wasChanged('selesai_at') && $jeda->selesai_at !== null && $jeda->crm_customer_id !== null) {
+                Notifikasi::selesaikan(
+                    [JenisNotifikasi::JedaChat, JenisNotifikasi::JedaKedaluwarsa, JenisNotifikasi::PengingatJeda],
+                    customerId: $jeda->crm_customer_id,
+                );
+            }
+        });
     }
 }

@@ -16,6 +16,8 @@ use Illuminate\Support\Str;
  */
 class StatusIntegrasi
 {
+    private const KONEKSI_BASI_JAM = 3;
+
     public function __construct(public readonly ?Workflow $chatbot) {}
 
     public static function sekarang(): self
@@ -97,13 +99,16 @@ class StatusIntegrasi
     }
 
     /**
-     * The latest check of each WAHA session.
+     * The latest check of each WAHA session, null when there is none from the last
+     * KONEKSI_BASI_JAM hours. Pantau Koneksi checks every 15 minutes; an older result says
+     * nothing about now, so "Terhubung" from days ago reads "Belum dicek" instead.
      *
      * @return array<string, WorkflowEvent|null>
      */
     public function koneksiTerakhir(): array
     {
-        $koneksi = $this->koneksi();
+        $batas = now()->subHours(self::KONEKSI_BASI_JAM);
+        $koneksi = $this->koneksi()->filter(fn (WorkflowEvent $k) => $k->waktu->gte($batas));
 
         return collect(NomorBot::daftar())
             ->map(fn (string $label, string $sesi) => $koneksi->last(fn (WorkflowEvent $k) => ($k->data['sesi'] ?? null) === $sesi))

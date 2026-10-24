@@ -162,7 +162,7 @@ export function PanelProduk({
                             />
                             <Input
                                 aria-label={`Harga tingkat ${i + 1}`}
-                                placeholder="[harga per tier]"
+                                placeholder="Harga (Rp)"
                                 value={t.harga}
                                 onChange={(e) =>
                                     ubahTier(i, { harga: e.target.value })

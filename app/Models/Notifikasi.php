@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use stdClass;
 
 /**
@@ -82,6 +83,31 @@ class Notifikasi extends Model
         if ($this->dibaca_at === null) {
             $this->update(['dibaca_at' => now()]);
         }
+    }
+
+    /**
+     * The matter behind these notifications is over: an order left "Menunggu ACC", a
+     * customer no longer needs an admin. They leave "Perlu tindakan" and stop counting
+     * as unread — nobody needs to act on them any more, so the bell should not say so.
+     * They stay in the list, read, as a record of what happened.
+     *
+     * @param  list<JenisNotifikasi>  $jenis
+     */
+    public static function selesaikan(array $jenis, ?int $orderId = null, ?int $customerId = null): void
+    {
+        if ($orderId === null && $customerId === null) {
+            return;
+        }
+
+        static::query()
+            ->whereIn('jenis', array_map(fn (JenisNotifikasi $j) => $j->value, $jenis))
+            ->whereNull('selesai_at')
+            ->when($orderId !== null, fn (Builder $q) => $q->where('log_order_id', $orderId))
+            ->when($orderId === null, fn (Builder $q) => $q->where('crm_customer_id', $customerId))
+            ->update([
+                'selesai_at' => now(),
+                'dibaca_at' => DB::raw('coalesce(dibaca_at, now())'),
+            ]);
     }
 
     /**

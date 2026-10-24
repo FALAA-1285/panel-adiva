@@ -52,9 +52,32 @@ test('paused customers show how long the pause still runs', function () {
             ->where('aktif.1.sejak', 'Kemarin')
             ->where('aktif.1.sampai', '∞')
             ->where('aktif.1.sisa', 'tanpa batas · diingatkan 09.00')
-            ->where('aktif.2.sisa', 'kedaluwarsa · lanjut otomatis')
-            ->where('aktif.2.kabar', 'Belum chat lagi')
-            ->where('ringkasan.0', ['label' => 'Sedang dijeda', 'nilai' => '3', 'meta' => '1 tanpa batas waktu']));
+            // Mbak Lia ran out at 13:40: Adiva already answers her, so she is not paused
+            ->has('aktif', 2)
+            ->where('ringkasan.0', ['label' => 'Sedang dijeda', 'nilai' => '2', 'meta' => '1 tanpa batas waktu'])
+            // …and lands in the history, ended by Sistem at her end time
+            ->where('riwayat.0.nama', 'Mbak Lia')
+            ->where('riwayat.0.oleh', 'Sistem')
+            ->where('riwayat.0.durasi', '60 mnt'));
+});
+
+test('a pause that ran out is not counted anywhere as still holding the bot', function () {
+    // past its end time, never closed: the customer has not written since
+    $lewat = JedaBot::create(['nama' => 'Bu Wati', 'nomor' => '6281355660042', 'chat_id' => '6281355660042@c.us', 'sejak' => '2026-09-28 10:05', 'sampai' => '2026-09-28 11:00', 'oleh' => 'Falah']);
+
+    expect(JedaBot::query()->menahan()->count())->toBe(0)
+        ->and(JedaBot::query()->berakhir()->count())->toBe(1)
+        ->and($lewat->akhir()?->format('H:i'))->toBe('11:00');
+
+    // pausing her again closes the old one first instead of leaving two open
+    CrmCustomer::factory()->create(['nama' => 'Bu Wati', 'nomor_wa' => '6281355660042', 'chat_id' => '6281355660042@c.us']);
+    $this->actingAs(User::factory()->falah()->create())
+        ->post('/jeda', ['customer' => 'bu wati', 'durasi' => '1 jam'])
+        ->assertSessionHasNoErrors();
+
+    expect(JedaBot::query()->aktif()->count())->toBe(1)
+        ->and($lewat->refresh()->selesai_at?->format('H:i'))->toBe('11:00')
+        ->and($lewat->diakhiri_oleh)->toBe('Sistem');
 });
 
 test('the history covers 3 days and the numbers 30 and 7 days', function () {

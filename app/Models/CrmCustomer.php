@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JenisNotifikasi;
 use App\Enums\SkorProspek;
 use App\Enums\StatusOrder;
 use App\Enums\TahapFunnel;
@@ -138,5 +139,20 @@ class CrmCustomer extends Model
             'status_optout' => 'boolean',
             'butuh_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Once nobody is flagged to step in for this customer, the "butuh admin" notices are done.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (CrmCustomer $customer) {
+            if ($customer->wasChanged('butuh_admin') && ! $customer->butuh_admin) {
+                Notifikasi::selesaikan(
+                    [JenisNotifikasi::ButuhAdmin, JenisNotifikasi::LampiranMasuk],
+                    customerId: $customer->id,
+                );
+            }
+        });
     }
 }

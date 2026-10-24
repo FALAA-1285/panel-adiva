@@ -94,6 +94,24 @@ enum AksiPesanan: string
     }
 
     /**
+     * The button on Detail pesanan, as a verb.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Acc => 'ACC & kirim invoice',
+            self::Tolak => 'Tolak',
+            self::Batal => 'Batalkan',
+            self::Lunas => 'Tandai lunas',
+            self::Siap => 'Siap diambil',
+            self::Kirim => 'Tandai dikirim',
+            self::Selesai => 'Tandai selesai',
+            self::Tutup => 'Tutup',
+            self::BatalKirim => 'Batalkan pengiriman',
+        };
+    }
+
+    /**
      * The HakAkses action that allows it.
      */
     public function hakAkses(): string

@@ -80,8 +80,8 @@ type Props = {
     };
     riwayat: { waktu: string; teks: string; nada: Nada }[];
     invoice: Invoice;
-    /** "TOLAK" and "ACC" while they apply. */
-    aksi: string[];
+    /** The commands that apply now: ending ones first, the next step last. */
+    aksi: { kode: string; label: string; bahaya: boolean }[];
 };
 
 const kolomItem: KolomTabel<Item>[] = [
@@ -129,6 +129,8 @@ export default function DetailPesanan({
     aksi,
 }: Props) {
     const [mengubahItem, setMengubahItem] = useState(false);
+    // the first command that moves the order forward is the one to stand out
+    const langkahBerikut = aksi.find((a) => !a.bahaya);
     const jalankan = (kode: string) =>
         router.post(
             perintah.url(order.id),
@@ -374,22 +376,27 @@ export default function DetailPesanan({
                             <Ikon nama="whatsapp" ukuran={15} tebal={2} />
                             Buka chat
                         </ButtonLink>
-                        {aksi.includes('TOLAK') && (
+                        {aksi.map((a) => (
                             <Button
-                                varian="danger"
-                                onClick={() => jalankan('TOLAK')}
+                                key={a.kode}
+                                varian={
+                                    a.bahaya
+                                        ? 'danger'
+                                        : a.kode === langkahBerikut?.kode
+                                          ? 'primary'
+                                          : 'secondary'
+                                }
+                                onClick={() =>
+                                    (!a.bahaya ||
+                                        window.confirm(
+                                            `${a.label} pesanan ${order.id}? Customer akan dikabari.`,
+                                        )) &&
+                                    jalankan(a.kode)
+                                }
                             >
-                                Tolak
+                                {a.label}
                             </Button>
-                        )}
-                        {aksi.includes('ACC') && (
-                            <Button
-                                varian="primary"
-                                onClick={() => jalankan('ACC')}
-                            >
-                                ACC &amp; kirim invoice
-                            </Button>
-                        )}
+                        ))}
                     </>
                 }
             />

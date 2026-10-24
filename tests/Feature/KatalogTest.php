@@ -32,7 +32,7 @@ test('the product table is read from the database', function () {
                 'kemasan' => 'Pack 250 g',
                 'rasa' => 'Bawang original, pedas',
                 'tier' => '1–9 · 10–49 · 50+ pcs',
-                'harga' => '[harga per tier]',
+                'harga' => 'Harga belum diisi',
                 'target' => 'Kantin sekolah, warung',
                 'adaFoto' => true,
             ])
@@ -51,6 +51,17 @@ test('filled-in tier prices replace the placeholder', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('produk.0.tier', '1–29 · 30+ bal')
             ->where('produk.0.harga', 'Rp92.000 · Rp87.000'));
+});
+
+test('a tier without a price shows a dash instead of hiding the others', function () {
+    Produk::factory()->molreng()->create(['harga_bertingkat' => [
+        'satuan' => 'bal',
+        'tier' => [['min' => 1, 'max' => 29, 'harga' => 92000], ['min' => 30, 'max' => null, 'harga' => null]],
+    ]]);
+
+    $this->actingAs(User::factory()->create())
+        ->get('/katalog')
+        ->assertInertia(fn (Assert $page) => $page->where('produk.0.harga', 'Rp92.000 · —'));
 });
 
 test('the tabs count every part of the catalogue', function () {

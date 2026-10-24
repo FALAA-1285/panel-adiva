@@ -177,7 +177,7 @@ const kolomHarga: KolomTabel<HargaKaryawan>[] = [
             row.original.harga ? (
                 <T1>{row.original.harga}</T1>
             ) : (
-                <T1 className="font-normal text-muted">[harga karyawan]</T1>
+                <T1 className="font-normal text-muted">Belum diisi</T1>
             ),
     },
     {
@@ -497,7 +497,7 @@ function UbahHarga({
                     <T1 className="max-md:col-span-2">{h.varian}</T1>
                     <Input
                         aria-label={`Harga karyawan ${h.varian}`}
-                        placeholder="[harga karyawan]"
+                        placeholder="Harga (Rp)"
                         value={form.data.harga[i]?.harga ?? ''}
                         onChange={(e) => ubah(i, { harga: e.target.value })}
                         className="h-8"

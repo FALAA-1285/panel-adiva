@@ -77,7 +77,7 @@ class PenerimaBroadcast
                 fn (Builder $q) => $q->where('tgl_interaksi_terakhir', '>=', now()->subDays((int) strtok($filter['interaksi'], '_'))),
             )
             ->where('status_optout', false)
-            ->whereNotIn('chat_id', JedaBot::query()->aktif()->select('chat_id'))
+            ->whereNotIn('chat_id', JedaBot::query()->menahan()->select('chat_id'))
             ->when($filter['kecualikan_order'], fn (Builder $q) => $q->whereDoesntHave('orders', fn (Builder $o) => $o->whereIn('status_order', StatusOrder::berjalan())))
             ->when($filter['kecualikan_baru'], fn (Builder $q) => $q->whereNotIn('id', BroadcastPenerima::query()
                 ->select('crm_customer_id')

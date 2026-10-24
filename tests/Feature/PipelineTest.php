@@ -38,13 +38,13 @@ test('guests are sent to the login page', function () {
     $this->get('/pipeline')->assertRedirect('/masuk');
 });
 
-test('columns count the customers active in 30 days and show the latest three of the last 3 days', function () {
+test('columns count the customers active in 30 days and show the latest three per column', function () {
     foreach (['Satu' => 1, 'Dua' => 2, 'Tiga' => 3, 'Empat' => 4] as $nama => $jam) {
         CrmCustomer::factory()->create(['nama' => $nama, 'tahap_funnel' => TahapFunnel::TanyaProduk, 'tgl_interaksi_terakhir' => now()->subHours($jam)]);
     }
     CrmCustomer::factory()->create(['nama' => 'Minggu lalu', 'tahap_funnel' => TahapFunnel::TanyaProduk, 'tgl_interaksi_terakhir' => now()->subDays(10)]);
     CrmCustomer::factory()->create(['nama' => 'Lama', 'tahap_funnel' => TahapFunnel::TanyaProduk, 'tgl_interaksi_terakhir' => now()->subDays(40)]);
-    // only Nego card: from the 10 days ago it is not on the board
+    // Nego card: customer from 10 days ago is shown as the card on the board
     CrmCustomer::factory()->create(['nama' => 'Nego lama', 'tahap_funnel' => TahapFunnel::Nego, 'tgl_interaksi_terakhir' => now()->subDays(10)]);
     // greeted again later today: first in its column
     CrmCustomer::factory()->create(['nama' => 'Disapa', 'tahap_funnel' => TahapFunnel::TanyaProduk, 'tgl_interaksi_terakhir' => now()->subHours(8), 'tgl_followup_berikutnya' => now()->addHours(3)]);
@@ -58,7 +58,7 @@ test('columns count the customers active in 30 days and show the latest three of
         ->and($produk['n'])->toBe(6)
         ->and(collect($produk['kartu'])->pluck('nama')->all())->toBe(['Disapa', 'Satu', 'Dua'])
         ->and(kolomTahap($props, TahapFunnel::Nego)['n'])->toBe(1)
-        ->and(kolomTahap($props, TahapFunnel::Nego)['kartu'])->toBe([]);
+        ->and(collect(kolomTahap($props, TahapFunnel::Nego)['kartu'])->pluck('nama')->all())->toBe(['Nego lama']);
 
     // "Lihat N lainnya" opens the whole column
     expect(collect(kolomTahap(papan('/pipeline?buka=TANYA_PRODUK'), TahapFunnel::TanyaProduk)['kartu'])->pluck('nama')->all())

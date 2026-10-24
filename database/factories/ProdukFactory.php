@@ -26,7 +26,7 @@ class ProdukFactory extends Factory
     }
 
     /**
-     * Katalog.dc.html, first row: prices not filled in yet ("[harga per tier]").
+     * Katalog.dc.html, first row: tier prices not filled in yet.
      */
     public function molreng(): static
     {

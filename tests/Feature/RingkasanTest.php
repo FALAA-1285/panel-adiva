@@ -106,8 +106,9 @@ test('the action list keeps only what is still open, most urgent kind first', fu
     $notif(JenisNotifikasi::JedaChat, '2026-09-28 13:30', 'Customer dijeda mengirim chat', $wati->id);
     $notif(JenisNotifikasi::ButuhAdmin, '2026-09-28 12:48', 'Butuh admin: nego harga', $hendra->id);
     $notif(JenisNotifikasi::OrderBaru, '2026-09-28 13:06', 'Order baru menunggu ACC', $rina->id, $order->id);
-    // handled already, or from yesterday: left out
+    // handled already: left out
     $notif(JenisNotifikasi::ButuhAdmin, '2026-09-28 11:00', 'Butuh admin', $sudah->id);
+    // the same matter raised again yesterday: one row, not two
     $notif(JenisNotifikasi::ButuhAdmin, '2026-09-27 12:00', 'Butuh admin', $hendra->id);
 
     $this->actingAs(User::factory()->falah()->create())
@@ -160,6 +161,21 @@ test('the automated messages and Status Adiva read today\'s runs', function () {
                 ['label' => 'Ongkir Mengantar', 'nilai' => '1 cek hari ini'],
                 ['label' => 'Sedang dijeda', 'nilai' => '1 customer', 'href' => '/jeda'],
             ]));
+});
+
+test('a connection check from days ago no longer says the numbers are connected', function () {
+    $pantau = Workflow::query()->where('kode', 'pantau_koneksi')->value('id');
+    foreach (['bangbana-waha', 'bangbana-2'] as $sesi) {
+        WorkflowEvent::create(['workflow_id' => $pantau, 'waktu' => '2026-09-25 13:30', 'jenis' => 'KONEKSI', 'status' => 'TERHUBUNG', 'judul' => 'Ok', 'data' => ['sesi' => $sesi]]);
+    }
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('statusAdiva.1', ['label' => 'WhatsApp (WAHA)', 'nilai' => '2 nomor · belum dicek', 'nada' => 'blue']));
+
+    $this->get('/monitoring')
+        ->assertInertia(fn (Assert $page) => $page->where('integrasi.nomor.0.status', 'Belum dicek'));
 });
 
 test('chat volume, stages, types and running orders', function () {
@@ -313,4 +329,37 @@ test('an empty period says so instead of leaving the panels blank', function () 
             ->where('pelanggan.sub', 'Belum ada yang belanja di rentang ini')
             ->where('hilang.sub', '0 order batal')
             ->has('hilang.baris', 0));
+});
+
+test('an order still waiting for ACC stays in the action list past midnight', function () {
+    // came in last night at 23:00, nobody has ACC-ed it yet
+    $order = LogOrder::factory()->create(['order_id' => 'ORD-260927-099', 'tanggal' => '2026-09-27 23:00']);
+    Notifikasi::create([
+        'waktu' => '2026-09-27 23:00', 'jenis' => JenisNotifikasi::OrderBaru->value, 'kategori' => JenisNotifikasi::OrderBaru->kategori()->value,
+        'penerima' => 'ADMIN_WA', 'judul' => 'Order baru menunggu ACC', 'log_order_id' => $order->id,
+    ]);
+    // older than the window: no longer this page's business
+    $lama = LogOrder::factory()->create(['order_id' => 'ORD-260901-001', 'tanggal' => '2026-09-01 10:00']);
+    Notifikasi::create([
+        'waktu' => '2026-09-01 10:00', 'jenis' => JenisNotifikasi::OrderBaru->value, 'kategori' => JenisNotifikasi::OrderBaru->kategori()->value,
+        'penerima' => 'ADMIN_WA', 'judul' => 'Order baru menunggu ACC', 'log_order_id' => $lama->id,
+    ]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('tindakan', 1)
+            ->where('tindakan.0.kode', 'ORD-260927-099'));
+});
+
+test('a notification marked done leaves the action list', function () {
+    $order = LogOrder::factory()->create(['order_id' => 'ORD-260928-050', 'tanggal' => '2026-09-28 09:00']);
+    Notifikasi::create([
+        'waktu' => '2026-09-28 09:00', 'jenis' => JenisNotifikasi::OrderBaru->value, 'kategori' => JenisNotifikasi::OrderBaru->kategori()->value,
+        'penerima' => 'ADMIN_WA', 'judul' => 'Order baru menunggu ACC', 'log_order_id' => $order->id, 'selesai_at' => '2026-09-28 09:30',
+    ]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/')
+        ->assertInertia(fn (Assert $page) => $page->has('tindakan', 0));
 });

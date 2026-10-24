@@ -191,10 +191,7 @@ class PipelineController extends Controller
         $dasar = $this->cari($request)
             ->select('crm_customer.*')
             ->selectRaw(self::AKTIVITAS.' as aktivitas_terakhir')
-            ->selectRaw(self::DISAPA_NANTI.' as disapa_nanti', [$sekarang, $sekarang->copy()->endOfDay()])
-            ->where(fn (Builder $q) => $q
-                ->whereRaw(self::AKTIVITAS.' >= ?', [$sekarang->copy()->subDays(self::HARI_KARTU)->startOfDay()])
-                ->when($buka, fn (Builder $q, TahapFunnel $t) => $q->orWhere('tahap_funnel', $t)));
+            ->selectRaw(self::DISAPA_NANTI.' as disapa_nanti', [$sekarang, $sekarang->copy()->endOfDay()]);
 
         /** @var Collection<int, CrmCustomer> $customer */
         $customer = CrmCustomer::query()
@@ -225,7 +222,7 @@ class PipelineController extends Controller
             ->orderBy('tanggal')
             ->get()
             ->keyBy('crm_customer_id');
-        $jeda = JedaBot::query()->aktif()->whereIn('chat_id', $customer->pluck('chat_id'))->orderBy('sejak')->get()->keyBy('chat_id');
+        $jeda = JedaBot::query()->menahan()->whereIn('chat_id', $customer->pluck('chat_id'))->orderBy('sejak')->get()->keyBy('chat_id');
         $pj = User::pjKaryawan()->name ?? null;
 
         return $customer->map(fn (CrmCustomer $c) => $this->isiKartu($c, $order->get($c->id), (int) ($jumlahOrder[$c->id] ?? 0), $jeda->get($c->chat_id), $pj));

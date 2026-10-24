@@ -62,7 +62,7 @@ class JedaRequest extends FormRequest
 
                 if (! $customer) {
                     $validator->errors()->add('customer', 'Customer tidak ditemukan di CRM.');
-                } elseif (JedaBot::query()->aktif()->where('chat_id', $customer->chat_id)->exists()) {
+                } elseif (JedaBot::query()->menahan()->where('chat_id', $customer->chat_id)->exists()) {
                     $validator->errors()->add('customer', 'Customer ini sedang dijeda.');
                 }
 

@@ -29,8 +29,9 @@ class JedaController extends Controller
     public function index(): Response
     {
         $singkat = NomorBot::singkat();
-        // in the order they were paused (Jeda.dc.html: Bu Wati, Toko Berkah Jaya, Mbak Lia)
-        $aktif = JedaBot::query()->aktif()->orderBy('id')->get();
+        // only what still holds the bot back: a pause past its end time already lets
+        // Adiva answer, so counting it here would say the bot is quiet when it is not
+        $aktif = JedaBot::query()->menahan()->orderBy('id')->get();
 
         return Inertia::render('jeda', [
             'ringkasan' => $this->ringkasan($aktif->count(), $aktif->whereNull('sampai')->count()),
@@ -48,19 +49,21 @@ class JedaController extends Controller
                 'alasan' => $j->alasan,
                 'kabar' => $j->sudah_diberi_tahu ? 'Customer sudah dikabari' : 'Belum chat lagi',
             ]),
+            // pauses that ran out without anyone closing them belong here too, ended by
+            // "Sistem" at their end time
             'riwayat' => JedaBot::query()
-                ->selesai()
-                ->where('selesai_at', '>=', now()->subDays(self::HARI_RIWAYAT)->startOfDay())
-                ->orderByDesc('selesai_at')
+                ->berakhir()
+                ->whereRaw('coalesce(selesai_at, sampai) >= ?', [now()->subDays(self::HARI_RIWAYAT)->startOfDay()])
+                ->orderByRaw('coalesce(selesai_at, sampai) desc')
                 ->get()
                 ->map(fn (JedaBot $j) => [
                     'id' => $j->id,
                     'nama' => $j->nama,
-                    'waktu' => $this->rentang($j->sejak, $j->selesai_at ?? now()),
+                    'waktu' => $this->rentang($j->sejak, $j->akhir() ?? now()),
                     'durasi' => number_format($this->menit($j), 0, ',', '.').' mnt',
                     'alasan' => $j->alasan,
                     'catatan' => $j->catatan_selesai,
-                    'oleh' => $j->diakhiri_oleh,
+                    'oleh' => $j->diakhiri_oleh ?? 'Sistem',
                 ]),
             'terakhir' => $this->chatTerakhir(),
         ]);
@@ -75,6 +78,10 @@ class JedaController extends Controller
         $customer = $request->customer() ?? abort(404);
         $detik = $request->detik();
         $alasan = $request->validated('alasan');
+
+        // JedaRequest already refused a pause that still holds, so anything left open is
+        // one that ran out: close it first, or the customer would have two open pauses
+        JedaBot::akhiriKedaluwarsa((string) ($customer->nomor_wa ?: $customer->chat_id), $customer->chat_id);
 
         $jeda = JedaBot::create([
             'crm_customer_id' => $customer->id,
@@ -138,10 +145,13 @@ class JedaController extends Controller
      */
     private function ringkasan(int $aktif, int $tanpaBatas): array
     {
+        // a pause that ran out counts as ended at its end time, by "Sistem": that is what
+        // it is, and the cron that would have closed it does not run everywhere
+        $akhir = 'coalesce(selesai_at, sampai)';
         $angka = JedaBot::query()
-            ->selesai()
+            ->berakhir()
             ->toBase()
-            ->selectRaw("count(*) filter (where selesai_at >= ?) as sesi, avg(extract(epoch from selesai_at - sejak) / 60) filter (where selesai_at >= ?) as rata, count(*) filter (where selesai_at >= ? and diakhiri_oleh = 'Sistem') as otomatis", [
+            ->selectRaw("count(*) filter (where {$akhir} >= ?) as sesi, avg(extract(epoch from {$akhir} - sejak) / 60) filter (where {$akhir} >= ?) as rata, count(*) filter (where {$akhir} >= ? and coalesce(diakhiri_oleh, 'Sistem') = 'Sistem') as otomatis", [
                 now()->subDays(30), now()->subDays(30), now()->subDays(7),
             ])
             ->first();
@@ -184,7 +194,7 @@ class JedaController extends Controller
         $customer = CrmCustomer::query()
             ->whereNotNull('nama')
             ->whereNotNull('tgl_interaksi_terakhir')
-            ->whereNotIn('chat_id', JedaBot::query()->aktif()->select('chat_id'))
+            ->whereNotIn('chat_id', JedaBot::query()->menahan()->select('chat_id'))
             ->orderByDesc('tgl_interaksi_terakhir')
             ->first();
 
@@ -218,6 +228,6 @@ class JedaController extends Controller
 
     private function menit(JedaBot $j): int
     {
-        return (int) round($j->sejak->diffInMinutes($j->selesai_at ?? now()));
+        return (int) round($j->sejak->diffInMinutes($j->akhir() ?? now()));
     }
 }
