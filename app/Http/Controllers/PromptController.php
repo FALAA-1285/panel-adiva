@@ -29,6 +29,11 @@ class PromptController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user() ?? abort(403);
+
+        if (! PromptVersi::query()->exists()) {
+            PromptVersi::inisialisasiStandar($user);
+        }
+
         $aktif = PromptVersi::query()->aktif()->with('pembuat:id,name')->latest('versi')->first();
         $draf = PromptVersi::query()->draf()->latest('versi')->first();
         $bagian = collect(($draf ?? $aktif)->bagian ?? [])

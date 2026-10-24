@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, kelasTombol } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
+import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
 import { Status } from '@/components/ui/status';
@@ -122,15 +123,21 @@ export default function Prompt({
                         sub="Titik oranye = diubah di draf"
                         isiClassName="p-2"
                     >
-                        <div className="flex flex-col gap-px">
-                            {bagian.map((b) => (
-                                <ItemBagian
-                                    key={b.no}
-                                    {...b}
-                                    terpilih={b.no === terpilih?.no}
-                                />
-                            ))}
-                        </div>
+                        {bagian.length === 0 ? (
+                            <div className="p-4 text-center text-caption text-muted">
+                                Belum ada bagian prompt yang dimuat.
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-px">
+                                {bagian.map((b) => (
+                                    <ItemBagian
+                                        key={b.no}
+                                        {...b}
+                                        terpilih={b.no === terpilih?.no}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </Panel>
 
                     {terpilih ? (
@@ -141,7 +148,26 @@ export default function Prompt({
                             ringkasanDraf={draf?.ringkasan ?? ''}
                         />
                     ) : (
-                        <div />
+                        <Panel
+                            judul="Pilih Bagian Prompt"
+                            sub="Instruksi sistem Adiva"
+                        >
+                            <div className="flex flex-col items-center justify-center p-12 text-center text-muted">
+                                <Ikon
+                                    nama="prompt"
+                                    ukuran={36}
+                                    className="mb-3 text-line-strong"
+                                />
+                                <p className="m-0 text-body font-medium text-ink">
+                                    Belum ada bagian prompt yang dipilih
+                                </p>
+                                <p className="mt-1 max-w-[360px] text-caption text-muted">
+                                    Pilih salah satu bagian dari daftar di
+                                    sebelah kiri untuk melihat isi instruksi
+                                    atau menguji perubahan draf.
+                                </p>
+                            </div>
+                        </Panel>
                     )}
 
                     <div className="flex flex-col gap-5 max-xl:col-span-2 max-xl:grid max-xl:grid-cols-2 max-xl:items-start max-lg:col-span-1 max-md:grid-cols-1">
