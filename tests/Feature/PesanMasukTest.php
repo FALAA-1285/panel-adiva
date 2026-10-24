@@ -569,3 +569,39 @@ test('a worked-through message that fails tells the supervisor', function () {
     expect(Notifikasi::query()->sole()->only(['jenis', 'judul']))->toBe(['jenis' => 'WORKFLOW_ERROR', 'judul' => 'Pesan masuk gagal diproses'])
         ->and(Notifikasi::query()->sole()->detail)->toContain('6281234567890@c.us', 'Halo kak, Molreng ada?', 'database mati');
 });
+
+test('only the sessions listed as the panel bot numbers are answered', function () {
+    // peralihan: nomor lama masih dipegang n8n, nomor baru dipegang panel
+    ConfigToko::create(['kunci' => 'DAFTAR_NOMOR_BOT', 'nilai' => 'bangbana-panel=Nomor Panel=panel']);
+
+    $kirim = function (array $isi) {
+        $badan = json_encode($isi);
+
+        return $this->postJson('/api/webhook/waha', $isi, [
+            'X-Webhook-Hmac' => hash_hmac('sha512', $badan, 'rahasia-waha'),
+        ]);
+    };
+
+    Queue::fake();
+
+    // nomor lama: diabaikan, supaya panel tidak ikut menjawab customer di sana
+    $kirim(($this->pesan)([], 'bangbana-waha'))
+        ->assertStatus(202)
+        ->assertJsonPath('diabaikan', 'sesi bukan nomor bot panel');
+    Queue::assertNothingPushed();
+
+    // nomor panel: diproses seperti biasa
+    $kirim(($this->pesan)([], 'bangbana-panel'))->assertOk();
+    Queue::assertPushed(ProsesPesanMasuk::class);
+});
+
+test('without DAFTAR_NOMOR_BOT every session is still accepted', function () {
+    Queue::fake();
+
+    $isi = ($this->pesan)([], 'sesi-apa-saja');
+    $this->postJson('/api/webhook/waha', $isi, [
+        'X-Webhook-Hmac' => hash_hmac('sha512', json_encode($isi), 'rahasia-waha'),
+    ])->assertOk();
+
+    Queue::assertPushed(ProsesPesanMasuk::class);
+});

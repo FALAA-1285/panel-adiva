@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ProsesPesanMasuk;
 use App\Models\BroadcastPenerima;
 use App\Support\Demo;
+use App\Support\NomorBot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,6 +25,18 @@ class WahaMasukController extends Controller
         abort_unless($this->sah($request), 401, 'tanda tangan webhook tidak sah');
 
         $isi = $request->json()->all();
+
+        // Selama peralihan, satu WAHA menampung nomor lama (dijawab n8n lewat
+        // perintah WhatsApp) dan nomor baru (dijawab panel). Webhook WAHA
+        // biasanya dipasang per sesi, tapi ada juga hook global yang berlaku
+        // untuk semuanya -- tanpa saringan ini, satu salah setel membuat panel
+        // ikut menjawab customer di nomor yang masih dipegang n8n.
+        // Daftar kosong berarti belum diatur: biarkan lewat, seperti sebelumnya.
+        $dikenal = NomorBot::daftar();
+
+        if ($dikenal !== [] && ! array_key_exists((string) ($isi['session'] ?? ''), $dikenal)) {
+            return response()->json(['ok' => true, 'diabaikan' => 'sesi bukan nomor bot panel'], 202);
+        }
 
         match ($isi['event'] ?? null) {
             'message' => ProsesPesanMasuk::dispatch($isi),

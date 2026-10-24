@@ -66,7 +66,22 @@ Workflow lama **tidak disentuh dan tetap aktif** selama peralihan.
 1. Impor kedelapan berkas dari `2026-10-24-supabase/` lewat **Workflows → Import from File**. Semuanya masuk dalam keadaan nonaktif.
 2. Buat credential Postgres Supabase di n8n VPS (centang "Ignore SSL Issues"), catat ID-nya dari URL.
 3. `node n8n-tambal.mjs /opt/panel-adiva <ID-credential>` — mengarahkan 82 node ke credential itu. Skrip hanya menyentuh node bertipe postgres, jadi workflow lama tidak ikut berubah.
-4. **Satu per satu, jangan sekaligus**: matikan workflow lama, baru nyalakan pasangan barunya. Jangan pernah dua-duanya aktif — webhook WAHA yang sama akan membuat customer **dibalas dua kali**, dan dua "Batas Bayar Order" akan membatalkan order yang sama.
-5. Setelah yang baru terbukti, workflow lama baru dihapus.
+4. **Yang menjawab chat boleh berjalan berdampingan** — `chatbot bangbana (main)` dan `Chatbot Sosmed` — karena nomor WhatsApp-nya berbeda. Webhook WAHA dipasang per sesi, jadi masing-masing hanya menerima pesan nomornya sendiri.
+5. **Yang terjadwal tidak boleh.** `Batas Bayar Order`, `Prospek Ulang Otomatis`, `Laporan Harian`, `Arsip Data`, dan `Pantau Koneksi WhatsApp` dipicu jadwal, bukan pesan masuk — mereka bekerja atas **data**, bukan atas nomor. Kalau dua generasi aktif di atas database yang sama, order yang sama dibatalkan dua kali dan laporan harian terkirim dua kali. Matikan yang lama dulu, baru nyalakan yang baru, satu per satu.
+6. Setelah yang baru terbukti, workflow lama baru dihapus.
 
 Sebelum menghapus yang lama, pastikan keduanya memakai **database yang sama**. Workflow baru sekarang menunjuk Supabase; kalau yang lama memakai database lain, menghapusnya berarti riwayat customer dan order terputus di titik itu.
+
+## Nomor WhatsApp terpisah selama peralihan
+
+Nomor baru dipakai untuk versi yang dikendalikan panel, nomor lama tetap dipegang n8n. Keduanya bisa hidup di **WAHA yang sudah ada** — sejak split Core/Plus dihapus, WAHA Core tidak lagi membatasi jumlah sesi, jadi tidak perlu container WAHA kedua.
+
+Yang perlu diatur:
+
+1. Pindai QR nomor baru di WAHA sebagai sesi tersendiri, mis. `bangbana-panel`.
+2. Pasang webhook **pada sesi itu saja**, menunjuk `https://panel.tokobangbana.com/api/webhook/waha`, dengan HMAC secret yang sama dengan `WAHA_WEBHOOK_SECRET` di `.env.produksi`.
+3. Tambahkan sesinya ke `DAFTAR_NOMOR_BOT` di halaman Pengaturan, mis. `bangbana-panel=Nomor Panel=panel`.
+
+Langkah 3 bukan sekadar pemberian label. `WahaMasukController` menolak pesan dari sesi yang **tidak** ada di `DAFTAR_NOMOR_BOT` dengan balasan 202 dan alasan "sesi bukan nomor bot panel". Itu pengaman kalau suatu saat WAHA disetel memakai hook global (`WHATSAPP_HOOK_URL`) yang berlaku untuk semua sesi — tanpa saringan ini, panel akan ikut menjawab customer di nomor lama yang masih dipegang n8n.
+
+Daftar yang kosong berarti belum diatur, dan semua sesi diterima seperti perilaku sebelumnya — supaya pemasangan pertama tidak diam-diam mati.
