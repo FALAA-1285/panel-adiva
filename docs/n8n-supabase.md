@@ -37,64 +37,36 @@ Dijadwalkan, dari laptop, tanpa pengawasan. WAHA lokal memang kosong (0 sesi) se
 
 **Aktifkan di satu tempat saja: VPS.**
 
-## Menerapkan ke n8n VPS
-
-n8n VPS tidak bisa dijangkau dari luar (port 5678 tertutup), jadi langkahnya dijalankan dari sana.
-
-1. Buat credential Postgres di UI n8n VPS: **Credentials → New → Postgres**, isi host/database/user/password Supabase, `SSL = require`, dan **centang "Ignore SSL Issues"** (itu nama kolom `allowUnauthorizedCerts` di UI).
-2. Catat ID-nya dari URL saat credential itu dibuka: `/home/credentials/<ID>`.
-3. Salin dua skrip ini ke VPS (ada di `storage/app/n8n-cadangan/skrip/`, tidak masuk git):
-   - `n8n-credential.mjs` — membuat credential dari `.env` panel, kalau ingin lewat API alih-alih UI
-   - `n8n-tambal.mjs` — mengganti credential di semua node Postgres
-4. Jalankan penambalannya:
-
-   ```bash
-   node n8n-tambal.mjs /opt/panel-adiva <ID-credential>
-   ```
-
-   Skrip membaca `N8N_API_URL` dan `N8N_API_KEY` dari `.env` panel di VPS. Tanpa argumen id workflow, ia menambal semuanya; dengan argumen, hanya yang disebut.
-5. Aktifkan kelima workflow terjadwal dari UI.
-
-Kalau lebih suka impor berkas: `2026-10-24-supabase/*.json` bisa diimpor lewat **Workflows → Import from File**, tetapi ID credential di dalamnya milik n8n lokal, jadi langkah 4 tetap perlu dijalankan setelahnya.
-
 ## Catatan API n8n
 
 - `POST /credentials` bisa membuat, `DELETE /credentials/:id` bisa menghapus, tetapi **tidak ada endpoint untuk mengubah**. Mengganti setelan credential berarti membuat yang baru, menambal ulang node-nya, lalu menghapus yang lama.
 - `GET /credentials` membalas 200 dengan daftar kosong — API publik memang tidak mengekspos credential yang sudah ada. ID-nya hanya bisa dibaca dari URL di UI atau dari balasan saat dibuat.
 - `PUT /workflows/:id` hanya menerima `name`, `nodes`, `connections`, dan `settings`. Menyertakan `active`, `id`, atau `tags` ditolak sebagai additional properties.
 
-## n8n dan WAHA Bang Bana dipisah dari milik proyek lain
+## Penanda "(panel adiva)" di nama workflow
 
-n8n (5678) **dan** WAHA (3001) yang sudah berjalan di VPS keduanya milik proyek lain. Bang Bana mendapat sepasang miliknya sendiri lewat `compose.bot.yml`, di port **5679** dan **3002**, keduanya hanya terikat ke loopback.
+n8n di VPS akan memuat **dua generasi workflow bernama sama**: yang lama (dioperasikan dengan perintah WhatsApp dari HP) dan yang baru (dikendalikan panel). Supaya tidak tercampur, kedelapan workflow baru diberi akhiran `(panel adiva)` pada namanya — mis. `chatbot bangbana (main) (panel adiva)`.
 
-Alasan dipisah, bukan digabung:
+Penanda itu bukan sekadar label untuk mata manusia. `n8n:sinkron` mencocokkan workflow **berdasarkan nama** dengan `Str::contains`, jadi `chatbot bangbana (main) (panel adiva)` tetap cocok dengan pola `chatbot bangbana (main)` — dan begitu pula yang lama. Dua kandidat cocok, lalu `->first()` memilih mana saja yang kebetulan muncul duluan di balasan API. Halaman Otomasi dan Monitoring jadi menampilkan workflow yang salah, berganti-ganti tiap sinkron.
 
-1. **Satu n8n = satu credential store dan satu encryption key.** Kata sandi Supabase akan duduk bersama credential proyek lain.
-2. **API key panel bisa membaca semuanya.** `n8n:sinkron` memanggil `GET /workflows` lalu mencocokkan berdasarkan nama dengan `Str::contains`. Digabung berarti panel Bang Bana membaca seluruh workflow proyek lain, dan nama seumum "Chatbot Sosmed" berisiko salah cocok sehingga halaman Otomasi menampilkan workflow yang bukan miliknya.
-3. **Satu versi untuk dua proyek.** Menaikkan versi demi satu proyek ikut menaikkan yang lain.
-4. **Cadangan jadi borongan.** Mengekspor Bang Bana saja tidak bisa lagi dipisahkan.
+`SinkronN8n::PENANDA` menyelesaikannya dengan satu aturan: **workflow bertanda selalu menang**, bahkan atas `n8n_workflow_id` yang sudah tersimpan. Jadi saat workflow baru diimpor, panel otomatis berpindah mengikutinya tanpa perlu mengosongkan kolom itu dengan tangan. Dua tes di `tests/Feature/SelarasN8nTest.php` menjaga aturan ini.
 
-Memasangnya di VPS:
+Tiga skrip pendukung ada di `storage/app/n8n-cadangan/skrip/` (tidak masuk git, salin ke VPS saat perlu). Ketiganya membaca `N8N_API_URL` dan `N8N_API_KEY` dari `.env` panel:
 
-```bash
-cd /opt/panel-adiva
-cp .env.bot.example .env.bot
-sed -i "s/^N8N_ENCRYPTION_KEY=.*/N8N_ENCRYPTION_KEY=$(openssl rand -hex 24)/" .env.bot
-sed -i "s/^WAHA_API_KEY=.*/WAHA_API_KEY=$(openssl rand -hex 24)/" .env.bot
-nano .env.bot   # isi WAHA_DASHBOARD_PASSWORD
-docker compose -f compose.bot.yml --env-file .env.bot up -d
-```
+| Skrip | Gunanya |
+|---|---|
+| `n8n-credential.mjs` | membuat credential Supabase lewat API, alih-alih lewat UI |
+| `n8n-tambal.mjs` | mengganti credential di semua node Postgres |
+| `n8n-tandai.mjs` | menambahkan akhiran `(panel adiva)` ke nama tiap workflow |
 
-`N8N_ENCRYPTION_KEY` **harus dibuat sekali lalu tidak pernah diganti** — kalau hilang, semua credential di dalamnya tidak bisa didekripsi lagi dan harus diisi ulang. Volume `waha` berisi sesi WhatsApp yang sudah dipindai QR; kalau terhapus, nomornya harus dipindai ulang. `.env.bot` sudah masuk `.gitignore`.
+## Urutan impor ke n8n VPS yang sudah ada
 
-Keduanya hanya terikat `127.0.0.1`. UI n8n dibuka lewat Caddy yang sudah ada di VPS (`n8n-bangbana.tokobangbana.com`, lihat `docs/deploy-vps.md`); WAHA tidak diberi subdomain karena dashboard-nya jarang dibuka, jadi cukup SSH tunnel saat perlu:
+Workflow lama **tidak disentuh dan tetap aktif** selama peralihan.
 
-```bash
-ssh -L 3002:127.0.0.1:3002 root@158.220.117.56
-```
+1. Impor kedelapan berkas dari `2026-10-24-supabase/` lewat **Workflows → Import from File**. Semuanya masuk dalam keadaan nonaktif.
+2. Buat credential Postgres Supabase di n8n VPS (centang "Ignore SSL Issues"), catat ID-nya dari URL.
+3. `node n8n-tambal.mjs /opt/panel-adiva <ID-credential>` — mengarahkan 82 node ke credential itu. Skrip hanya menyentuh node bertipe postgres, jadi workflow lama tidak ikut berubah.
+4. **Satu per satu, jangan sekaligus**: matikan workflow lama, baru nyalakan pasangan barunya. Jangan pernah dua-duanya aktif — webhook WAHA yang sama akan membuat customer **dibalas dua kali**, dan dua "Batas Bayar Order" akan membatalkan order yang sama.
+5. Setelah yang baru terbukti, workflow lama baru dihapus.
 
-lalu buka `http://127.0.0.1:3002`. Panel di VPS memanggil keduanya dengan `N8N_API_URL=http://host.docker.internal:5679` dan `WAHA_URL=http://host.docker.internal:3002`.
-
-WAHA Core sudah tidak punya batas sesi sejak split Core/Plus dihapus — dua nomor bot Bang Bana muat di image gratisnya, lengkap dengan pengiriman media.
-
-Setelah instance ini hidup: impor kedelapan workflow dari `2026-10-24-supabase/`, buat credential Postgres Supabase (dengan "Ignore SSL Issues" dicentang), lalu jalankan `n8n-tambal.mjs` seperti di bagian sebelumnya, baru aktifkan kelima workflow terjadwal.
+Sebelum menghapus yang lama, pastikan keduanya memakai **database yang sama**. Workflow baru sekarang menunjuk Supabase; kalau yang lama memakai database lain, menghapusnya berarti riwayat customer dan order terputus di titik itu.

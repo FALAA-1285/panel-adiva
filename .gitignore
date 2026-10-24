@@ -11,14 +11,12 @@
 /storage/*.key
 /storage/pail
 /vendor
-# Semua .env diabaikan, hanya contohnya yang ikut. Daftar nama satu per satu
-# terlalu mudah bocor: .env.produksi memuat kredensial Supabase, .env.bot memuat
-# kunci enkripsi n8n dan API key WAHA.
+# Semua .env diabaikan, hanya contohnya yang ikut. Mendaftar nama satu per satu
+# terlalu mudah bocor; .env.produksi memuat kredensial Supabase dan WAHA.
 .env
 .env.*
 !.env.example
 !.env.produksi.example
-!.env.bot.example
 .phpactor.json
 .phpunit.result.cache
 Homestead.json

@@ -41,6 +41,13 @@ class SinkronN8n extends Command
     ];
 
     /**
+     * Penanda di nama workflow yang dikendalikan panel, mis.
+     * "chatbot bangbana (main) (panel adiva)". Workflow bertanda ini selalu
+     * menang atas workflow lama bernama sama.
+     */
+    private const PENANDA = '(panel adiva)';
+
+    /**
      * Workflows that came after the panel's list, added once n8n has them:
      * kode => [name in n8n, jadwal, keterangan, deskripsi].
      *
@@ -84,8 +91,16 @@ class SinkronN8n extends Command
         }
 
         foreach (Workflow::query()->orderBy('id')->get() as $workflow) {
-            $n8n = collect($daftar)->firstWhere('id', $workflow->n8n_workflow_id)
-                ?? collect($daftar)->first(fn (array $w) => Str::contains(Str::lower($w['name']), Str::lower($workflow->nama)));
+            $namanya = fn (array $w) => Str::contains(Str::lower($w['name']), Str::lower($workflow->nama));
+
+            // Selama peralihan, n8n memuat dua generasi workflow dengan nama yang
+            // sama: yang lama (dioperasikan lewat perintah WhatsApp) dan yang baru
+            // (dikendalikan panel, diberi penanda di namanya). Tanpa aturan ini
+            // panel memilih mana saja yang kebetulan muncul duluan di balasan API,
+            // dan halaman Otomasi menampilkan workflow yang salah.
+            $n8n = collect($daftar)->first(fn (array $w) => $namanya($w) && Str::contains(Str::lower($w['name']), self::PENANDA))
+                ?? collect($daftar)->firstWhere('id', $workflow->n8n_workflow_id)
+                ?? collect($daftar)->first($namanya);
 
             if ($n8n === null) {
                 continue;

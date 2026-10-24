@@ -115,3 +115,47 @@ test('Unduh PDF serves the invoice n8n kept, and only to staff', function () {
 
     $this->actingAs($falah)->get('/pesanan/ORD-1')->assertInertia(fn (Assert $page) => $page->where('invoice.pdf', route('pesanan.invoice-pdf', 'ORD-1')));
 });
+
+test('during the handover the panel follows the workflow marked (panel adiva)', function () {
+    // n8n memuat dua generasi bernama sama: yang lama dioperasikan lewat perintah
+    // WhatsApp, yang baru dikendalikan panel
+    $chatbot = Workflow::factory()->create(['kode' => 'chatbot', 'nama' => 'chatbot bangbana (main)']);
+    $batas = Workflow::factory()->create(['kode' => 'batas_bayar', 'nama' => 'Batas Bayar Order']);
+
+    Http::fake([
+        'n8n.test/api/v1/workflows*' => Http::response(['data' => [
+            // yang lama disebut duluan: tanpa aturan penanda, ini yang terpilih
+            ['id' => 'LAMA', 'name' => 'chatbot bangbana (main)', 'active' => true, 'nodes' => []],
+            ['id' => 'PANEL', 'name' => 'chatbot bangbana (main) (panel adiva)', 'active' => false, 'nodes' => []],
+            // tidak punya pasangan bertanda: yang lama tetap dipakai
+            ['id' => 'ZVXm', 'name' => 'Bang Bana - Batas Bayar Order', 'active' => true, 'nodes' => []],
+        ]]),
+        'n8n.test/api/v1/executions*' => Http::response(['data' => []]),
+    ]);
+
+    $this->artisan('n8n:sinkron')->assertSuccessful();
+
+    expect($chatbot->refresh()->n8n_workflow_id)->toBe('PANEL')
+        ->and($chatbot->status)->toBe('NONAKTIF')
+        ->and($batas->refresh()->n8n_workflow_id)->toBe('ZVXm');
+});
+
+test('a workflow already bound to the old id switches once the marked one appears', function () {
+    $chatbot = Workflow::factory()->create([
+        'kode' => 'chatbot', 'nama' => 'chatbot bangbana (main)', 'n8n_workflow_id' => 'LAMA',
+    ]);
+
+    Http::fake([
+        'n8n.test/api/v1/workflows*' => Http::response(['data' => [
+            ['id' => 'LAMA', 'name' => 'chatbot bangbana (main)', 'active' => true, 'nodes' => []],
+            ['id' => 'PANEL', 'name' => 'chatbot bangbana (main) (panel adiva)', 'active' => true, 'nodes' => []],
+        ]]),
+        'n8n.test/api/v1/executions*' => Http::response(['data' => []]),
+    ]);
+
+    $this->artisan('n8n:sinkron')->assertSuccessful();
+
+    // penanda menang atas id yang sudah tersimpan, supaya peralihan tidak perlu
+    // mengosongkan kolomnya dengan tangan
+    expect($chatbot->refresh()->n8n_workflow_id)->toBe('PANEL');
+});

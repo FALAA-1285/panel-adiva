@@ -4,10 +4,8 @@ Panel berjalan di VPS yang sama dengan n8n dan WAHA. Database tetap di Supabase.
 
 | Yang sudah ada di VPS | Port |
 |---|---|
-| n8n **(proyek lain)** | 5678 |
-| WAHA **(proyek lain)** | 3001 → 3000 di container |
-| n8n Bang Bana (`compose.bot.yml`) | 127.0.0.1:5679 |
-| WAHA Bang Bana (`compose.bot.yml`) | 127.0.0.1:3002 |
+| n8n — Adiva yang sedang melayani | 5678 |
+| WAHA — nomor WhatsApp Adiva | 3001 → 3000 di container |
 | sandbox n8n | tidak dipublikasikan |
 | **panel (baru)** | **8080** |
 
@@ -130,14 +128,9 @@ panel.tokobangbana.com {
         encode zstd gzip
         reverse_proxy localhost:8080
 }
-
-n8n-bangbana.tokobangbana.com {
-        encode zstd gzip
-        reverse_proxy localhost:5679
-}
 ```
 
-Lalu arahkan A record kedua subdomain itu ke `158.220.117.56` dan muat ulang:
+Lalu arahkan A record subdomain itu ke `158.220.117.56` dan muat ulang:
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
@@ -146,14 +139,13 @@ systemctl reload caddy
 
 Caddy mengurus sertifikat Let's Encrypt sendiri — gratis, otomatis diperpanjang, tanpa konfigurasi tambahan.
 
-Container panel dan n8n Bang Bana sengaja hanya terikat `127.0.0.1`, jadi port 8080 dan 5679 tidak pernah terbuka ke internet; hanya Caddy yang menghadap keluar. `bootstrap/app.php` sudah memuat `trustProxies(at: '*')` dan `AppServiceProvider` memanggil `URL::forceScheme('https')` saat `APP_URL` berawalan `https://`, jadi tidak ada perubahan kode yang diperlukan.
+Container panel sengaja hanya terikat `127.0.0.1`, jadi port 8080 tidak pernah terbuka ke internet; hanya Caddy yang menghadap keluar. `bootstrap/app.php` sudah memuat `trustProxies(at: '*')` dan `AppServiceProvider` memanggil `URL::forceScheme('https')` saat `APP_URL` berawalan `https://`, jadi tidak ada perubahan kode yang diperlukan.
 
 Setelah HTTPS hidup, pastikan `.env.produksi` memakai `APP_URL=https://panel.tokobangbana.com` dan `SESSION_SECURE_COOKIE=true`. Kalau nilai kedua itu `true` sementara panel masih diakses lewat `http://` polos, browser menolak mengirim cookie dan **login selalu gagal tanpa pesan yang masuk akal**.
 
 ### Dua hal yang perlu Anda periksa
 
-1. **`n8n.tokobangbana.com` saat ini menunjuk n8n proyek lain** (`localhost:5678`). Subdomain itu memakai domain Bang Bana tapi melayani proyek lain. Kalau itu tidak disengaja, pemetaannya perlu ditukar.
-2. **WAHA (3001) milik proyek lain masih terbuka langsung ke internet tanpa TLS**, di luar Caddy. Sebaiknya ikut dipindah ke belakang Caddy lalu portnya ditutup:
+1. **WAHA (3001) masih terbuka langsung ke internet tanpa TLS**, di luar Caddy. Ia memegang sesi WhatsApp yang sedang melayani customer. Sebaiknya dipindah ke belakang Caddy lalu portnya ditutup:
    ```bash
    ufw deny 3001/tcp
    ufw deny 5678/tcp
@@ -171,14 +163,15 @@ Yang akan ditambahkan Bang Bana, dengan batas yang dipasang di compose:
 
 | Container | `mem_limit` | Perkiraan nyata |
 |---|---|---|
-| `bangbana-waha` | 2 GB | ±700 MB per sesi WhatsApp; engine WEBJS menjalankan satu Chromium per nomor |
-| `bangbana-n8n` | 768 MB | ±400 MB |
 | `panel-worker` | 512 MB | ±150 MB |
 | `panel-cron` | 512 MB | ±100 MB |
+| `panel-web` (kalau dipakai) | 512 MB | ±250 MB |
+
+n8n dan WAHA tidak ditambah: workflow panel diimpor ke n8n yang sudah ada, dan nomor WhatsApp-nya tetap di WAHA yang sudah ada. `docker stats` menunjukkan keduanya memakai 656 MB dan 2,25 GB.
 
 Batas itu adalah langit-langit, bukan jatah yang dikunci, jadi pemakaian sebenarnya jauh di bawahnya. Tetap muat di 4,5 GB yang tersedia.
 
-**Pasang swap 2 GB sebelum menjalankan apa pun.** Tanpa swap, lonjakan memori sesaat langsung memicu OOM killer kernel, dan kernel memilih korbannya sendiri berdasarkan skor — bisa jatuh ke n8n proyek lain, bukan ke container yang menyebabkan lonjakan. Chromium di WAHA membuat lonjakan itu bukan hipotetis.
+**Pasang swap 2 GB sebelum menjalankan apa pun.** Tanpa swap, lonjakan memori sesaat langsung memicu OOM killer kernel, dan kernel memilih korbannya sendiri berdasarkan skor — bisa jatuh ke n8n atau WAHA yang sedang melayani customer, bukan ke container yang menyebabkan lonjakan. Chromium di WAHA membuat lonjakan itu bukan hipotetis.
 
 ```bash
 fallocate -l 2G /swapfile
