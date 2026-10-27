@@ -6,11 +6,8 @@ use App\Bot\KirimKeStaf;
 use App\Bot\PengirimanGagal;
 use App\Enums\KategoriAktivitas;
 use App\Enums\Peran;
-use App\Enums\SumberAktivitas;
 use App\Http\Requests\SimpanKeamananRequest;
 use App\Http\Requests\SimpanStafRequest;
-use App\Jobs\KabariKonfigN8n;
-use App\Models\ActivityLog;
 use App\Models\User;
 use App\Support\Aktivitas;
 use App\Support\HakAkses;
@@ -224,24 +221,6 @@ class TimController extends Controller
     }
 
     /**
-     * "Keluarkan" on a WhatsApp row: n8n refuses admin commands from this number until
-     * the staff member signs in to the panel again (App\Listeners\CatatMasuk).
-     */
-    public function keluarkanWhatsapp(Request $request, User $user): RedirectResponse
-    {
-        $oleh = $request->user() ?? abort(403);
-        $user->forceFill(['wa_dicabut_at' => now()])->save();
-
-        Aktivitas::catat($oleh, KategoriAktivitas::Login, 'Keluarkan dari WhatsApp', trim("{$user->name} · WhatsApp ".$this->nomor($user)), $user);
-        // n8n's "Cek Apakah Admin" reads users.wa_dicabut_at itself; this is only a notice
-        KabariKonfigN8n::dispatch('AKSES_ADMIN_WA', ['user_id' => $user->id, 'nomor_wa' => $user->nomor_wa, 'dicabut' => true]);
-
-        Inertia::flash('toast', "{$user->name} dikeluarkan dari WhatsApp.");
-
-        return back();
-    }
-
-    /**
      * Staff numbers show two digits; the PJ karyawan number (SARAH_WA) shows four,
      * as on Karyawan and Settings.
      */
@@ -330,42 +309,12 @@ class TimController extends Controller
             })
             ->filter();
 
-        $whatsapp = ActivityLog::query()
-            ->where('sumber', SumberAktivitas::WhatsApp)
-            ->whereIn('user_id', $staf->keys())
-            ->where('waktu', '>=', $batas)
-            ->toBase()
-            ->selectRaw('user_id, max(waktu) as waktu')
-            ->groupBy('user_id')
-            ->get()
-            // taken away with "Keluarkan" until they sign in again
-            ->reject(fn (object $baris) => ($staf->get($baris->user_id)?->wa_dicabut_at) !== null)
-            ->map(function (object $baris) use ($staf) {
-                $user = $staf->get($baris->user_id);
-                if (! $user) {
-                    return null;
-                }
-
-                return [
-                    'kunci' => "whatsapp-{$user->id}",
-                    'jenis' => 'whatsapp',
-                    'userId' => $user->id,
-                    'perangkat' => null,
-                    'judul' => trim("{$user->name} · WhatsApp ".$this->nomor($user)),
-                    'keterangan' => 'Perintah admin',
-                    'ini' => false,
-                    'waktu' => Date::parse($baris->waktu)->getTimestamp(),
-                ];
-            })
-            ->filter();
-
         $saya = $request->user()?->id;
 
         $urut = $web->values()
-            ->concat($whatsapp)
             ->groupBy('userId')
             ->sortBy(fn (Collection $baris, int $userId) => [$userId === $saya ? 0 : 1, -$baris->max('waktu')])
-            ->flatMap(fn (Collection $baris) => $baris->sortBy(fn (array $s) => [! $s['ini'], $s['jenis'] === 'whatsapp', -$s['waktu']]))
+            ->flatMap(fn (Collection $baris) => $baris->sortBy(fn (array $s) => [! $s['ini'], -$s['waktu']]))
             ->map(fn (array $s) => collect($s)->except('waktu')->all());
 
         return array_values($urut->all());

@@ -16,7 +16,6 @@ import { Avatar, Mono, Note, T1, T2 } from '@/components/ui/teks';
 import { cn } from '@/lib/utils';
 import { keamanan } from '@/routes/tim';
 import { keluarkan } from '@/routes/tim/sesi';
-import { keluarkan as keluarkanWhatsapp } from '@/routes/tim/whatsapp';
 
 type Staf = {
     id: number;
@@ -174,7 +173,7 @@ export default function Tim({
                 )}
                 <Panel
                     judul={`${staf.length} orang`}
-                    sub="Nomor WhatsApp di sini = daftar ADMIN_STAFF: pesan dari nomor ini dibaca sebagai perintah admin, bukan chat customer"
+                    sub="Nomor WhatsApp di sini dikenali bot sebagai staf: pesannya tidak dijawab Adiva. Semua perintah dijalankan dari panel."
                     isiClassName="p-0"
                 >
                     <DataTable
@@ -224,12 +223,9 @@ export default function Tim({
                             </div>
                         ))}
                         <Note nada="amber">
-                            Di WhatsApp, workflow saat ini memperlakukan semua
-                            nomor di daftar staf (ADMIN_STAFF) dan nomor
-                            supervisor (ADMIN_WA) sama: semua boleh mengirim
-                            ACC, JEDA, CATAT, dan perintah lain. Pembatasan per
-                            peran di WhatsApp butuh tambahan di node Cek Apakah
-                            Admin.
+                            Perintah yang diketik di WhatsApp (ACC, JEDA, CATAT,
+                            …) tidak dijalankan; staf diarahkan ke panel. Jadi
+                            hak akses di atas berlaku untuk semua perintah.
                         </Note>
                     </Panel>
                     <Panel
@@ -251,15 +247,6 @@ export default function Tim({
 
 function BarisSesi({ sesi }: { sesi: Sesi }) {
     const keluar = () => {
-        // WhatsApp: n8n refuses this number's admin commands until the next panel sign-in
-        if (sesi.jenis === 'whatsapp') {
-            router.delete(keluarkanWhatsapp.url(sesi.userId), {
-                preserveScroll: true,
-            });
-
-            return;
-        }
-
         router.delete(keluarkan.url(sesi.userId), {
             data: { perangkat: sesi.perangkat },
             preserveScroll: true,

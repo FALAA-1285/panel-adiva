@@ -172,7 +172,7 @@ export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
             <PageHeader
                 rapat
                 judul="Pesanan"
-                sub="Setiap tombol di sini sama dengan perintah admin di WhatsApp, dengan urutan yang sama"
+                sub="Perintah order dijalankan dari sini, dengan urutan yang sama seperti workflow"
                 aksi={
                     <>
                         <Button
@@ -296,7 +296,7 @@ function BarisPesanan({
                 // phones: order + total on top, customer and status under them
                 'max-md:grid-cols-[minmax(0,1fr)_auto] max-md:gap-y-1.5',
                 dipilih
-                    ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                    ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                     : 'bg-surface hover:bg-subtle',
                 'motion-safe:transition-colors motion-safe:duration-150',
             )}

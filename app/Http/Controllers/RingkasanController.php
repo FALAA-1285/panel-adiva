@@ -68,15 +68,15 @@ class RingkasanController extends Controller
     ];
 
     /**
-     * Tipe customer colours (Main.dc.html).
+     * Tipe customer colours: shades of blue, slate for the employees and grey for the unsure.
      *
      * @var array<string, string>
      */
     private const WARNA_TIPE = [
         'RETAIL' => '#1D4ED8',
         'RESELLER' => '#60A5FA',
-        'BELUM_JELAS' => '#D1D5DB',
-        'KARYAWAN' => '#1E3A8A',
+        'BELUM_JELAS' => '#CBD5E1',
+        'KARYAWAN' => '#64748B',
     ];
 
     public function index(Request $request): Response

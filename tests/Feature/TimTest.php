@@ -1,9 +1,6 @@
 <?php
 
-use App\Enums\KategoriAktivitas;
 use App\Enums\Peran;
-use App\Enums\SumberAktivitas;
-use App\Models\ActivityLog;
 use App\Models\ConfigToko;
 use App\Models\User;
 use App\Support\PengaturanKeamanan;
@@ -76,7 +73,7 @@ test('the access table ticks the roles allowed for each action', function () {
             ]));
 });
 
-test('open sessions list this session first, one row per device, then WhatsApp admin use', function () {
+test('open sessions list this session first, one row per device, ', function () {
     config(['session.driver' => 'database']);
 
     $falah = User::factory()->supervisor()->create(['name' => 'Falah', 'cabang' => 'Malang', 'nomor_wa' => '6281234560007']);
@@ -86,22 +83,18 @@ test('open sessions list this session first, one row per device, then WhatsApp a
     SesiPanel::buat($falah, UserAgent::WINDOWS, '-1 hour');
     SesiPanel::buat($dina, UserAgent::ANDROID, '-5 hours');
     SesiPanel::buat($dina, UserAgent::FIREFOX, '-13 hours');
-    ActivityLog::factory()->oleh($falah, SumberAktivitas::WhatsApp)->kategori(KategoriAktivitas::Jeda)
-        ->create(['waktu' => now()->subHours(3), 'aksi' => 'JEDA customer']);
 
     $this->actingAs($falah)
         ->withCookie(config('session.cookie'), $ini)
         ->get('/tim')
         ->assertInertia(fn (Assert $page) => $page
-            ->has('sesi', 3)
+            ->has('sesi', 2)
             ->where('sesi.0.judul', 'Falah · Chrome · Windows · Malang')
             ->where('sesi.0.keterangan', 'Sesi ini')
             ->where('sesi.0.ini', true)
-            ->where('sesi.1.judul', 'Falah · WhatsApp 0812-••••-••07')
-            ->where('sesi.1.keterangan', 'Perintah admin')
-            ->where('sesi.2.judul', 'Dina · Chrome · Android · Malang')
-            ->where('sesi.2.keterangan', '5 jam lalu')
-            ->where('sesi.2.perangkat', 'Chrome · Android'));
+            ->where('sesi.1.judul', 'Dina · Chrome · Android · Malang')
+            ->where('sesi.1.keterangan', '5 jam lalu')
+            ->where('sesi.1.perangkat', 'Chrome · Android'));
 });
 
 test('Keluarkan ends one staff member\'s sessions on one device', function () {

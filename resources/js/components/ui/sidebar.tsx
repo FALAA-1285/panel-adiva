@@ -183,10 +183,7 @@ type SidebarProps = {
     panel: Panel;
     /** "Ciutkan sidebar" on wide screens: icons only, 64px wide (not in the design; off by default). */
     ciut?: boolean;
-    /**
-     * Below 1280px the sidebar shows icons only unless widened ("Lebarkan sidebar"),
-     * and below 1024px it is a drawer over the page (not in the design).
-     */
+    /** Kept for the component preview; the sidebar is full from 1024px unless collapsed. */
     lebar?: boolean;
     laci?: boolean;
     onTutupLaci?: () => void;
@@ -198,18 +195,16 @@ type SidebarProps = {
  * Which parts show, as classes, so the first paint is right on every screen:
  * `penuh` = labels, counts and the status block; `ikon` = their icon-only stand-ins.
  */
-function kelasMode(ciut: boolean, lebar: boolean, tetap: boolean) {
+function kelasMode(ciut: boolean, tetap: boolean) {
     if (tetap) {
         return { penuh: ciut ? 'hidden' : '', ikon: ciut ? '' : 'hidden' };
     }
 
+    // from 1024px the menu shows its names unless collapsed (Audit: icons alone left
+    // new staff guessing); below 1024px it is a drawer with names
     return {
-        penuh: cn(ciut && 'xl:hidden', !lebar && 'lg:max-xl:hidden'),
-        ikon: cn(
-            !ciut && 'xl:hidden',
-            lebar && 'lg:max-xl:hidden',
-            'max-lg:hidden',
-        ),
+        penuh: cn(ciut && 'lg:hidden'),
+        ikon: cn(!ciut && 'lg:hidden', 'max-lg:hidden'),
     };
 }
 
@@ -217,13 +212,12 @@ export function Sidebar({
     active,
     panel,
     ciut = false,
-    lebar = false,
     laci = false,
     onTutupLaci,
     tetap = false,
 }: SidebarProps) {
     const { hitungan, status, pengguna, akses } = panel;
-    const mode = kelasMode(ciut, lebar, tetap);
+    const mode = kelasMode(ciut, tetap);
 
     return (
         <nav
@@ -231,10 +225,9 @@ export function Sidebar({
             aria-label="Menu utama"
             onKeyDown={(e) => e.key === 'Escape' && onTutupLaci?.()}
             className={cn(
-                'box-border flex h-full shrink-0 flex-col gap-[18px] border-r border-line bg-subtle px-3 pt-4 pb-3 font-sans text-ink-2',
+                'box-border flex h-full shrink-0 flex-col gap-[18px] overflow-y-auto border-r border-line bg-latar px-3 pt-3 pb-3 font-sans text-ink-2',
                 ciut ? 'w-16' : 'w-[248px]',
                 !tetap && [
-                    lebar ? 'lg:max-xl:w-[248px]' : 'lg:max-xl:w-16',
                     // the drawer: over the page, scrolls on short phones
                     'max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-40 max-lg:w-[280px] max-lg:max-w-[85vw] max-lg:overflow-y-auto',
                     'motion-safe:max-lg:transition-[translate,visibility] motion-safe:max-lg:duration-200',
@@ -247,11 +240,14 @@ export function Sidebar({
             <Link
                 href={home.url()}
                 aria-label="Bang Bana — ke Ringkasan"
-                className="flex items-center gap-2.5 px-2 pt-0.5 pb-1.5 text-ink no-underline"
+                className={cn(
+                    'flex items-center gap-2.5 rounded-ikon p-2 text-ink no-underline',
+                    !ciut && 'bg-subtle',
+                )}
             >
                 <span
                     aria-hidden="true"
-                    className="flex size-[30px] shrink-0 items-center justify-center rounded-nav bg-brand text-caption font-bold tracking-[-0.02em] text-white"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-linear-135 from-brand-from to-brand text-caption font-bold tracking-[-0.02em] text-white shadow-utama"
                 >
                     BB
                 </span>
@@ -262,7 +258,7 @@ export function Sidebar({
                         Bang Bana
                     </span>
                     <span className="text-caption whitespace-nowrap text-muted">
-                        Panel admin Adiva
+                        Panel Adiva
                     </span>
                 </span>
             </Link>
@@ -307,7 +303,7 @@ export function Sidebar({
                                     aria-label={judulTooltip}
                                     title={judulTooltip}
                                     className={cn(
-                                        'relative flex h-8.5 items-center gap-2.5 rounded-nav px-2.5 text-body no-underline motion-safe:transition-colors motion-safe:duration-150',
+                                        'relative flex h-9 items-center gap-2.5 rounded-nav px-2.5 text-body no-underline motion-safe:transition-colors motion-safe:duration-150',
                                         item.kode === active
                                             ? 'bg-nav-active font-semibold text-primary-ink'
                                             : 'bg-transparent font-medium text-ink-2 hover:bg-line-softer hover:text-ink',
@@ -383,10 +379,16 @@ export function Sidebar({
                                 {statusTeks}
                             </div>
                             <div className="text-caption leading-[1.45] text-muted">
-                                {status.nomorWaha} nomor WAHA · {status.workflowAktif}{' '}
-                                workflow aktif
-                                <br />
-                                {status.dijeda} customer sedang dijeda
+                                {aktif
+                                    ? 'Membalas chat customer'
+                                    : 'Chat dibalas admin dulu'}
+                                {status.dijeda > 0 && (
+                                    <>
+                                        <br />
+                                        {status.dijeda} customer diambil alih
+                                        admin
+                                    </>
+                                )}
                             </div>
                         </div>
                     </>
@@ -398,10 +400,7 @@ export function Sidebar({
                     'flex items-center gap-2.5 border-t border-line px-2 pt-2.5',
                     tetap
                         ? ciut && 'flex-col px-0'
-                        : [
-                              ciut && 'xl:flex-col xl:px-0',
-                              !lebar && 'lg:max-xl:flex-col lg:max-xl:px-0',
-                          ],
+                        : ciut && 'lg:flex-col lg:px-0',
                 )}
             >
                 <span

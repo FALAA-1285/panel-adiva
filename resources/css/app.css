@@ -14,51 +14,73 @@
     --font-sans: 'Geist', sans-serif;
     --font-mono: 'Geist Mono', monospace;
 
-    /* ---- teks & garis (abu) */
-    --color-ink: #111827; /* teks utama, judul */
-    --color-ink-2: #374151; /* teks isi sekunder, ikon nav */
-    --color-ink-3: #4b5563; /* teks isi tersier */
-    --color-muted: #6b7280; /* label, sub-judul, meta */
-    --color-faint: #9ca3af; /* placeholder, dot abu */
-    --color-line: #e5e7eb; /* border panel, pemisah utama */
-    --color-line-strong: #d1d5db; /* border input & tombol sekunder */
-    --color-line-soft: #f1f2f4; /* garis antar baris tabel/list */
-    --color-line-softer: #f3f4f6; /* pemisah halus, latar tag */
-    --color-line-quiet: #eef0f2; /* border kotak pratinjau pesan */
+    /*
+     * ---- palet biru (Audit Panel Adiva, bagian D, dengan aksen biru)
+     * 60% netral terang (latar, kartu, garis), 30% abu kebiruan (teks, struktur),
+     * 10% biru hanya di titik penting: satu tombol utama per layar, menu aktif,
+     * badge, tautan. Nada netral memakai slate.
+     * Semua pasangan teks lolos WCAG AA (>= 4,5:1), komponen >= 3:1.
+     */
+
+    /* ---- teks & garis (slate) */
+    --color-ink: #0f172a; /* teks utama, judul · 17,4:1 */
+    --color-ink-2: #334155; /* teks isi sekunder, ikon nav · 10,4:1 */
+    --color-ink-3: #475569; /* teks isi tersier · 7,4:1 */
+    --color-muted: #64748b; /* label, sub-judul, meta · 4,6:1 */
+    --color-faint: #64748b; /* placeholder, tanggal, teks nonaktif (dulu #9ca3af, 2,5:1) */
+    --color-line: #e1e7ef; /* garis kartu, pemisah utama */
+    --color-line-strong: #cbd5e1; /* garis tombol sekunder */
+    --color-line-control: #7a8699; /* bingkai kotak isian & checkbox · 3,7:1 */
+    --color-line-soft: #eef2f6; /* garis antar baris tabel/list */
+    --color-line-softer: #f1f5f9; /* pemisah halus, latar tag */
+    --color-line-quiet: #eef2f6; /* border kotak pratinjau pesan */
 
     /* ---- permukaan */
-    --color-surface: #ffffff;
-    --color-subtle: #f9fafb; /* sidebar, header tabel, field read-only */
-    --color-selected: #f5f8ff; /* baris terpilih (+ garis kiri 2px primary) */
+    --color-latar: #fcfcfd; /* latar halaman dan sidebar */
+    --color-surface: #ffffff; /* kartu, tabel, modal */
+    --color-subtle: #f1f5f9; /* kepala tabel, kotak cari, kotak ikon netral */
+    --color-selected: #f5f8ff; /* baris terpilih (+ garis kiri 3px primary) */
     --color-unread: #fafbff; /* notifikasi belum dibaca */
     --color-wa-bg: #efeae2; /* latar pratinjau WhatsApp */
 
     /* ---- biru utama */
-    --color-primary: #2563eb;
-    --color-primary-ink: #1d4ed8; /* teks biru, hover link, nav aktif */
-    --color-primary-soft: #eff6ff; /* latar pilihan aktif (segmented) */
-    --color-primary-line: #bfdbfe;
+    --color-primary: #2563eb; /* tombol utama, badge · teks putih 5,2:1 */
+    --color-primary-ink: #1d4ed8; /* teks tautan, menu aktif, tombol ditekan · 6,7:1 */
+    --color-primary-soft: #eff6ff; /* latar pilihan aktif, kotak ikon utama */
+    --color-primary-line: #bfdbfe; /* garis pilihan aktif, kartu utama */
     --color-nav-active: #eaf1ff; /* latar item sidebar aktif */
-    --color-brand: #1d4ed8; /* kotak logo "BB" */
+    --color-brand: #1d4ed8; /* kotak logo "BB" (ujung gelap gradasi) */
+    --color-brand-from: #3b82f6; /* kotak logo "BB" (ujung terang gradasi) */
+    --color-accent: #3b82f6; /* cincin fokus, siluet, gradasi · hanya non-teks */
+    --color-chart: #2563eb; /* seri utama grafik */
+    --color-chart-2: #64748b; /* seri pembanding */
 
     /* ---- nada status: teks / titik */
     --color-blue-text: #1d4ed8;
     --color-blue-dot: #3b82f6;
     --color-amber-text: #b45309;
     --color-amber-dot: #f59e0b;
-    --color-green-text: #15803d;
-    --color-green-dot: #16a34a;
+    --color-green-text: #047857;
+    --color-green-dot: #10b981;
     --color-red-text: #b91c1c;
     --color-red-dot: #dc2626;
-    --color-gray-text: #4b5563;
-    --color-gray-dot: #9ca3af;
+    --color-gray-text: #475569;
+    --color-gray-dot: #94a3b8;
     --color-violet-text: #6d28d9;
     --color-violet-dot: #8b5cf6;
 
+    /* ---- latar pil status */
+    --color-blue-bg: #eff6ff;
+    --color-amber-bg: #fffbeb;
+    --color-green-bg: #ecfdf5;
+    --color-red-bg: #fef2f2;
+    --color-gray-bg: #f1f5f9;
+    --color-violet-bg: #f5f3ff;
+
     /* ---- kotak catatan (note): latar / border / teks */
-    --color-note-gray-bg: #f9fafb;
-    --color-note-gray-line: #e5e7eb;
-    --color-note-gray-text: #374151;
+    --color-note-gray-bg: #f8fafc;
+    --color-note-gray-line: #e1e7ef;
+    --color-note-gray-text: #334155;
     --color-note-blue-bg: #eff6ff;
     --color-note-blue-line: #bfdbfe;
     --color-note-blue-text: #1e3a8a;
@@ -68,53 +90,72 @@
     --color-note-red-bg: #fef2f2;
     --color-note-red-line: #fecaca;
     --color-note-red-text: #7f1d1d;
-    --color-ok-bg: #f0fdf4;
-    --color-ok-line: #bbf7d0;
-    --color-ok-text: #14532d;
+    --color-ok-bg: #ecfdf5;
+    --color-ok-line: #a7f3d0;
+    --color-ok-text: #064e3b;
 
     /*
      * ---- ukuran teks
-     * Skala utama 7 langkah: 11,5 · 12 · 13 · 14,5 · 17 · 22 · 24.
-     * Sebelumnya desain memakai 20 ukuran dengan jarak 0,5 px (13,5 / 14 / 14,5),
-     * yang tidak terbaca sebagai beda tingkat — lihat docs/audit-kepadatan.md §1.1.
-     * Di luar skala utama hanya ada tiga kelompok yang memang beda keperluan:
-     * kunci CONFIG_TOKO (mono), lembar invoice (A4 diperkecil), dan panel kiri Masuk.
+     * Skala 7 langkah: 12 · 13 · 14 · 16 · 18 · 26 · 28 (Audit Panel Adiva: teks isi
+     * minimal 14 px, keterangan minimal 12 px, judul halaman 24–26 px). Di luar
+     * skala hanya ukuran yang memang beda keperluan: lembar invoice (A4 diperkecil),
+     * kunci CONFIG_TOKO (mono), dan panel kiri Masuk.
      */
     /* drop Tailwind's default sizes: they bring a --text-base--line-height of 1.5 */
     --text-*: initial;
     --text-nota-mini: 9.5px; /* lembar invoice: label kolom, catatan kaki */
     --text-nota: 10px; /* lembar invoice: isi */
-    --text-key: 10.5px; /* kunci CONFIG_TOKO (mono) */
-    --text-tag: 11.5px; /* tag, badge angka */
-    --text-caption: 12px; /* label tabel, hint, grup sidebar, meta, status */
-    --text-body: 13px; /* isi, tombol md, nav, sub-judul halaman */
-    --text-panel: 14.5px; /* judul panel (h2), nama di daftar */
-    --text-judul: 17px; /* nama customer/kampanye, judul langkah formulir */
-    --text-page: 22px; /* judul halaman (h1), letter-spacing -0.015em */
-    --text-stat: 24px; /* angka di strip statistik */
+    --text-key: 11px; /* kunci CONFIG_TOKO (mono) */
+    --text-tag: 12px; /* tag, badge angka */
+    --text-caption: 13px; /* label tabel, hint, grup sidebar, meta, status */
+    --text-body: 14px; /* isi, tombol md, nav, sub-judul halaman */
+    --text-panel: 16px; /* judul panel (h2), nama di daftar */
+    --text-judul: 18px; /* nama customer/kampanye, judul langkah formulir */
+    --text-page: 26px; /* judul halaman (h1), letter-spacing -0.02em */
+    --text-stat: 28px; /* angka di strip statistik */
     --text-display-sm: 36px; /* panel kiri Masuk di bawah 1280 px */
     --text-display: 44px; /* panel kiri Masuk */
 
     /* ---- radius */
-    --radius-tag: 5px;
-    --radius-chip: 6px;
-    --radius-nav: 7px; /* item sidebar, segmented */
-    --radius-control: 8px; /* tombol, input, kotak kecil */
-    --radius-card: 10px; /* panel, strip statistik */
+    --radius-tag: 6px;
+    --radius-chip: 8px;
+    --radius-nav: 10px; /* item sidebar, segmented */
+    --radius-control: 10px; /* tombol, input, kotak kecil */
+    --radius-ikon: 12px; /* kotak ikon */
+    --radius-card: 16px; /* panel, kartu, strip statistik */
+
+    /* ---- bayangan: kartu sedikit terangkat dari latar */
+    --shadow-kartu: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
+    --shadow-utama: 0 4px 12px rgb(236 72 153 / 0.3); /* tombol utama */
 }
 
 @layer base {
     body {
         margin: 0;
-        background: var(--color-surface);
+        background: var(--color-latar);
         color: var(--color-ink);
         font-family: var(--font-sans);
     }
     a {
-        color: var(--color-primary);
+        color: var(--color-primary-ink);
     }
     a:hover {
         color: var(--color-primary-ink);
+    }
+
+    /*
+     * Cincin fokus untuk papan ketik: 2 px biru cerah berjarak 2 px, di semua
+     * elemen interaktif (Audit: dulu hanya garis tipis bawaan, kotak isian tanpa tanda).
+     */
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+        outline-offset: 0;
+        border-color: var(--color-primary);
     }
     button,
     input,
@@ -133,6 +174,15 @@
      */
     html {
         line-height: normal;
+    }
+}
+
+/* a box around a borderless input (search, tags, codes) shows its keyboard focus */
+@utility fokus-bingkai {
+    &:has(:focus-visible) {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+        border-color: var(--color-primary);
     }
 }
 

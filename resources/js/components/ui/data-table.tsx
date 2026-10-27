@@ -118,7 +118,7 @@ export function DataTable<TData extends RowData>({
                     const kelas = cn(
                         'grid w-full items-center gap-4 border-b border-line-soft px-[18px] py-[11px] text-left text-ink',
                         aktif
-                            ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                            ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                             : 'bg-surface',
                         onPilih && !aktif && 'hover:bg-subtle',
                         'motion-safe:transition-colors motion-safe:duration-150',

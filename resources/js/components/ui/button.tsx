@@ -14,7 +14,7 @@ const ukuranKelas: Record<Ukuran, string> = {
 // hover states are not in the design (it is drawn at rest); they reuse its colours
 const varianKelas: Record<Varian, string> = {
     primary:
-        'border border-primary bg-primary text-white hover:border-primary-ink hover:bg-primary-ink hover:text-white',
+        'border border-primary bg-primary text-white shadow-utama hover:border-primary-ink hover:bg-primary-ink hover:text-white active:bg-primary-ink',
     secondary:
         'border border-line-strong bg-surface text-ink hover:bg-subtle hover:text-ink',
     danger: 'border border-line bg-surface text-red-text hover:border-note-red-line hover:bg-note-red-bg hover:text-red-text',

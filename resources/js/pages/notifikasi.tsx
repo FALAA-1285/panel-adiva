@@ -142,7 +142,7 @@ function BarisNotifikasi({ notifikasi: n }: { notifikasi: Notifikasi }) {
                 'grid grid-cols-[8px_minmax(0,1fr)_60px_auto] items-start gap-3.5 border-b border-line-soft px-[18px] py-3.5',
                 // phones: the button goes under the text
                 'max-md:grid-cols-[8px_minmax(0,1fr)_auto] max-md:gap-x-3 max-md:gap-y-2',
-                'outline-none focus-visible:shadow-[inset_2px_0_0_var(--color-primary)]',
+                'outline-none focus-visible:shadow-[inset_3px_0_0_var(--color-primary)]',
                 n.dibaca ? 'bg-surface' : 'bg-unread',
             )}
         >

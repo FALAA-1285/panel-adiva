@@ -103,7 +103,7 @@ export default function KatalogKebijakan({
                                     className={cn(
                                         'flex w-full cursor-pointer flex-col gap-[3px] border-0 border-b border-line-soft px-4 py-[11px] text-left text-ink',
                                         aktif
-                                            ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                                            ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                                             : 'bg-surface',
                                     )}
                                 >

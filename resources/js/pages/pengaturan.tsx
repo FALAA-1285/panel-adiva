@@ -240,7 +240,7 @@ export default function Pengaturan({
                 className={cn(
                     'items-start gap-5 pb-8',
                     tabAktif === 'semua'
-                        ? 'grid grid-cols-2 max-lg:grid-cols-1'
+                        ? 'grid grid-cols-2 max-xl:grid-cols-1'
                         : 'flex max-w-4xl flex-col',
                 )}
             >

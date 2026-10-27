@@ -197,7 +197,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/tim', [TimController::class, 'index'])->name('tim');
         Route::patch('/tim/keamanan', [TimController::class, 'simpanKeamanan'])->name('tim.keamanan');
         Route::delete('/tim/{user}/sesi', [TimController::class, 'keluarkan'])->name('tim.sesi.keluarkan');
-        Route::delete('/tim/{user}/whatsapp', [TimController::class, 'keluarkanWhatsapp'])->name('tim.whatsapp.keluarkan');
         Route::post('/tim/staf', [TimController::class, 'undang'])->name('tim.staf.undang');
         Route::put('/tim/staf/{user}', [TimController::class, 'ubah'])->name('tim.staf.ubah');
         Route::post('/tim/staf/{user}/nonaktif', [TimController::class, 'nonaktifkan'])->name('tim.staf.nonaktif');

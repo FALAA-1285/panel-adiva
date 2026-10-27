@@ -225,7 +225,7 @@ function BarisKampanye({ baris, terpilih, onPilih }: BarisKampanyeProps) {
                 'grid w-full cursor-pointer items-center gap-2.5 border-0 border-b border-line-softer px-[18px] py-3 text-ink',
                 kolom,
                 terpilih
-                    ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                    ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                     : 'bg-surface hover:bg-subtle',
                 'motion-safe:transition-colors motion-safe:duration-150',
             )}

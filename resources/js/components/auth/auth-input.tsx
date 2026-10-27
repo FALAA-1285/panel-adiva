@@ -5,7 +5,7 @@ import type { NamaIkon } from '@/components/ui/ikon';
 import { cn } from '@/lib/utils';
 
 const kotak =
-    'box-border flex h-11 items-center gap-2.5 rounded-control border border-line-strong bg-surface text-muted';
+    'fokus-bingkai box-border flex h-11 items-center gap-2.5 rounded-control border border-line-control bg-surface text-muted';
 
 // px-0.5 py-px = the browser's default input padding the design relies on
 const isian =

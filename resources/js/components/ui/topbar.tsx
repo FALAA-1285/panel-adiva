@@ -109,7 +109,7 @@ export function Topbar({
             </button>
             <label
                 className={cn(
-                    'box-border flex h-9 w-[380px] items-center gap-2 rounded-control border border-line bg-subtle pr-1.5 pl-[11px] text-muted',
+                    'fokus-bingkai box-border flex h-9 w-[380px] items-center gap-2 rounded-control border border-line bg-latar pr-1.5 pl-[11px] text-muted',
                     'focus-within:border-line-strong focus-within:bg-surface motion-safe:transition-colors',
                     'max-lg:w-auto max-lg:max-w-[380px] max-lg:grow',
                     // phones: hidden behind the search icon, then over the whole bar

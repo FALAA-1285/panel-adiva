@@ -90,7 +90,7 @@ const warnaSkor: Record<string, string> = {
     COLD: 'text-muted',
 };
 
-/** The dots in Aktivitas (Customer.dc.html: #2563EB, #9CA3AF, #15803D). */
+/** The dots in Aktivitas: blue, grey, green. */
 const warnaTitik: Record<string, string> = {
     blue: 'bg-primary',
     green: 'bg-green-text',
@@ -232,7 +232,7 @@ export default function Pelanggan({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 py-3.5">
-                        <label className="box-border flex h-10 items-center gap-2 rounded-control border border-line-strong px-3 text-muted">
+                        <label className="fokus-bingkai box-border flex h-10 items-center gap-2 rounded-control border border-line-control px-3 text-muted">
                             <Ikon nama="cari" tebal={2} />
                             <input
                                 type="search"
@@ -295,7 +295,7 @@ export default function Pelanggan({
                                     className={cn(
                                         'flex w-full cursor-pointer items-center gap-2.5 border-0 border-b border-line-softer px-4 py-[11px] text-left text-ink',
                                         aktif
-                                            ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                                            ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                                             : 'bg-surface hover:bg-subtle',
                                         'motion-safe:transition-colors motion-safe:duration-150',
                                     )}
@@ -540,7 +540,7 @@ function ProfilPelanggan({
                                     l.selesai
                                         ? 'bg-primary'
                                         : l.dilewati
-                                          ? 'bg-[#DBEAFE]'
+                                          ? 'bg-primary-line'
                                           : 'bg-line',
                                 )}
                             />

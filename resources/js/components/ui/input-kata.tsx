@@ -21,7 +21,7 @@ const gaya: Record<
     { kotak: string; chip: string; hapus: string; input: string }
 > = {
     kebijakan: {
-        kotak: 'box-border flex min-h-[38px] flex-wrap items-center gap-1.5 rounded-control border border-line-strong px-2 py-[5px]',
+        kotak: 'fokus-bingkai box-border flex min-h-[38px] flex-wrap items-center gap-1.5 rounded-control border border-line-control px-2 py-[5px]',
         chip: 'inline-flex h-[26px] items-center gap-1 rounded-chip bg-line-softer pr-1.5 pl-[9px] text-caption',
         hapus: 'cursor-pointer border-none bg-transparent p-0 text-faint',
         // px-0.5 py-px = the browser's default input padding; pl-1 from the source

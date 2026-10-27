@@ -46,11 +46,11 @@ export function KodeOtp({ kode, onUbah }: KodeOtpProps) {
                     onChange={(e) => ubah(i, e.target.value)}
                     className={cn(
                         // px-0.5 py-px = the browser's default input padding the design relies on
-                        'box-border h-[52px] w-full rounded-control bg-surface px-0.5 py-px text-center text-page font-semibold text-ink outline-none',
+                        'box-border h-[52px] w-full rounded-control bg-surface px-0.5 py-px text-center text-page font-semibold text-ink',
                         i === kosongPertama
                             ? 'border-2 border-primary'
                             : v
-                              ? 'border border-[#93C5FD]'
+                              ? 'border border-primary-line'
                               : 'border border-line-strong',
                     )}
                 />

@@ -31,21 +31,17 @@ export function AppLayout({
     const { panel } = usePage().props;
     // the server renders the full sidebar, so the saved choice is applied after hydration
     const [ciut, setCiut] = useState(false);
-    // 1024–1279px: icons unless widened for now
-    const [lebar, setLebar] = useState(false);
     const [laci, setLaci] = useState(false);
     const [bantuan, setBantuan] = useState(false);
-    const layarLebar = useLayar(LAYAR.lebar);
+    const layarSedang = useLayar(LAYAR.sedang);
 
     useEffect(() => setCiut(bacaCiut()), []);
 
-    // the sidebar button and "[": wide screens remember it, tablets widen for now, phones open the drawer
+    // the sidebar button and "[": from 1024px it collapses (remembered), phones open the drawer
     function ubahCiut() {
-        if (cocok(LAYAR.lebar)) {
+        if (cocok(LAYAR.sedang)) {
             setCiut(!ciut);
             simpanCiut(!ciut);
-        } else if (cocok(LAYAR.sedang)) {
-            setLebar(!lebar);
         } else {
             setLaci(!laci);
         }
@@ -102,12 +98,19 @@ export function AppLayout({
     }
 
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-surface font-sans text-ink max-lg:h-dvh">
+        // fixed to the viewport: focusing a field low on the page scrolls only the page
+        // body, never the whole frame (Audit: the top bar used to slide out of view)
+        <div className="fixed inset-0 flex overflow-hidden bg-latar font-sans text-ink">
+            <a
+                href="#isi-utama"
+                className="absolute top-2 left-2 z-50 -translate-y-20 rounded-control bg-primary px-3 py-2 text-body font-semibold text-white no-underline focus:translate-y-0"
+            >
+                Lewati ke konten
+            </a>
             <Sidebar
                 active={active}
                 panel={panel}
                 ciut={ciut}
-                lebar={lebar}
                 laci={laci}
                 onTutupLaci={() => setLaci(false)}
             />
@@ -123,13 +126,15 @@ export function AppLayout({
                 <div data-bebas-klik className="contents">
                     <Topbar
                         panel={panel}
-                        ciut={layarLebar ? ciut : !lebar}
+                        ciut={layarSedang ? ciut : true}
                         onCiutkan={ubahCiut}
                         onMenu={() => setLaci(true)}
                         laciTerbuka={laci}
                     />
                 </div>
                 <div
+                    id="isi-utama"
+                    tabIndex={-1}
                     data-gulir
                     className={cn(
                         'flex min-h-0 grow flex-col overflow-y-auto',

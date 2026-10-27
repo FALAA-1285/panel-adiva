@@ -115,7 +115,7 @@ const warnaSkor: Record<string, string> = {
     COLD: 'text-muted',
 };
 
-/** Inbox.dc.html flag and status colours (#1D4ED8, #B45309, #B91C1C, #4B5563). */
+/** Flag and status colours: blue for the neutral flag, then amber, red, slate. */
 const warnaNada: Partial<Record<Nada, string>> = {
     blue: 'text-primary-ink',
     amber: 'text-amber-text',
@@ -374,7 +374,7 @@ export default function HalamanPercakapan({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 pt-3.5 pb-2.5">
-                        <label className="box-border flex h-10 items-center gap-2 rounded-card border border-line px-3 text-muted">
+                        <label className="fokus-bingkai box-border flex h-10 items-center gap-2 rounded-control border border-line-control px-3 text-muted">
                             <Ikon nama="cari" tebal={2} />
                             <input
                                 type="search"
@@ -575,7 +575,7 @@ function BarisChat({
             className={cn(
                 'flex w-full cursor-pointer items-start gap-3 border-0 border-b border-line-softer px-4 py-3 text-ink',
                 terpilih
-                    ? 'bg-selected shadow-[inset_2px_0_0_var(--color-primary)]'
+                    ? 'bg-selected shadow-[inset_3px_0_0_var(--color-primary)]'
                     : 'bg-surface hover:bg-subtle',
                 'motion-safe:transition-colors motion-safe:duration-150',
             )}

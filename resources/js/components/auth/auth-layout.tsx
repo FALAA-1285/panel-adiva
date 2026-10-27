@@ -32,7 +32,7 @@ export function AuthLayout({ sisi, children }: AuthLayoutProps) {
                 <div className="flex shrink-0 items-center gap-2.5">
                     <span
                         aria-hidden="true"
-                        className="flex size-8 items-center justify-center rounded-control bg-brand text-caption font-bold tracking-[-0.02em] text-white"
+                        className="flex size-8 items-center justify-center rounded-control bg-linear-135 from-brand-from to-brand text-caption font-bold tracking-[-0.02em] text-white"
                     >
                         BB
                     </span>
@@ -58,7 +58,7 @@ export function AuthLayout({ sisi, children }: AuthLayoutProps) {
             <aside
                 aria-label="Tentang panel"
                 // any width other than the design's 1440px: the panel takes what is left; gone below 1024px
-                className="box-border flex h-full w-[880px] shrink-0 grow flex-col justify-between overflow-hidden bg-brand px-[88px] py-10 text-white max-[1440px]:w-auto max-[1440px]:min-w-0 max-[1440px]:shrink max-[1440px]:px-14 max-lg:hidden"
+                className="box-border flex h-full w-[880px] shrink-0 grow flex-col justify-between overflow-hidden bg-linear-135 from-brand-from to-brand px-[88px] py-10 text-white max-[1440px]:w-auto max-[1440px]:min-w-0 max-[1440px]:shrink max-[1440px]:px-14 max-lg:hidden"
             >
                 <div className="shrink-0 text-body font-medium text-primary-line">
                     {sisi.atas}
@@ -67,7 +67,7 @@ export function AuthLayout({ sisi, children }: AuthLayoutProps) {
                     <h2 className="m-0 w-[640px] text-display leading-[1.1] font-semibold tracking-[-0.03em] text-white max-[1440px]:w-auto max-[1440px]:max-w-[640px] max-xl:text-display-sm">
                         {sisi.judul}
                     </h2>
-                    <p className="mt-4 mb-6 w-[560px] text-judul leading-[1.55] text-[#DBEAFE] max-[1440px]:w-auto max-[1440px]:max-w-[560px] xl:mt-5 xl:mb-9">
+                    <p className="mt-4 mb-6 w-[560px] text-judul leading-[1.55] text-white/85 max-[1440px]:w-auto max-[1440px]:max-w-[560px] xl:mt-5 xl:mb-9">
                         {sisi.paragraf}
                     </p>
                     <div

@@ -154,7 +154,7 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
             <IsiHalaman className="gap-[18px] pt-[22px] pb-6">
                 <StatStrip rapat stat={ringkasan} />
 
-                <section className="grid min-h-0 grow grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5 max-lg:grid-cols-1">
+                <section className="grid min-h-0 grow grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5 max-xl:grid-cols-1">
                     <div className="flex min-w-0 flex-col gap-[18px]">
                         <div className="overflow-hidden rounded-card border border-line bg-surface max-xl:overflow-x-auto">
                             <KepalaKartu

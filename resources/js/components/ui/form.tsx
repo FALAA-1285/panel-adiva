@@ -51,7 +51,7 @@ export function Field({
 }
 
 const kontrol =
-    'box-border h-[38px] w-full rounded-control border border-line-strong bg-surface px-[11px] text-body text-ink outline-none';
+    'box-border h-[38px] w-full rounded-control border border-line-control bg-surface px-[11px] text-body text-ink';
 
 type InputProps = ComponentProps<'input'> & { mono?: boolean };
 
