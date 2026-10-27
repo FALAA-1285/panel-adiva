@@ -126,7 +126,7 @@
 
     /* ---- bayangan: kartu sedikit terangkat dari latar */
     --shadow-kartu: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
-    --shadow-utama: 0 4px 12px rgb(236 72 153 / 0.3); /* tombol utama */
+    --shadow-utama: 0 4px 12px rgb(37 99 235 / 0.28); /* tombol utama */
 }
 
 @layer base {

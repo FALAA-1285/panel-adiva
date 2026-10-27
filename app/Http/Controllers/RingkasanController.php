@@ -76,7 +76,7 @@ class RingkasanController extends Controller
         'RETAIL' => '#1D4ED8',
         'RESELLER' => '#60A5FA',
         'BELUM_JELAS' => '#CBD5E1',
-        'KARYAWAN' => '#64748B',
+        'KARYAWAN' => '#1E3A8A',
     ];
 
     public function index(Request $request): Response
