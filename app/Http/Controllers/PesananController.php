@@ -40,10 +40,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class PesananController extends Controller
 {
+    /** Orders per page of the list. */
+    private const PER_HALAMAN = 25;
+
+    /** How the list may be sorted; "status" is the workflow order (running first). */
+    private const URUTAN = ['status', 'terbaru', 'terlama', 'total'];
+
     public function index(Request $request): Response
     {
         $user = $request->user() ?? abort(403);
         $tab = TabPesanan::tryFrom((string) $request->query('tab')) ?? TabPesanan::Semua;
+        $urut = in_array($request->query('urut'), self::URUTAN, true) ? (string) $request->query('urut') : 'status';
+        $halaman = max(1, $request->integer('halaman', 1));
 
         return Inertia::render('pesanan', [
             'tab' => fn () => array_map(fn (TabPesanan $t) => [
@@ -52,12 +60,14 @@ class PesananController extends Controller
                 'n' => $this->hitungan()[$t->value] ?? 0,
             ], TabPesanan::cases()),
             'aktifTab' => $tab->value,
-            'baris' => fn () => $this->daftar($tab)->get()->map(fn (LogOrder $o) => $this->baris($o)),
+            'urut' => $urut,
+            'halaman' => fn () => ['sekarang' => $halaman, 'total' => $this->daftar($tab)->reorder()->count(), 'per' => self::PER_HALAMAN],
+            'baris' => fn () => $this->daftar($tab, $urut)->forPage($halaman, self::PER_HALAMAN)->get()->map(fn (LogOrder $o) => $this->baris($o)),
             // ?order=…, else the first order in the tab
-            'detail' => function () use ($request, $tab, $user) {
+            'detail' => function () use ($request, $tab, $user, $urut) {
                 $order = $request->filled('order')
                     ? LogOrder::query()->where('order_id', $request->query('order'))->with(['items', 'customer:id,nama'])->first()
-                    : $this->daftar($tab)->first();
+                    : $this->daftar($tab, $urut)->first();
 
                 return $order ? $this->detail($order, $user) : null;
             },
@@ -210,12 +220,17 @@ class PesananController extends Controller
      *
      * @return Builder<LogOrder>
      */
-    private function daftar(TabPesanan $tab): Builder
+    private function daftar(TabPesanan $tab, string $urut = 'status'): Builder
     {
-        $query = LogOrder::query()->tampilDiPesanan()->urutanPesanan()->with(['items', 'customer:id,nama']);
+        $query = LogOrder::query()->tampilDiPesanan()->with(['items', 'customer:id,nama']);
         $tab->terapkan($query);
 
-        return $query;
+        return match ($urut) {
+            'terbaru' => $query->orderByDesc('tanggal')->orderByDesc('id'),
+            'terlama' => $query->orderBy('tanggal')->orderBy('id'),
+            'total' => $query->orderByRaw(LogOrder::sqlTagihan().' desc')->orderByDesc('id'),
+            default => $query->urutanPesanan(),
+        };
     }
 
     /**

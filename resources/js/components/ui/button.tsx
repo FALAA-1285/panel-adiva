@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils';
 type Varian = 'primary' | 'secondary' | 'danger' | 'ghost' | 'link';
 type Ukuran = 'sm' | 'md' | 'lg';
 
+// phones: every button is at least 44px tall, a finger's width (Audit: many were 23–34px)
 const ukuranKelas: Record<Ukuran, string> = {
-    sm: 'h-8 px-[11px] text-caption',
-    md: 'h-9 px-3.5 text-body',
+    sm: 'h-8 px-[11px] text-caption max-md:h-11',
+    md: 'h-9 px-3.5 text-body max-md:h-11',
     lg: 'h-11 px-[18px] text-panel',
 };
 
@@ -97,7 +98,7 @@ type IconButtonProps = ComponentProps<'button'> & {
 
 /** IconButton's look, for a link that looks the same. */
 export const kelasIconButton =
-    'box-border inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink-2 no-underline';
+    'box-border inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink-2 no-underline max-md:size-11';
 
 /** 32×32 outlined square button holding a 16px icon. */
 export function IconButton({

@@ -65,6 +65,11 @@ class KatalogController extends Controller
                         ])->all(),
                     ],
                 ]),
+            // the values already in use, offered first so the same category is not typed three ways
+            'saran' => [
+                'kategori_produk' => Produk::query()->dijual()->whereNotNull('kategori_produk')->distinct()->orderBy('kategori_produk')->pluck('kategori_produk'),
+                'kategori_kemasan' => Produk::query()->dijual()->whereNotNull('kategori_kemasan')->distinct()->orderBy('kategori_kemasan')->pluck('kategori_kemasan'),
+            ],
             // "Arsip": no longer sold, kept so they can be brought back
             'arsip' => Produk::query()->whereNotNull('diarsip_at')->orderByDesc('diarsip_at')->get()
                 ->map(fn (Produk $produk) => [

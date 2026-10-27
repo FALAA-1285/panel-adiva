@@ -5,7 +5,7 @@ import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { ID_PERTANYAAN_UJI, UjiAdiva } from '@/components/katalog/uji-adiva';
 import type { Uji } from '@/components/katalog/uji-adiva';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button, IconButton } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { InputKata } from '@/components/ui/input-kata';
@@ -80,15 +80,6 @@ export default function KatalogKebijakan({
                 <div className="grid grid-cols-[300px_minmax(0,1fr)_320px] items-start gap-5 max-xl:grid-cols-[260px_minmax(0,1fr)] max-lg:grid-cols-1">
                     <Panel
                         judul={`${kebijakan.length} kebijakan`}
-                        aksi={
-                            <IconButton
-                                aria-label="Tambah kebijakan"
-                                aria-disabled={!bolehUbah}
-                                onClick={tambahBaru}
-                            >
-                                <Ikon nama="tambah" />
-                            </IconButton>
-                        }
                         isiClassName="p-0"
                     >
                         {kebijakan.map((k) => {

@@ -35,6 +35,7 @@ type Props = {
     tab: TabKatalog;
     produk: Produk[];
     /** No longer sold; Adiva does not offer them. */
+    saran: { kategori_produk: string[]; kategori_kemasan: string[] };
     arsip: {
         id: number;
         nama: string;
@@ -104,7 +105,13 @@ const tool = [
     ['Cek_Ongkir', 'Info pengiriman (ongkir COD)'],
 ];
 
-export default function KatalogProduk({ tab, produk, arsip, uji }: Props) {
+export default function KatalogProduk({
+    tab,
+    produk,
+    saran,
+    arsip,
+    uji,
+}: Props) {
     const bolehUbah = usePage().props.panel?.akses.katalog ?? false;
     // 'baru': "Tambah produk"; a row: editing that product
     const [dibuka, setDibuka] = useState<Produk | 'baru' | null>(null);
@@ -176,6 +183,7 @@ export default function KatalogProduk({ tab, produk, arsip, uji }: Props) {
                         id={dibuka === 'baru' ? null : dibuka.id}
                         nama={dibuka === 'baru' ? undefined : dibuka.nama}
                         isian={dibuka === 'baru' ? null : dibuka.isian}
+                        saran={saran}
                         onTutup={() => setDibuka(null)}
                     />
                 )}

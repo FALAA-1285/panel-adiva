@@ -212,3 +212,29 @@ test('the open tab is exported as CSV', function () {
         ->toContain('ORD-ACC,"2026-09-28 13:06","Rina Maharani",,,1283000,,,"Menunggu ACC"')
         ->not->toContain('ORD-LUNAS');
 });
+
+test('the order list sorts and pages, 25 at a time', function () {
+    foreach (range(1, 27) as $i) {
+        LogOrder::factory()->pada(now()->subMinutes($i)->format('Y-m-d H:i'))->create([
+            'order_id' => sprintf('ORD-P%02d', $i), 'total_produk' => $i * 1000,
+        ]);
+    }
+    $falah = User::factory()->falah()->create();
+
+    $this->actingAs($falah)->get('/pesanan?urut=terbaru')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('baris', 25)
+            ->where('baris.0.id', 'ORD-P01')
+            ->where('urut', 'terbaru')
+            ->where('halaman', ['sekarang' => 1, 'total' => 27, 'per' => 25]));
+
+    $this->actingAs($falah)->get('/pesanan?urut=terbaru&halaman=2')
+        ->assertInertia(fn (Assert $page) => $page->has('baris', 2)->where('baris.1.id', 'ORD-P27'));
+
+    $this->actingAs($falah)->get('/pesanan?urut=total')
+        ->assertInertia(fn (Assert $page) => $page->where('baris.0.id', 'ORD-P27'));
+
+    // an unknown order of sorting falls back to the workflow order
+    $this->actingAs($falah)->get('/pesanan?urut=apa')
+        ->assertInertia(fn (Assert $page) => $page->where('urut', 'status'));
+});

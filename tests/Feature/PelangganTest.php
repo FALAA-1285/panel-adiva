@@ -24,21 +24,40 @@ test('guests are sent to the login page', function () {
     $this->get('/pelanggan')->assertRedirect('/masuk');
 });
 
-test('the list shows the 10 latest chats and counts everyone', function () {
-    foreach (range(1, 12) as $i) {
+test('the list pages through everyone, 25 at a time, latest chat first', function () {
+    foreach (range(1, 27) as $i) {
         CrmCustomer::factory()->create(['nama' => "Pelanggan {$i}", 'tgl_interaksi_terakhir' => now()->subHours($i)]);
     }
     CrmCustomer::factory()->create(['nama' => 'Lama', 'tgl_interaksi_terakhir' => now()->subDays(40)]);
+    $falah = User::factory()->falah()->create();
 
-    $this->actingAs(User::factory()->falah()->create())
+    $this->actingAs($falah)
         ->get('/pelanggan')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('pelanggan')
-            ->has('daftar', 10)
+            ->has('daftar', 25)
             ->where('daftar.0.nama', 'Pelanggan 1')
-            ->where('jumlah', '13 pelanggan · 12 aktif 30 hari')
+            ->where('halaman', ['sekarang' => 1, 'total' => 28, 'per' => 25])
+            ->where('jumlah', '28 pelanggan · 27 aktif 30 hari')
             ->where('profil.nama', 'Pelanggan 1'));
+
+    $this->actingAs($falah)
+        ->get('/pelanggan?halaman=2')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('daftar', 3)
+            ->where('daftar.2.nama', 'Lama'));
+});
+
+test('the list can be sorted by name', function () {
+    CrmCustomer::factory()->create(['nama' => 'Zaenal', 'tgl_interaksi_terakhir' => now()]);
+    CrmCustomer::factory()->create(['nama' => 'Ani', 'tgl_interaksi_terakhir' => now()->subDay()]);
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->get('/pelanggan?urut=nama')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('daftar.0.nama', 'Ani')
+            ->where('filter.urut', 'nama'));
 });
 
 test('search and filters narrow the list', function () {

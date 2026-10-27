@@ -145,11 +145,8 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
                                 Tabel
                             </Link>
                         </div>
-                        <ButtonLink
-                            href={baru.url({ query: segmen(isian) })}
-                            varian="primary"
-                            className="border-0"
-                        >
+                        {/* a mass message is never the page's main action (Audit) */}
+                        <ButtonLink href={baru.url({ query: segmen(isian) })}>
                             <Ikon nama="broadcast" ukuran={15} tebal={2} />
                             Broadcast ke segmen ini
                         </ButtonLink>

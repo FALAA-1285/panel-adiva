@@ -13,12 +13,14 @@ import type { Nada } from '@/components/ui/status';
 import { Avatar } from '@/components/ui/teks';
 import { sedangMengetik } from '@/components/ui/topbar';
 import { cocok, LAYAR } from '@/hooks/use-layar';
+import { Halaman } from '@/components/ui/halaman';
+import type { InfoHalaman } from '@/components/ui/halaman';
 import { cn } from '@/lib/utils';
 import { jeda, pelanggan, percakapan } from '@/routes';
 import { ekspor, optout } from '@/routes/pelanggan';
 import { detail as detailPesanan } from '@/routes/pesanan';
 
-type Filter = { cari: string; tipe: string; tahap: string };
+type Filter = { cari: string; tipe: string; tahap: string; urut: string };
 
 type Baris = {
     id: number;
@@ -75,6 +77,7 @@ type Profil = {
 
 type Props = {
     filter: Filter;
+    halaman: InfoHalaman;
     pilihan: {
         tipe: { nilai: string; label: string }[];
         tahap: { nilai: string; label: string }[];
@@ -96,15 +99,18 @@ const warnaTitik: Record<string, string> = {
     green: 'bg-green-text',
 };
 
-const query = (f: Filter, pilih?: number) => ({
+const query = (f: Filter, pilih?: number, halaman?: number) => ({
     cari: f.cari || undefined,
     tipe: f.tipe || undefined,
     tahap: f.tahap || undefined,
+    urut: f.urut === 'nama' ? 'nama' : undefined,
+    halaman: halaman && halaman > 1 ? halaman : undefined,
     pilih,
 });
 
 export default function Pelanggan({
     filter,
+    halaman,
     pilihan,
     jumlah,
     daftar,
@@ -280,7 +286,22 @@ export default function Pelanggan({
                                 ))}
                             </Select>
                         </div>
-                        <div className="text-caption text-muted">{jumlah}</div>
+                        <div className="flex items-center gap-2">
+                            <span className="grow text-caption text-muted">
+                                {jumlah}
+                            </span>
+                            <Select
+                                aria-label="Urutkan"
+                                className="h-8 w-auto rounded-[9px] px-2 text-caption"
+                                value={isian.urut}
+                                onChange={(e) =>
+                                    setIsian({ ...isian, urut: e.target.value })
+                                }
+                            >
+                                <option value="terbaru">Chat terbaru</option>
+                                <option value="nama">Nama A–Z</option>
+                            </Select>
+                        </div>
                     </div>
                     <div className="grow overflow-auto">
                         {daftar.map((b) => {
@@ -319,19 +340,42 @@ export default function Pelanggan({
                             );
                         })}
                         {daftar.length === 0 && (
-                            <div className="flex flex-col items-center justify-center p-8 text-center text-muted">
+                            <div className="flex flex-col items-center justify-center p-8 text-center text-muted lg:hidden">
                                 <span className="mb-2 flex size-10 items-center justify-center rounded-xl bg-subtle text-muted">
                                     <Ikon nama="cari" ukuran={18} />
                                 </span>
-                                <p className="text-body font-medium text-ink">Tidak ada pelanggan</p>
+                                <p className="text-body font-medium text-ink">
+                                    Tidak ada pelanggan
+                                </p>
                                 <p className="mt-1 text-caption text-muted">
                                     {isian.cari || isian.tipe || isian.tahap
-                                        ? 'Coba sesuaikan kata kunci atau bersihkan filter.'
-                                        : 'Belum ada data pelanggan tersimpan.'}
+                                        ? 'Coba kata kunci lain.'
+                                        : 'Customer yang chat dengan Adiva otomatis tercatat di sini.'}
                                 </p>
+                                {(isian.cari || isian.tipe || isian.tahap) && (
+                                    <ButtonLink
+                                        href={pelanggan.url()}
+                                        ukuran="sm"
+                                        className="mt-3"
+                                    >
+                                        Hapus pencarian
+                                    </ButtonLink>
+                                )}
                             </div>
                         )}
                     </div>
+                    <Halaman
+                        halaman={halaman}
+                        onPindah={(ke) =>
+                            router.get(
+                                pelanggan.url({
+                                    query: query(isian, undefined, ke),
+                                }),
+                                {},
+                                { preserveState: true },
+                            )
+                        }
+                    />
                 </section>
 
                 {profil ? (
@@ -343,14 +387,29 @@ export default function Pelanggan({
                         onKembali={keDaftar}
                     />
                 ) : (
-                    <TidakAdaPelangganDipilih kosong={daftar.length === 0} />
+                    <TidakAdaPelangganDipilih
+                        kosong={daftar.length === 0}
+                        disaring={Boolean(
+                            isian.cari || isian.tipe || isian.tahap,
+                        )}
+                    />
                 )}
             </IsiHalaman>
         </AppLayout>
     );
 }
 
-function TidakAdaPelangganDipilih({ kosong }: { kosong: boolean }) {
+/**
+ * The right panel with no profile open. With an empty list it is the one empty
+ * message on the page (Audit: two different ones used to show side by side).
+ */
+function TidakAdaPelangganDipilih({
+    kosong,
+    disaring,
+}: {
+    kosong: boolean;
+    disaring: boolean;
+}) {
     return (
         <section
             aria-label="Profil pelanggan"
@@ -361,14 +420,23 @@ function TidakAdaPelangganDipilih({ kosong }: { kosong: boolean }) {
             </span>
             <div className="flex flex-col gap-1.5">
                 <h3 className="text-judul font-semibold text-ink">
-                    {kosong ? 'Belum Ada Pelanggan' : 'Pilih Pelanggan'}
+                    {!kosong
+                        ? 'Pilih pelanggan'
+                        : disaring
+                          ? 'Tidak ada yang cocok'
+                          : 'Belum ada pelanggan'}
                 </h3>
                 <p className="max-w-[420px] text-body text-muted leading-relaxed">
-                    {kosong
-                        ? 'Tidak ada data customer yang sesuai dengan filter atau database belum memiliki data pelanggan.'
-                        : 'Pilih salah satu customer dari daftar di sebelah kiri untuk melihat ringkasan profil, detail pesanan, dan riwayat interaksi.'}
+                    {!kosong
+                        ? 'Pilih salah satu customer dari daftar di sebelah kiri untuk melihat profil, pesanan, dan riwayat interaksinya.'
+                        : disaring
+                          ? 'Tidak ada customer dengan kata kunci atau filter ini. Coba kata kunci lain.'
+                          : 'Customer yang chat dengan Adiva otomatis tercatat di sini.'}
                 </p>
             </div>
+            {kosong && disaring && (
+                <ButtonLink href={pelanggan.url()}>Hapus pencarian</ButtonLink>
+            )}
         </section>
     );
 }

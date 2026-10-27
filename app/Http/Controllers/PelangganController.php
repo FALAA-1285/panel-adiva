@@ -37,10 +37,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class PelangganController extends Controller
 {
     /**
-     * The list shows the customers with the latest chats; search and the filters
-     * reach the rest.
+     * Customers per page of the list; the pages reach all of them (Audit: the
+     * header said "312 pelanggan" while the list showed ten).
      */
-    private const DAFTAR = 10;
+    private const DAFTAR = 25;
 
     /**
      * Stages where a prospect that stops replying is greeted again (Otomasi: FU-01…05).
@@ -51,14 +51,17 @@ class PelangganController extends Controller
 
     public function index(Request $request): Response
     {
-        $daftar = fn () => $this->cari($request)->limit(self::DAFTAR)->get();
+        $halaman = max(1, $request->integer('halaman', 1));
+        $daftar = fn () => $this->cari($request)->forPage($halaman, self::DAFTAR)->get();
 
         return Inertia::render('pelanggan', [
             'filter' => [
                 'cari' => (string) $request->query('cari'),
                 'tipe' => (string) $request->query('tipe'),
                 'tahap' => (string) $request->query('tahap'),
+                'urut' => $request->query('urut') === 'nama' ? 'nama' : 'terbaru',
             ],
+            'halaman' => fn () => ['sekarang' => $halaman, 'total' => $this->cari($request)->reorder()->count(), 'per' => self::DAFTAR],
             'pilihan' => [
                 'tipe' => array_map(fn (TipeCustomer $t) => ['nilai' => $t->value, 'label' => $t->label()], TipeCustomer::cases()),
                 'tahap' => array_map(fn (TahapFunnel $t) => ['nilai' => $t->value, 'label' => $t->label()], [...TahapFunnel::alur(), TahapFunnel::TidakMinat]),
@@ -240,7 +243,11 @@ class PelangganController extends Controller
                 ->when(strlen($angka) >= 3, fn (Builder $q) => $q->orWhere('nomor_wa', 'like', '%'.ltrim($angka, '0').'%'))))
             ->when(TipeCustomer::tryFrom((string) $request->query('tipe')), fn (Builder $q, TipeCustomer $t) => $q->where('tipe_customer', $t))
             ->when(TahapFunnel::tryFrom((string) $request->query('tahap')), fn (Builder $q, TahapFunnel $t) => $q->where('tahap_funnel', $t))
-            ->orderByDesc('tgl_interaksi_terakhir')
+            ->when(
+                $request->query('urut') === 'nama',
+                fn (Builder $q) => $q->orderByRaw('nama is null')->orderBy('nama'),
+                fn (Builder $q) => $q->orderByDesc('tgl_interaksi_terakhir'),
+            )
             ->orderBy('id');
     }
 

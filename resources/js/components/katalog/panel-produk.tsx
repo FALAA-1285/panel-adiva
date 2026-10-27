@@ -51,12 +51,15 @@ export function PanelProduk({
     id,
     nama,
     isian,
+    saran,
     onTutup,
 }: {
     /** null: a new product. */
     id: number | null;
     nama?: string;
     isian: IsianProduk | null;
+    /** Categories and packs already in use, offered as the field is typed in. */
+    saran?: { kategori_produk: string[]; kategori_kemasan: string[] };
     onTutup: () => void;
 }) {
     const form = useForm<IsianProduk>(isian ?? KOSONG);
@@ -125,6 +128,12 @@ export function PanelProduk({
                             >
                                 <Input
                                     id={`produk-${kunci}`}
+                                    list={
+                                        kunci === 'kategori_produk' ||
+                                        kunci === 'kategori_kemasan'
+                                            ? `saran-${kunci}`
+                                            : undefined
+                                    }
                                     value={form.data[kunci] as string}
                                     onChange={(e) =>
                                         form.setData(kunci, e.target.value)
@@ -133,6 +142,16 @@ export function PanelProduk({
                             </Field>
                         ))}
                     </div>
+                    {saran &&
+                        (['kategori_produk', 'kategori_kemasan'] as const).map(
+                            (k) => (
+                                <datalist key={k} id={`saran-${k}`}>
+                                    {saran[k].map((v) => (
+                                        <option key={v} value={v} />
+                                    ))}
+                                </datalist>
+                            ),
+                        )}
                     <Field label="Deskripsi" htmlFor="produk-deskripsi">
                         <Textarea
                             id="produk-deskripsi"

@@ -132,7 +132,7 @@ export function Topbar({
     };
 
     const tombolIkon =
-        'flex size-8.5 shrink-0 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-muted hover:bg-line-softer hover:text-ink motion-safe:transition-colors';
+        'flex size-8.5 shrink-0 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-muted hover:bg-line-softer hover:text-ink motion-safe:transition-colors max-md:size-11';
 
     return (
         <div className="relative box-border flex h-16 w-full shrink-0 items-center gap-3 border-b border-line bg-surface pr-6 pl-5 font-sans text-ink max-md:gap-1.5 max-md:pr-3 max-md:pl-2">
@@ -301,7 +301,7 @@ export function Topbar({
             <Link
                 href={notifikasi.url()}
                 aria-label={`Notifikasi: ${n} belum dibaca`}
-                className="flex h-8.5 items-center gap-1.5 rounded-control px-2 text-body font-medium text-ink-2 no-underline hover:bg-line-softer hover:text-ink motion-safe:transition-colors"
+                className="flex h-8.5 items-center gap-1.5 rounded-control px-2 text-body font-medium text-ink-2 no-underline hover:bg-line-softer hover:text-ink motion-safe:transition-colors max-md:h-11"
             >
                 <Ikon nama="lonceng" ukuran={18} />
                 {n > 0 && <Count n={n} kuat />}

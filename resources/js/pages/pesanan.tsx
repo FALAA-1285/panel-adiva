@@ -3,13 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
-import { Input } from '@/components/ui/form';
+import { Input, Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { DaftarTab, PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { sedangMengetik } from '@/components/ui/topbar';
 import { cocok, LAYAR } from '@/hooks/use-layar';
+import { Halaman } from '@/components/ui/halaman';
+import type { InfoHalaman } from '@/components/ui/halaman';
 import { cn } from '@/lib/utils';
 import { pelanggan, pesanan } from '@/routes';
 import {
@@ -86,6 +88,8 @@ type Detail = {
 type Props = {
     tab: { kode: string; label: string; n: number }[];
     aktifTab: string;
+    urut: string;
+    halaman: InfoHalaman;
     baris: Baris[];
     detail: Detail | null;
 };
@@ -93,12 +97,33 @@ type Props = {
 const KOLOM = 'grid-cols-[132px_minmax(0,1fr)_132px_128px]';
 
 /** Query string for the open tab and order ("semua" is the default tab). */
-const query = (tab: string, order?: string) => ({
+const query = (
+    tab: string,
+    order?: string,
+    urut?: string,
+    halaman?: number,
+) => ({
     tab: tab === 'semua' ? undefined : tab,
     order,
+    urut: urut && urut !== 'status' ? urut : undefined,
+    halaman: halaman && halaman > 1 ? halaman : undefined,
 });
 
-export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
+const URUTAN: [string, string][] = [
+    ['status', 'Status (berjalan dulu)'],
+    ['terbaru', 'Terbaru'],
+    ['terlama', 'Terlama'],
+    ['total', 'Total terbesar'],
+];
+
+export default function Pesanan({
+    tab,
+    aktifTab,
+    urut,
+    halaman,
+    baris,
+    detail,
+}: Props) {
     const [dipilih, setDipilih] = useState(detail?.id);
     // below 1280px the list and the order take turns (?order= opens the order)
     const lihatDetail = new URLSearchParams(
@@ -198,29 +223,84 @@ export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
                 }
             />
             <IsiHalaman className="gap-4 pb-6">
-                <DaftarTab
-                    label="Filter status"
-                    className="-mt-1 gap-[22px]"
-                    tab={tab.map((t) => ({
-                        label: t.label,
-                        n: t.n,
-                        aktif: t.kode === aktifTab,
-                        // three groups: what waits for a decision, what is on its
-                        // way, and what is closed
-                        pisah: ['menunggu-acc', 'lunas', 'selesai'].includes(
-                            t.kode,
-                        ),
-                        // the selected order stays open, as in the design
-                        onClick: () =>
+                <div className="flex items-center gap-2 md:hidden">
+                    <Select
+                        aria-label="Filter status"
+                        className="h-11 grow"
+                        value={aktifTab}
+                        onChange={(e) =>
                             router.get(
                                 pesanan.url({
-                                    query: query(t.kode, detail?.id),
+                                    query: query(
+                                        e.target.value,
+                                        undefined,
+                                        urut,
+                                    ),
+                                }),
+                            )
+                        }
+                    >
+                        {tab.map((t) => (
+                            <option key={t.kode} value={t.kode}>
+                                {t.label} ({t.n})
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+                <div className="flex items-end gap-4 max-md:hidden">
+                    <DaftarTab
+                        label="Filter status"
+                        className="-mt-1 grow gap-[22px]"
+                        tab={tab.map((t) => ({
+                            label: t.label,
+                            n: t.n,
+                            aktif: t.kode === aktifTab,
+                            // three groups: what waits for a decision, what is on its
+                            // way, and what is closed
+                            pisah: [
+                                'menunggu-acc',
+                                'lunas',
+                                'selesai',
+                            ].includes(t.kode),
+                            // the selected order stays open, as in the design
+                            onClick: () =>
+                                router.get(
+                                    pesanan.url({
+                                        query: query(t.kode, detail?.id, urut),
+                                    }),
+                                    {},
+                                    { preserveScroll: true },
+                                ),
+                        }))}
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-caption text-muted">Urutkan</span>
+                    <Select
+                        aria-label="Urutkan pesanan"
+                        className="h-9 w-auto max-md:h-11 max-md:grow"
+                        value={urut}
+                        onChange={(e) =>
+                            router.get(
+                                pesanan.url({
+                                    query: query(
+                                        aktifTab,
+                                        undefined,
+                                        e.target.value,
+                                    ),
                                 }),
                                 {},
                                 { preserveScroll: true },
-                            ),
-                    }))}
-                />
+                            )
+                        }
+                    >
+                        {URUTAN.map(([nilai, label]) => (
+                            <option key={nilai} value={nilai}>
+                                {label}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
                 <div className="flex min-h-0 grow gap-5">
                     <section
                         aria-label="Daftar pesanan"
@@ -260,6 +340,23 @@ export default function Pesanan({ tab, aktifTab, baris, detail }: Props) {
                                     </div>
                                 )}
                             </div>
+                            <Halaman
+                                halaman={halaman}
+                                onPindah={(ke) =>
+                                    router.get(
+                                        pesanan.url({
+                                            query: query(
+                                                aktifTab,
+                                                undefined,
+                                                urut,
+                                                ke,
+                                            ),
+                                        }),
+                                        {},
+                                        { preserveState: true },
+                                    )
+                                }
+                            />
                         </div>
                     </section>
                     {detail && (
@@ -344,8 +441,6 @@ function BarisPesanan({
         </button>
     );
 }
-
-
 
 /**
  * The grid's eighth button: TUTUP, once a WhatsApp command only. Opens
