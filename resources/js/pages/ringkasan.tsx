@@ -1,4 +1,4 @@
-import { Head, Link, router, usePoll } from '@inertiajs/react';
+import { Head, Link, router, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
@@ -6,7 +6,7 @@ import { Button, ButtonLink } from '@/components/ui/button';
 import { Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
-import { Panel } from '@/components/ui/panel';
+import { KotakIkon, Panel } from '@/components/ui/panel';
 import { StatStrip } from '@/components/ui/stat-strip';
 import type { Stat } from '@/components/ui/stat-strip';
 import { Status } from '@/components/ui/status';
@@ -137,12 +137,15 @@ export default function Ringkasan(props: Props) {
 
     // the figures follow what n8n writes, without reloading the page (not in the design)
     usePoll(15000);
+    const bolehMonitoring = usePage().props.panel?.akses.monitoring ?? false;
+    // the system in one line: something to check only when a row says so in red
+    const bermasalah = props.statusAdiva.some((s) => s.nada === 'red');
 
     return (
         <AppLayout active="main">
-            <Head title="Ringkasan" />
+            <Head title="Tugas" />
             <PageHeader
-                judul="Ringkasan"
+                judul="Yang perlu dikerjakan"
                 sub={tanggal}
                 aksi={
                     <>
@@ -183,78 +186,138 @@ export default function Ringkasan(props: Props) {
                 <StatStrip stat={props.angka} />
 
                 <div className="grid grid-cols-[minmax(0,1fr)_380px] items-stretch gap-5 max-xl:grid-cols-[minmax(0,1fr)_320px] max-lg:grid-cols-1">
-                    <Panel
-                        judul="Perlu tindakan"
-                        sub="Sama dengan notifikasi yang dikirim ke WhatsApp supervisor"
-                        aksi={
-                            <span className="text-caption text-muted">
-                                {props.tindakan.length} item
-                            </span>
-                        }
-                        className="h-full flex flex-col"
-                        isiClassName="p-0 grow flex flex-col justify-center"
+                    {/* the one card that stands out on this page: what to do, top to bottom */}
+                    <section
+                        aria-labelledby="judul-tugas"
+                        className="relative flex h-full flex-col overflow-hidden rounded-card border border-primary-line bg-linear-135 from-primary-soft via-surface to-surface shadow-kartu"
                     >
-                        {props.tindakan.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-8 text-center">
-                                <div className="mb-2.5 flex size-12 items-center justify-center rounded-full bg-note-green-bg text-green-text">
-                                    <Ikon nama="centang" ukuran={24} tebal={2.5} />
-                                </div>
-                                <span className="text-body font-semibold text-ink">
-                                    Semua beres!
-                                </span>
-                                <span className="mt-1 max-w-[320px] text-caption leading-relaxed text-muted">
-                                    Tidak ada tindakan yang tertunda saat ini. Semua pesanan, chat, dan bot Adiva berjalan lancar.
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -top-16 -right-10 size-[230px] rounded-full border border-primary-line bg-primary/5 max-lg:hidden"
+                        />
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -top-8 -right-2.5 size-[170px] rounded-full border border-primary-line max-lg:hidden"
+                        />
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute top-0 right-5 size-[110px] rounded-full border border-dashed border-primary-line"
+                        />
+                        <div className="relative flex items-center gap-3 px-[18px] pt-4 pb-3">
+                            <KotakIkon nama="jam" />
+                            <div className="flex flex-col gap-0.5">
+                                <h2
+                                    id="judul-tugas"
+                                    className="m-0 text-panel font-semibold"
+                                >
+                                    Tugas hari ini
+                                </h2>
+                                <span className="text-caption text-muted">
+                                    Selesaikan dari atas ke bawah
                                 </span>
                             </div>
-                        ) : (
-                            props.tindakan.map((t, i) => (
-                                <BarisTindakan
-                                    key={t.id}
-                                    tindakan={t}
-                                    terakhir={i === props.tindakan.length - 1}
-                                />
-                            ))
-                        )}
-                    </Panel>
+                        </div>
+                        <div className="relative px-[18px] pb-3 text-[40px] leading-none font-semibold tracking-[-0.02em] text-primary-ink tabular-nums">
+                            {props.tindakan.length === 0
+                                ? 'Semua beres'
+                                : `${props.tindakan.length} tugas`}
+                        </div>
+                        <div className="relative flex grow flex-col justify-center border-t border-line-soft bg-surface/70">
+                            {props.tindakan.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center p-8 text-center">
+                                    <div className="mb-2.5 flex size-12 items-center justify-center rounded-full bg-ok-bg text-green-text">
+                                        <Ikon
+                                            nama="centang"
+                                            ukuran={24}
+                                            tebal={2.5}
+                                        />
+                                    </div>
+                                    <span className="text-body font-semibold text-ink">
+                                        Semua beres!
+                                    </span>
+                                    <span className="mt-1 max-w-[320px] text-caption leading-relaxed text-muted">
+                                        Pesanan baru dan chat yang butuh admin
+                                        otomatis muncul di sini.
+                                    </span>
+                                </div>
+                            ) : (
+                                props.tindakan.map((t, i) => (
+                                    <BarisTindakan
+                                        key={t.id}
+                                        tindakan={t}
+                                        terakhir={
+                                            i === props.tindakan.length - 1
+                                        }
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </section>
 
                     <div className="flex flex-col gap-5">
                         <Panel
-                            judul="Status Adiva"
+                            judul="Adiva"
+                            ikon="percakapan"
                             aksi={
-                                <TautanPanel href={monitoring.url()}>
-                                    Monitoring
-                                </TautanPanel>
+                                bolehMonitoring && (
+                                    <TautanPanel href={monitoring.url()}>
+                                        Kesehatan sistem
+                                    </TautanPanel>
+                                )
                             }
-                            isiClassName="pt-1 pb-1.5"
+                            isiClassName="pt-2 pb-1.5"
                         >
-                            {props.statusAdiva.map((s, i) => (
-                                <div
-                                    key={s.label}
-                                    className={cn(
-                                        'flex items-center gap-3 py-[9px]',
-                                        i < props.statusAdiva.length - 1 &&
-                                            'border-b border-line-soft',
-                                    )}
-                                >
-                                    <span className="grow text-body">
-                                        {s.label}
-                                    </span>
-                                    {s.href ? (
-                                        <Link
-                                            href={s.href}
-                                            className="text-caption font-medium no-underline"
-                                        >
-                                            {s.nilai}
-                                        </Link>
-                                    ) : s.nada ? (
-                                        <Status nada={s.nada}>{s.nilai}</Status>
-                                    ) : (
-                                        <span className="text-caption leading-[1.4] text-muted">
-                                            {s.nilai}
+                            <div className="flex items-center gap-2 pb-2 text-body font-semibold">
+                                <Status nada={bermasalah ? 'red' : 'green'}>
+                                    {bermasalah
+                                        ? 'Ada yang perlu dicek'
+                                        : 'Berjalan normal'}
+                                </Status>
+                                <span className="font-normal text-muted">
+                                    {bermasalah
+                                        ? 'lihat rincian di bawah'
+                                        : 'membalas chat customer'}
+                                </span>
+                            </div>
+                            {/* the technical rows, for whoever needs them; open when something is wrong */}
+                            <details
+                                open={bermasalah}
+                                className="group border-t border-line-soft"
+                            >
+                                <summary className="cursor-pointer py-2 text-caption font-medium text-muted marker:text-faint">
+                                    Rincian teknis
+                                </summary>
+                                {props.statusAdiva.map((s, i) => (
+                                    <div
+                                        key={s.label}
+                                        className={cn(
+                                            'flex items-center gap-3 py-[9px]',
+                                            i < props.statusAdiva.length - 1 &&
+                                                'border-b border-line-soft',
+                                        )}
+                                    >
+                                        <span className="grow text-body">
+                                            {s.label}
                                         </span>
-                                    )}
-                                </div>
-                            ))}
+                                        {s.href ? (
+                                            <Link
+                                                href={s.href}
+                                                className="text-caption font-medium no-underline"
+                                            >
+                                                {s.nilai}
+                                            </Link>
+                                        ) : s.nada ? (
+                                            <Status nada={s.nada}>
+                                                {s.nilai}
+                                            </Status>
+                                        ) : (
+                                            <span className="text-caption leading-[1.4] text-muted">
+                                                {s.nilai}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </details>
                         </Panel>
 
                         <Panel
@@ -292,6 +355,10 @@ export default function Ringkasan(props: Props) {
                         </Panel>
                     </div>
                 </div>
+
+                <h2 className="m-0 mt-2 text-judul font-semibold text-ink">
+                    Laporan singkat
+                </h2>
 
                 <Panel
                     judul="Omzet · 30 hari"

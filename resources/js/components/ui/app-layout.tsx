@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Sidebar } from '@/components/ui/sidebar';
 import type { MenuAktif } from '@/components/ui/sidebar';
+import { SubMenu } from '@/components/ui/sub-menu';
 import { sedangMengetik, Topbar } from '@/components/ui/topbar';
 import { DaftarPintasan, UmpanBalik } from '@/components/ui/umpan-balik';
 import { cocok, LAYAR, useLayar } from '@/hooks/use-layar';
@@ -132,6 +133,7 @@ export function AppLayout({
                         laciTerbuka={laci}
                     />
                 </div>
+                <SubMenu active={active} panel={panel} />
                 <div
                     id="isi-utama"
                     tabIndex={-1}

@@ -39,144 +39,206 @@ export type MenuAktif =
     | 'aktivitas'
     | 'none';
 
-type ItemMenu = {
+/** One page under a menu item; the item opens its first page the role may see. */
+type Halaman = {
     kode: Exclude<MenuAktif, 'none'>;
     label: string;
     href: string;
-    ikon: NamaIkon;
     hitungan?: keyof Panel['hitungan'];
-    kuat?: boolean;
     /** Hidden unless the role may open it. */
     akses?: keyof Panel['akses'];
 };
 
-// Page routes follow design/halaman.json; switch to Wayfinder as each page is built.
+type ItemMenu = {
+    kunci: string;
+    label: string;
+    ikon: NamaIkon;
+    hitungan?: keyof Panel['hitungan'];
+    kuat?: boolean;
+    halaman: Halaman[];
+};
+
+/*
+ * Eight items in shop words (Audit Panel Adiva, E.2): staff see the four they work
+ * in, supervisors also the four they manage. The technical pages sit under Laporan
+ * and Pengaturan as sub-pages; no page was removed and no route changed.
+ */
 const grup: { judul: string; item: ItemMenu[] }[] = [
     {
-        judul: 'Operasional',
+        judul: 'Kerja',
         item: [
             {
-                kode: 'main',
-                label: 'Ringkasan',
-                href: home.url(),
-                ikon: 'ringkasan',
+                kunci: 'tugas',
+                label: 'Tugas',
+                ikon: 'tugas',
+                halaman: [{ kode: 'main', label: 'Tugas', href: home.url() }],
             },
             {
-                kode: 'inbox',
-                label: 'Percakapan',
-                href: percakapan.url(),
+                kunci: 'chat',
+                label: 'Chat',
                 ikon: 'percakapan',
                 hitungan: 'percakapan',
                 kuat: true,
+                halaman: [
+                    {
+                        kode: 'inbox',
+                        label: 'Semua chat',
+                        href: percakapan.url(),
+                        hitungan: 'percakapan',
+                    },
+                    {
+                        kode: 'jeda',
+                        label: 'Diambil alih admin',
+                        href: jeda.url(),
+                        hitungan: 'jeda',
+                    },
+                    {
+                        kode: 'sosmed',
+                        label: 'Instagram & Facebook',
+                        href: sosmed.url(),
+                        hitungan: 'sosmed',
+                        akses: 'sosmed',
+                    },
+                ],
             },
             {
-                kode: 'orders',
+                kunci: 'pesanan',
                 label: 'Pesanan',
-                href: pesanan.url(),
                 ikon: 'pesanan',
                 hitungan: 'pesanan',
+                halaman: [
+                    { kode: 'orders', label: 'Pesanan', href: pesanan.url() },
+                ],
             },
             {
-                kode: 'jeda',
-                label: 'Ambil alih chat',
-                href: jeda.url(),
-                ikon: 'jeda',
-                hitungan: 'jeda',
-            },
-        ],
-    },
-    {
-        judul: 'Pelanggan',
-        item: [
-            {
-                kode: 'pipeline',
-                label: 'Pipeline',
-                href: pipeline.url(),
-                ikon: 'pipeline',
-            },
-            {
-                kode: 'customer',
+                kunci: 'pelanggan',
                 label: 'Pelanggan',
-                href: pelanggan.url(),
                 ikon: 'pelanggan',
-            },
-            {
-                kode: 'broadcast',
-                label: 'Broadcast',
-                href: broadcast.url(),
-                ikon: 'broadcast',
-                akses: 'broadcast',
-            },
-            {
-                kode: 'sosmed',
-                label: 'Instagram & Facebook',
-                href: sosmed.url(),
-                ikon: 'sosmed',
-                hitungan: 'sosmed',
-                akses: 'sosmed',
+                halaman: [
+                    {
+                        kode: 'customer',
+                        label: 'Daftar pelanggan',
+                        href: pelanggan.url(),
+                    },
+                    {
+                        kode: 'pipeline',
+                        label: 'Pipeline',
+                        href: pipeline.url(),
+                    },
+                ],
             },
         ],
     },
     {
-        judul: 'Adiva',
+        judul: 'Kelola',
         item: [
             {
-                kode: 'katalog',
-                label: 'Katalog & pengetahuan',
-                href: '/katalog',
-                ikon: 'katalog',
+                kunci: 'promosi',
+                label: 'Promosi',
+                ikon: 'promosi',
+                halaman: [
+                    {
+                        kode: 'broadcast',
+                        label: 'Broadcast',
+                        href: broadcast.url(),
+                        akses: 'broadcast',
+                    },
+                ],
             },
             {
-                kode: 'prompt',
-                label: 'Prompt Adiva',
-                href: prompt.url(),
-                ikon: 'prompt',
-                akses: 'katalog',
+                kunci: 'produk',
+                label: 'Produk',
+                ikon: 'produk',
+                halaman: [
+                    {
+                        kode: 'katalog',
+                        label: 'Katalog & pengetahuan',
+                        href: '/katalog',
+                    },
+                ],
             },
             {
-                kode: 'otomasi',
-                label: 'Otomasi',
-                href: otomasi.url(),
-                ikon: 'otomasi',
-                akses: 'pengaturan',
-            },
-            {
-                kode: 'settings',
-                label: 'Pengaturan',
-                href: pengaturan.url(),
-                ikon: 'pengaturan',
-                akses: 'pengaturan',
-            },
-        ],
-    },
-    {
-        judul: 'Sistem',
-        item: [
-            {
-                kode: 'monitoring',
-                label: 'Monitoring',
-                href: monitoring.url(),
-                ikon: 'monitoring',
+                kunci: 'laporan',
+                label: 'Laporan',
+                ikon: 'laporan',
                 hitungan: 'monitoring',
-                akses: 'monitoring',
+                halaman: [
+                    {
+                        kode: 'monitoring',
+                        label: 'Kesehatan sistem',
+                        href: monitoring.url(),
+                        hitungan: 'monitoring',
+                        akses: 'monitoring',
+                    },
+                    {
+                        kode: 'aktivitas',
+                        label: 'Log aktivitas',
+                        href: '/aktivitas',
+                        akses: 'aktivitas',
+                    },
+                ],
             },
             {
-                kode: 'tim',
-                label: 'Tim & akses',
-                href: tim.url(),
-                ikon: 'tim',
-                akses: 'tim',
-            },
-            {
-                kode: 'aktivitas',
-                label: 'Log aktivitas',
-                href: '/aktivitas',
-                ikon: 'aktivitas',
-                akses: 'aktivitas',
+                kunci: 'pengaturan',
+                label: 'Pengaturan',
+                ikon: 'pengaturan',
+                halaman: [
+                    {
+                        kode: 'settings',
+                        label: 'Toko',
+                        href: pengaturan.url(),
+                        akses: 'pengaturan',
+                    },
+                    {
+                        kode: 'prompt',
+                        label: 'Prompt Adiva',
+                        href: prompt.url(),
+                        akses: 'katalog',
+                    },
+                    {
+                        kode: 'otomasi',
+                        label: 'Otomasi',
+                        href: otomasi.url(),
+                        akses: 'pengaturan',
+                    },
+                    {
+                        kode: 'tim',
+                        label: 'Tim & akses',
+                        href: tim.url(),
+                        akses: 'tim',
+                    },
+                ],
             },
         ],
     },
 ];
+
+/** The pages of an item this role may open. */
+const halamanBoleh = (item: ItemMenu, akses: Panel['akses']) =>
+    item.halaman.filter((h) => !h.akses || akses[h.akses]);
+
+/**
+ * The sibling pages of the open page, for the sub-menu under the top bar; empty when
+ * its item has only one page the role may open.
+ */
+export function subHalaman(
+    active: MenuAktif,
+    akses: Panel['akses'],
+): { induk: string; halaman: Halaman[] } | null {
+    for (const g of grup) {
+        for (const item of g.item) {
+            const halaman = halamanBoleh(item, akses);
+
+            if (halaman.some((h) => h.kode === active)) {
+                return halaman.length > 1
+                    ? { induk: item.label, halaman }
+                    : null;
+            }
+        }
+    }
+
+    return null;
+}
 
 type SidebarProps = {
     active: MenuAktif;
@@ -265,14 +327,17 @@ export function Sidebar({
 
             {grup.map((g) => {
                 const itemTampil = g.item.filter(
-                    (item) => !item.akses || akses[item.akses],
+                    (item) => halamanBoleh(item, akses).length > 0,
                 );
                 if (itemTampil.length === 0) return null;
 
                 return (
                     <div key={g.judul} className="flex flex-col gap-px">
                         <div
-                            className={cn('mx-2.5 mb-1.5 h-px bg-line', mode.ikon)}
+                            className={cn(
+                                'mx-2.5 mb-1.5 h-px bg-line',
+                                mode.ikon,
+                            )}
                         />
                         <div
                             className={cn(
@@ -291,20 +356,21 @@ export function Sidebar({
                                     ? `${item.label} (${n} perlu tindakan)`
                                     : item.label;
 
+                            const halaman = halamanBoleh(item, akses);
+                            const aktif = halaman.some(
+                                (h) => h.kode === active,
+                            );
+
                             return (
                                 <Link
-                                    key={item.kode}
-                                    href={item.href}
-                                    aria-current={
-                                        item.kode === active
-                                            ? 'page'
-                                            : undefined
-                                    }
+                                    key={item.kunci}
+                                    href={halaman[0].href}
+                                    aria-current={aktif ? 'page' : undefined}
                                     aria-label={judulTooltip}
                                     title={judulTooltip}
                                     className={cn(
                                         'relative flex h-9 items-center gap-2.5 rounded-nav px-2.5 text-body no-underline motion-safe:transition-colors motion-safe:duration-150',
-                                        item.kode === active
+                                        aktif
                                             ? 'bg-nav-active font-semibold text-primary-ink'
                                             : 'bg-transparent font-medium text-ink-2 hover:bg-line-softer hover:text-ink',
                                         // the drawer: comfortable touch targets
@@ -345,7 +411,9 @@ export function Sidebar({
 
             {(() => {
                 const aktif = status.adivaAktif ?? true;
-                const statusTeks = aktif ? 'Adiva sedang aktif' : 'Adiva nonaktif';
+                const statusTeks = aktif
+                    ? 'Adiva sedang aktif'
+                    : 'Adiva nonaktif';
 
                 return (
                     <>
