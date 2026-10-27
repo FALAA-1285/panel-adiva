@@ -25,6 +25,8 @@ class SimpanBroadcastRequest extends FormRequest
     {
         return [
             'aksi' => ['required', Rule::in(['draf', 'kirim', 'jadwal'])],
+            // the draft being edited (only a draft can be)
+            'ubah' => ['nullable', 'integer', Rule::exists('broadcast', 'id')->where('status', 'DRAF')],
             'nama' => ['required', 'string', 'max:255'],
             'pesan' => ['required', 'string', 'max:4096'],
             'filter' => ['array'],

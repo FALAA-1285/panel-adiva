@@ -18,7 +18,7 @@ class TabKatalog
     public static function hitungan(): array
     {
         return [
-            'produk' => Produk::query()->count(),
+            'produk' => Produk::query()->dijual()->count(),
             'paket' => PaketReseller::query()->count(),
             'gambar' => GambarProduk::query()->count(),
             'kebijakan' => Kebijakan::query()->count(),

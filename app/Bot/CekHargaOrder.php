@@ -33,7 +33,7 @@ final class CekHargaOrder
         }
 
         $daftar = [];
-        foreach ($produk ?? Produk::query()->get() as $p) {
+        foreach ($produk ?? Produk::query()->dijual()->get() as $p) {
             $d = [
                 'p' => $p,
                 'kata' => self::kataNama($p->jenis_produk),

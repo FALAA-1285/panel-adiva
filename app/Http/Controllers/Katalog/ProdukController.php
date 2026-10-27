@@ -46,6 +46,27 @@ class ProdukController extends Controller
     }
 
     /**
+     * "Arsipkan": no longer sold. Adiva stops quoting it; old orders still show it.
+     */
+    public function arsip(Request $request, Produk $produk): RedirectResponse
+    {
+        $produk->update(['diarsip_at' => now()]);
+        Aktivitas::catat($request->user() ?? abort(403), KategoriAktivitas::Pengaturan, 'Arsipkan produk', $produk->jenis_produk, $produk);
+        Inertia::flash('toast', "{$produk->jenis_produk} diarsipkan dan tidak lagi ditawarkan Adiva.");
+
+        return back();
+    }
+
+    public function pulihkan(Request $request, Produk $produk): RedirectResponse
+    {
+        $produk->update(['diarsip_at' => null]);
+        Aktivitas::catat($request->user() ?? abort(403), KategoriAktivitas::Pengaturan, 'Pulihkan produk', $produk->jenis_produk, $produk);
+        Inertia::flash('toast', "{$produk->jenis_produk} dijual lagi.");
+
+        return back();
+    }
+
+    /**
      * Rows with a known name update that product, the others are added. Prices are
      * "1-9:15000;10-49:14000;50+:13000".
      */

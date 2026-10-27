@@ -1,5 +1,6 @@
 <?php
 
+use App\Bot\CekHargaOrder;
 use App\Enums\Peran;
 use App\Enums\StatusData;
 use App\Models\ActivityLog;
@@ -10,6 +11,7 @@ use App\Models\PaketReseller;
 use App\Models\Produk;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->falah = User::factory()->falah()->create();
@@ -32,6 +34,19 @@ test('a product needs a name and tiers that go up', function () {
     $this->actingAs($this->falah)->post('/katalog/produk', [
         'jenis_produk' => 'Usus', 'tier' => [['min' => '1', 'max' => '', 'harga' => ''], ['min' => '10', 'max' => '', 'harga' => '']],
     ])->assertSessionHasErrors(['tier' => 'Tingkat harga harus berurutan dan tidak tumpang tindih.']);
+});
+
+test('a price typed as letters is refused, not dropped', function () {
+    $this->actingAs($this->falah)->post('/katalog/produk', [
+        'jenis_produk' => 'Usus', 'tier' => [['min' => '1', 'max' => '', 'harga' => 'abc']],
+    ])->assertSessionHasErrors(['tier.0.harga' => 'Harga harus angka, misalnya 35000.']);
+
+    // written the way people write prices, it is read
+    $this->actingAs($this->falah)->post('/katalog/produk', [
+        'jenis_produk' => 'Usus', 'tier' => [['min' => '1', 'max' => '', 'harga' => 'Rp 35.000']],
+    ])->assertSessionHasNoErrors();
+
+    expect(Produk::query()->where('jenis_produk', 'Usus')->sole()->harga_bertingkat['tier'][0]['harga'])->toBe(35000);
 });
 
 test('editing a product keeps it the same row', function () {
@@ -136,4 +151,28 @@ test('only supervisors may change the catalogue, everyone may look', function ()
     $this->actingAs($cs)->put("/katalog/paket/{$paket->id}", ['kode_paket' => 'X', 'nama_paket' => 'X'])->assertForbidden();
     $this->actingAs($cs)->post('/katalog/kebijakan', ['topik' => 'X'])->assertForbidden();
     $this->actingAs($cs)->post('/katalog/karyawan', ['nama' => 'X', 'nomor_wa' => '6281'])->assertForbidden();
+});
+
+test('an archived product leaves the catalogue and Adiva\'s price check, and can come back', function () {
+    $produk = Produk::factory()->molreng()->create();
+
+    $this->actingAs(User::factory()->create())->post("/katalog/produk/{$produk->id}/arsip")->assertForbidden();
+    $this->actingAs($this->falah)->post("/katalog/produk/{$produk->id}/arsip")->assertRedirect();
+
+    expect($produk->refresh()->diarsip_at)->not->toBeNull()
+        ->and(Produk::query()->dijual()->count())->toBe(0);
+
+    $this->actingAs($this->falah)->get('/katalog')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('produk', 0)
+            ->where('arsip.0.nama', 'Molreng Reguler')
+            ->where('tab.produk', 0));
+
+    // a price for it is no longer matched against the list
+    $hasil = CekHargaOrder::periksa(['metode_bayar' => 'TRANSFER', 'order_items_detail' => [['nama' => 'Molreng Reguler', 'qty' => 1, 'harga_satuan' => 1]]], ['catatan_notif' => '', 'catatan_log' => '']);
+    expect($hasil['catatan_log'])->toBe('');
+
+    $this->actingAs($this->falah)->post("/katalog/produk/{$produk->id}/pulihkan");
+    expect($produk->refresh()->diarsip_at)->toBeNull()
+        ->and(ActivityLog::query()->orderBy('id')->pluck('aksi')->all())->toBe(['Arsipkan produk', 'Pulihkan produk']);
 });

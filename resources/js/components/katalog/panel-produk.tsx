@@ -1,10 +1,10 @@
-import { useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { router, useForm } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { Panel } from '@/components/ui/panel';
-import { impor, simpan, tambah } from '@/routes/katalog/produk';
+import { arsip, impor, simpan, tambah } from '@/routes/katalog/produk';
 
 export type Tier = { min: string; max: string; harga: string };
 
@@ -60,7 +60,24 @@ export function PanelProduk({
     onTutup: () => void;
 }) {
     const form = useForm<IsianProduk>(isian ?? KOSONG);
-    const galat = Object.values(form.errors)[0];
+    const galat = form.errors as Record<string, string | undefined>;
+    // the price tiers' errors (the order rule, or a field of one tier) sit under the tiers
+    const galatTier =
+        galat.tier ??
+        Object.entries(galat).find(([k]) => k.startsWith('tier.'))?.[1];
+    // errors of fields not drawn on this form, so none is lost
+    const galatLain = Object.entries(galat).find(
+        ([k]) => k !== 'jenis_produk' && k !== 'tier' && !k.startsWith('tier.'),
+    )?.[1];
+    const bingkai = useRef<HTMLDivElement>(null);
+
+    // opened from a row far down the list: bring the form into view, ready to type
+    useEffect(() => {
+        bingkai.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        bingkai.current
+            ?.querySelector<HTMLInputElement>('#produk-nama')
+            ?.focus({ preventScroll: true });
+    }, [id]);
 
     const ubahTier = (i: number, isi: Partial<Tier>) =>
         form.setData(
@@ -79,145 +96,190 @@ export function PanelProduk({
     };
 
     return (
-        <Panel
-            judul={id === null ? 'Produk baru' : `Ubah ${nama}`}
-            sub="Kolom tabel PRODUK yang dibaca Adiva"
-        >
-            <div className="flex flex-col gap-3.5">
-                <Field label="Nama produk" htmlFor="produk-nama">
-                    <Input
-                        id="produk-nama"
-                        value={form.data.jenis_produk}
-                        onChange={(e) =>
-                            form.setData('jenis_produk', e.target.value)
-                        }
-                    />
-                </Field>
-                <div className="grid grid-cols-3 gap-3 max-md:grid-cols-1">
-                    {ISIAN.map(([kunci, label]) => (
-                        <Field
-                            key={kunci}
-                            label={label}
-                            htmlFor={`produk-${kunci}`}
-                        >
-                            <Input
-                                id={`produk-${kunci}`}
-                                value={form.data[kunci] as string}
-                                onChange={(e) =>
-                                    form.setData(kunci, e.target.value)
-                                }
-                            />
-                        </Field>
-                    ))}
-                </div>
-                <Field label="Deskripsi" htmlFor="produk-deskripsi">
-                    <Textarea
-                        id="produk-deskripsi"
-                        rows={3}
-                        value={form.data.deskripsi}
-                        onChange={(e) =>
-                            form.setData('deskripsi', e.target.value)
-                        }
-                    />
-                </Field>
-                <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-3">
-                        <span className="grow text-body font-semibold text-ink">
-                            Harga bertingkat
-                        </span>
-                        <span className="text-body text-muted">Satuan</span>
+        <div ref={bingkai} className="scroll-mt-4">
+            <Panel
+                judul={id === null ? 'Produk baru' : `Ubah ${nama}`}
+                sub="Data yang dipakai Adiva untuk menjawab customer"
+            >
+                <div className="flex flex-col gap-3.5">
+                    <Field
+                        label="Nama produk"
+                        htmlFor="produk-nama"
+                        error={galat.jenis_produk}
+                    >
                         <Input
-                            aria-label="Satuan"
-                            value={form.data.satuan}
+                            id="produk-nama"
+                            aria-invalid={galat.jenis_produk ? true : undefined}
+                            value={form.data.jenis_produk}
                             onChange={(e) =>
-                                form.setData('satuan', e.target.value)
+                                form.setData('jenis_produk', e.target.value)
                             }
-                            className="h-8 w-20"
                         />
+                    </Field>
+                    <div className="grid grid-cols-3 gap-3 max-md:grid-cols-1">
+                        {ISIAN.map(([kunci, label]) => (
+                            <Field
+                                key={kunci}
+                                label={label}
+                                htmlFor={`produk-${kunci}`}
+                            >
+                                <Input
+                                    id={`produk-${kunci}`}
+                                    value={form.data[kunci] as string}
+                                    onChange={(e) =>
+                                        form.setData(kunci, e.target.value)
+                                    }
+                                />
+                            </Field>
+                        ))}
                     </div>
-                    {form.data.tier.map((t, i) => (
-                        <div
-                            key={i}
-                            className="grid grid-cols-[90px_90px_minmax(0,1fr)_28px] items-center gap-2"
-                        >
+                    <Field label="Deskripsi" htmlFor="produk-deskripsi">
+                        <Textarea
+                            id="produk-deskripsi"
+                            rows={3}
+                            value={form.data.deskripsi}
+                            onChange={(e) =>
+                                form.setData('deskripsi', e.target.value)
+                            }
+                        />
+                    </Field>
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-3">
+                            <span className="grow text-body font-semibold text-ink">
+                                Harga bertingkat
+                            </span>
+                            <span className="text-body text-muted">Satuan</span>
                             <Input
-                                aria-label={`Minimal tingkat ${i + 1}`}
-                                inputMode="numeric"
-                                placeholder="Dari"
-                                value={t.min}
+                                aria-label="Satuan"
+                                value={form.data.satuan}
                                 onChange={(e) =>
-                                    ubahTier(i, { min: e.target.value })
+                                    form.setData('satuan', e.target.value)
                                 }
-                                className="h-8"
+                                className="h-8 w-20"
                             />
-                            <Input
-                                aria-label={`Maksimal tingkat ${i + 1}`}
-                                inputMode="numeric"
-                                placeholder="Sampai (kosong = ke atas)"
-                                value={t.max}
-                                onChange={(e) =>
-                                    ubahTier(i, { max: e.target.value })
-                                }
-                                className="h-8"
-                            />
-                            <Input
-                                aria-label={`Harga tingkat ${i + 1}`}
-                                placeholder="Harga (Rp)"
-                                value={t.harga}
-                                onChange={(e) =>
-                                    ubahTier(i, { harga: e.target.value })
-                                }
-                                className="h-8"
-                            />
-                            <button
-                                type="button"
-                                aria-label={`Hapus tingkat ${i + 1}`}
+                        </div>
+                        {form.data.tier.map((t, i) => (
+                            <div
+                                key={i}
+                                className="grid grid-cols-[90px_90px_minmax(0,1fr)_28px] items-center gap-2"
+                            >
+                                <Input
+                                    aria-label={`Minimal tingkat ${i + 1}`}
+                                    inputMode="numeric"
+                                    placeholder="Dari"
+                                    value={t.min}
+                                    onChange={(e) =>
+                                        ubahTier(i, { min: e.target.value })
+                                    }
+                                    className="h-8"
+                                />
+                                <Input
+                                    aria-label={`Maksimal tingkat ${i + 1}`}
+                                    inputMode="numeric"
+                                    placeholder="Sampai (kosong = ke atas)"
+                                    value={t.max}
+                                    onChange={(e) =>
+                                        ubahTier(i, { max: e.target.value })
+                                    }
+                                    className="h-8"
+                                />
+                                <Input
+                                    aria-label={`Harga tingkat ${i + 1}`}
+                                    aria-invalid={
+                                        galat[`tier.${i}.harga`]
+                                            ? true
+                                            : undefined
+                                    }
+                                    inputMode="numeric"
+                                    placeholder="Harga (Rp)"
+                                    value={t.harga}
+                                    onChange={(e) =>
+                                        ubahTier(i, { harga: e.target.value })
+                                    }
+                                    className="h-8"
+                                />
+                                <button
+                                    type="button"
+                                    aria-label={`Hapus tingkat ${i + 1}`}
+                                    onClick={() =>
+                                        form.setData(
+                                            'tier',
+                                            form.data.tier.filter(
+                                                (_, j) => j !== i,
+                                            ),
+                                        )
+                                    }
+                                    className="flex size-7 cursor-pointer items-center justify-center border-none bg-transparent text-muted"
+                                >
+                                    <Ikon nama="tutup" ukuran={15} />
+                                </button>
+                            </div>
+                        ))}
+                        {galatTier && (
+                            <span
+                                role="alert"
+                                className="text-caption text-red-text"
+                            >
+                                {galatTier}
+                            </span>
+                        )}
+                        <div>
+                            <Button
+                                varian="link"
                                 onClick={() =>
-                                    form.setData(
-                                        'tier',
-                                        form.data.tier.filter(
-                                            (_, j) => j !== i,
-                                        ),
+                                    form.setData('tier', [
+                                        ...form.data.tier,
+                                        { min: '', max: '', harga: '' },
+                                    ])
+                                }
+                            >
+                                <Ikon nama="tambah" ukuran={15} tebal={2} />
+                                Tambah tingkat
+                            </Button>
+                        </div>
+                    </div>
+                    {galatLain && (
+                        <span
+                            role="alert"
+                            className="text-caption text-red-text"
+                        >
+                            {galatLain}
+                        </span>
+                    )}
+                    <div className="flex gap-2">
+                        <Button
+                            varian="primary"
+                            aria-disabled={form.processing}
+                            onClick={simpanProduk}
+                        >
+                            Simpan
+                        </Button>
+                        <Button onClick={onTutup}>Batal</Button>
+                        {id !== null && (
+                            <Button
+                                varian="danger"
+                                className="ml-auto"
+                                onClick={() =>
+                                    window.confirm(
+                                        `Arsipkan ${nama}? Adiva berhenti menawarkannya. Pesanan lama tetap menampilkannya, dan produk bisa dipulihkan dari daftar Arsip.`,
+                                    ) &&
+                                    router.post(
+                                        arsip.url(id),
+                                        {},
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: onTutup,
+                                        },
                                     )
                                 }
-                                className="flex size-7 cursor-pointer items-center justify-center border-none bg-transparent text-muted"
                             >
-                                <Ikon nama="tutup" ukuran={15} />
-                            </button>
-                        </div>
-                    ))}
-                    <div>
-                        <Button
-                            varian="link"
-                            onClick={() =>
-                                form.setData('tier', [
-                                    ...form.data.tier,
-                                    { min: '', max: '', harga: '' },
-                                ])
-                            }
-                        >
-                            <Ikon nama="tambah" ukuran={15} tebal={2} />
-                            Tambah tingkat
-                        </Button>
+                                Arsipkan
+                            </Button>
+                        )}
                     </div>
                 </div>
-                {galat && (
-                    <span role="alert" className="text-caption text-red-text">
-                        {galat}
-                    </span>
-                )}
-                <div className="flex gap-2">
-                    <Button
-                        varian="primary"
-                        aria-disabled={form.processing}
-                        onClick={simpanProduk}
-                    >
-                        Simpan
-                    </Button>
-                    <Button onClick={onTutup}>Batal</Button>
-                </div>
-            </div>
-        </Panel>
+            </Panel>
+        </div>
     );
 }
 

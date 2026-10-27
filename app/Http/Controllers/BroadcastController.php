@@ -193,6 +193,20 @@ class BroadcastController extends Controller
     }
 
     /**
+     * "Hapus" on a draft. A campaign that was sent or scheduled stays as its record.
+     */
+    public function destroy(Request $request, Broadcast $broadcast): RedirectResponse
+    {
+        abort_unless($broadcast->status === StatusBroadcast::Draf, 409, 'Hanya draf yang bisa dihapus.');
+
+        $broadcast->delete();
+        Aktivitas::catat($request->user() ?? abort(403), KategoriAktivitas::Broadcast, 'Hapus draf broadcast', $broadcast->nama);
+        Inertia::flash('toast', "Draf {$broadcast->nama} dihapus.");
+
+        return to_route('broadcast');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function laporan(Broadcast $b): array
@@ -243,6 +257,7 @@ class BroadcastController extends Controller
                 'teks' => $p->balasan,
             ]),
             'bisaKirimUlang' => $b->jumlah_gagal > 0,
+            'draf' => $b->status === StatusBroadcast::Draf,
         ];
     }
 

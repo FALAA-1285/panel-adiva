@@ -22,6 +22,8 @@ type Filter = {
 };
 
 type Isian = {
+    /** The draft being edited; saving writes over it. */
+    ubah: number | null;
     template: number | null;
     nama: string;
     filter: Filter;
@@ -169,6 +171,20 @@ export default function BuatKampanye({
             { onError: (e) => setGalat(e), preserveScroll: true },
         );
 
+    // sending needs a name, a message and someone to send to; it is confirmed with the count
+    const siapKirim =
+        isian.nama.trim() !== '' && isian.pesan.trim() !== '' && jumlah > 0;
+    const kirimKampanye = () => {
+        const aksi = terjadwal ? 'jadwal' : 'kirim';
+        const kalimat = terjadwal
+            ? `Jadwalkan "${isian.nama}" untuk ${jumlah.toLocaleString('id-ID')} orang?`
+            : `Kirim "${isian.nama}" ke ${jumlah.toLocaleString('id-ID')} orang sekarang? Pesan yang sudah terkirim tidak bisa ditarik.`;
+
+        if (siapKirim && window.confirm(kalimat)) {
+            kirim(aksi);
+        }
+    };
+
     const kecepatan =
         pilihan.kecepatan.find((k) => k.nilai === isian.kecepatan) ??
         pilihan.kecepatan[0];
@@ -209,50 +225,6 @@ export default function BuatKampanye({
                         </Link>{' '}
                         <span className="text-line-strong">/</span> Kampanye
                         baru
-                    </>
-                }
-                aksi={
-                    <>
-                        <Button className="px-3" onClick={() => kirim('draf')}>
-                            <Ikon nama="simpan" ukuran={15} tebal={2} />
-                            Simpan draf
-                        </Button>
-                        <Button
-                            className="px-3"
-                            onClick={() =>
-                                router.post(
-                                    uji.url(),
-                                    {
-                                        nama: isian.nama,
-                                        pesan: isian.pesan,
-                                        gambar: isian.gambar,
-                                        tombol: isian.tombol,
-                                        stop: isian.stop,
-                                        nomor_bot: isian.nomor_bot,
-                                        // the customer the preview shows
-                                        contoh: orang?.id ?? null,
-                                    },
-                                    {
-                                        onError: (e) => setGalat(e),
-                                        preserveScroll: true,
-                                    },
-                                )
-                            }
-                        >
-                            <Ikon nama="kirim" ukuran={15} tebal={2} />
-                            Kirim uji ke supervisor
-                        </Button>
-                        <Button
-                            varian="primary"
-                            className="border-0"
-                            onClick={() =>
-                                kirim(terjadwal ? 'jadwal' : 'kirim')
-                            }
-                        >
-                            {terjadwal
-                                ? 'Jadwalkan kampanye'
-                                : 'Kirim sekarang'}
-                        </Button>
                     </>
                 }
             />
@@ -608,10 +580,11 @@ export default function BuatKampanye({
                                         Kirim lewat nomor bot
                                     </span>
                                     <span className="text-caption leading-[1.45] text-muted">
-                                        Setiap customer dikirimi dari nomor WhatsApp yang
-                                        terakhir ia gunakan, sama
+                                        Setiap customer dikirimi dari nomor
+                                        WhatsApp yang terakhir ia gunakan, sama
                                         seperti balasan dan invoice. Customer
-                                        tanpa riwayat dikirim dari nomor WhatsApp utama.
+                                        tanpa riwayat dikirim dari nomor
+                                        WhatsApp utama.
                                     </span>
                                 </div>
                                 <Select
@@ -721,6 +694,56 @@ export default function BuatKampanye({
                             Daftar penerima dikunci saat kampanye mulai.
                             Customer yang tiba-tiba dijeda atau opt-out di
                             tengah jalan otomatis dilewati.
+                        </div>
+                        <div className="flex flex-col gap-2 border-t border-line-softer pt-3">
+                            <Button
+                                varian="primary"
+                                className="w-full border-0"
+                                disabled={!siapKirim}
+                                title={
+                                    siapKirim
+                                        ? undefined
+                                        : 'Isi nama, pesan, dan penerima dulu'
+                                }
+                                onClick={kirimKampanye}
+                            >
+                                {terjadwal
+                                    ? 'Jadwalkan kampanye'
+                                    : 'Kirim sekarang'}
+                            </Button>
+                            <Button
+                                className="w-full"
+                                onClick={() =>
+                                    router.post(
+                                        uji.url(),
+                                        {
+                                            nama: isian.nama,
+                                            pesan: isian.pesan,
+                                            gambar: isian.gambar,
+                                            tombol: isian.tombol,
+                                            stop: isian.stop,
+                                            nomor_bot: isian.nomor_bot,
+                                            // the customer the preview shows
+                                            contoh: orang?.id ?? null,
+                                        },
+                                        {
+                                            onError: (e) => setGalat(e),
+                                            preserveScroll: true,
+                                        },
+                                    )
+                                }
+                            >
+                                <Ikon nama="kirim" ukuran={15} tebal={2} />
+                                Kirim uji ke supervisor
+                            </Button>
+                            <Button
+                                varian="ghost"
+                                className="w-full"
+                                onClick={() => kirim('draf')}
+                            >
+                                <Ikon nama="simpan" ukuran={15} tebal={2} />
+                                Simpan draf
+                            </Button>
                         </div>
                     </div>
                 </aside>

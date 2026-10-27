@@ -17,10 +17,17 @@ class SimpanProdukRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $angka = function (mixed $nilai): ?int {
-            $digit = preg_replace('/\D/', '', (string) $nilai) ?? '';
+        // "Rp 35.000" is 35000; an empty field is no price; text without a digit ("abc")
+        // stays as typed so the integer rule refuses it instead of it vanishing
+        $angka = function (mixed $nilai): int|string|null {
+            $teks = trim((string) $nilai);
+            $digit = preg_replace('/\D/', '', $teks) ?? '';
 
-            return $digit === '' ? null : (int) $digit;
+            return match (true) {
+                $teks === '' => null,
+                $digit === '' => $teks,
+                default => (int) $digit,
+            };
         };
 
         $this->merge([
@@ -65,6 +72,9 @@ class SimpanProdukRequest extends FormRequest
         return [
             'jenis_produk.required' => 'Isi nama produk.',
             'tier.*.min.required' => 'Isi jumlah minimal tiap tingkat harga.',
+            'tier.*.min.integer' => 'Jumlah harus angka.',
+            'tier.*.max.integer' => 'Jumlah harus angka.',
+            'tier.*.harga.integer' => 'Harga harus angka, misalnya 35000.',
         ];
     }
 

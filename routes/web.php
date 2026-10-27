@@ -91,6 +91,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/katalog/produk', [ProdukController::class, 'store'])->name('katalog.produk.tambah');
         Route::post('/katalog/produk/impor', [ProdukController::class, 'impor'])->name('katalog.produk.impor');
         Route::put('/katalog/produk/{produk}', [ProdukController::class, 'update'])->name('katalog.produk.simpan');
+        Route::post('/katalog/produk/{produk}/arsip', [ProdukController::class, 'arsip'])->name('katalog.produk.arsip');
+        Route::post('/katalog/produk/{produk}/pulihkan', [ProdukController::class, 'pulihkan'])->name('katalog.produk.pulihkan');
         Route::post('/katalog/paket', [KatalogController::class, 'tambahPaket'])->name('katalog.paket.tambah');
         Route::put('/katalog/paket/{paket}', [KatalogController::class, 'simpanPaket'])->name('katalog.paket.simpan');
         Route::post('/katalog/gambar', [GambarController::class, 'store'])->name('katalog.gambar.unggah');
@@ -164,6 +166,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/broadcast', [BuatBroadcastController::class, 'store'])->name('broadcast.simpan');
         Route::post('/broadcast/uji', [BuatBroadcastController::class, 'uji'])->name('broadcast.uji');
         Route::post('/broadcast/{broadcast}/kirim-ulang', [BroadcastController::class, 'kirimUlang'])->name('broadcast.kirim-ulang');
+        Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.hapus');
         Route::get('/broadcast/{broadcast}/ekspor', [BroadcastController::class, 'ekspor'])->name('broadcast.ekspor');
     });
 

@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import { PanelProduk, useImporCsv } from '@/components/katalog/panel-produk';
+import { pulihkan } from '@/routes/katalog/produk';
 import type { IsianProduk } from '@/components/katalog/panel-produk';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { UjiAdiva } from '@/components/katalog/uji-adiva';
@@ -33,6 +34,13 @@ type Produk = {
 type Props = {
     tab: TabKatalog;
     produk: Produk[];
+    /** No longer sold; Adiva does not offer them. */
+    arsip: {
+        id: number;
+        nama: string;
+        kategori: string | null;
+        diarsip: string | null;
+    }[];
     uji: (Uji & { produkId: number | null }) | null;
 };
 
@@ -96,7 +104,7 @@ const tool = [
     ['Cek_Ongkir', 'Info pengiriman (ongkir COD)'],
 ];
 
-export default function KatalogProduk({ tab, produk, uji }: Props) {
+export default function KatalogProduk({ tab, produk, arsip, uji }: Props) {
     const bolehUbah = usePage().props.panel?.akses.katalog ?? false;
     // 'baru': "Tambah produk"; a row: editing that product
     const [dibuka, setDibuka] = useState<Produk | 'baru' | null>(null);
@@ -104,6 +112,7 @@ export default function KatalogProduk({ tab, produk, uji }: Props) {
         router.reload({ only: ['produk', 'tab'] }),
     );
     const [cari, setCari] = useState('');
+    const [lihatArsip, setLihatArsip] = useState(false);
     const tampil = useMemo(() => {
         const kata = cari.trim().toLowerCase();
 
@@ -199,6 +208,66 @@ export default function KatalogProduk({ tab, produk, uji }: Props) {
                         />
                     </Panel>
                     <div className="flex flex-col gap-5 max-xl:grid max-xl:grid-cols-2 max-xl:items-start max-md:grid-cols-1">
+                        {arsip.length > 0 && (
+                            <Panel
+                                judul={`Arsip · ${arsip.length} produk`}
+                                sub="Tidak lagi dijual dan tidak ditawarkan Adiva"
+                                aksi={
+                                    <Button
+                                        ukuran="sm"
+                                        aria-expanded={lihatArsip}
+                                        onClick={() =>
+                                            setLihatArsip(!lihatArsip)
+                                        }
+                                    >
+                                        {lihatArsip ? 'Sembunyikan' : 'Lihat'}
+                                    </Button>
+                                }
+                                isiClassName={
+                                    lihatArsip
+                                        ? 'px-[18px] pt-1 pb-2'
+                                        : 'hidden'
+                                }
+                            >
+                                {arsip.map((a) => (
+                                    <div
+                                        key={a.id}
+                                        className="flex items-center gap-2 border-b border-line-soft py-2"
+                                    >
+                                        <span className="flex min-w-0 grow flex-col">
+                                            <span className="text-body font-medium text-ink">
+                                                {a.nama}
+                                            </span>
+                                            <span className="text-caption text-muted">
+                                                {[
+                                                    a.kategori,
+                                                    a.diarsip &&
+                                                        `diarsip ${a.diarsip}`,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </span>
+                                        </span>
+                                        {bolehUbah && (
+                                            <Button
+                                                ukuran="sm"
+                                                onClick={() =>
+                                                    router.post(
+                                                        pulihkan.url(a.id),
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                Pulihkan
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </Panel>
+                        )}
                         <UjiAdiva uji={uji} bagian="KATALOG" />
                         <Panel
                             judul="Tool yang membaca katalog"

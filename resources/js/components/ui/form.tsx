@@ -7,6 +7,8 @@ type FieldProps = {
     /** CONFIG_TOKO key shown next to the label. */
     kunci?: string;
     hint?: ReactNode;
+    /** The validation message, shown right under the control it is about. */
+    error?: string;
     children: ReactNode;
     className?: string;
 };
@@ -16,6 +18,7 @@ export function Field({
     htmlFor,
     kunci,
     hint,
+    error,
     children,
     className,
 }: FieldProps) {
@@ -29,10 +32,19 @@ export function Field({
                 {label}
             </label>
             {children}
-            {hint && (
-                <span className="text-caption leading-[1.45] text-muted">
-                    {hint}
+            {error ? (
+                <span
+                    role="alert"
+                    className="text-caption leading-[1.45] text-red-text"
+                >
+                    {error}
                 </span>
+            ) : (
+                hint && (
+                    <span className="text-caption leading-[1.45] text-muted">
+                        {hint}
+                    </span>
+                )
             )}
         </div>
     );

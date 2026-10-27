@@ -32,6 +32,7 @@ class KatalogController extends Controller
         return Inertia::render('katalog/produk', [
             'tab' => TabKatalog::hitungan(),
             'produk' => Produk::query()
+                ->dijual()
                 // "Foto: Ada" means a photo file has been uploaded, not just a row
                 ->withExists(['gambar as ada_foto' => fn ($q) => $q->adaFile()])
                 ->orderBy('id')
@@ -64,6 +65,14 @@ class KatalogController extends Controller
                         ])->all(),
                     ],
                 ]),
+            // "Arsip": no longer sold, kept so they can be brought back
+            'arsip' => Produk::query()->whereNotNull('diarsip_at')->orderByDesc('diarsip_at')->get()
+                ->map(fn (Produk $produk) => [
+                    'id' => $produk->id,
+                    'nama' => $produk->jenis_produk,
+                    'kategori' => $produk->kategori_produk,
+                    'diarsip' => $produk->diarsip_at?->translatedFormat('j M Y'),
+                ]),
             'uji' => $uji ? [
                 'pertanyaan' => $uji->pertanyaan,
                 'jawaban' => $uji->jawaban,
@@ -85,7 +94,7 @@ class KatalogController extends Controller
             // a package just added opens in the editor
             'pilih' => $request->integer('pilih') ?: null,
             // "Tambah produk" in a package suggests the catalog's names
-            'namaProduk' => Produk::query()->orderBy('jenis_produk')->pluck('jenis_produk'),
+            'namaProduk' => Produk::query()->dijual()->orderBy('jenis_produk')->pluck('jenis_produk'),
             'paket' => PaketReseller::query()
                 ->with('diubahOleh:id,name')
                 // "Terjual 14× bulan ini": packages in this month's orders that were not cancelled

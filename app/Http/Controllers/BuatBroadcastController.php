@@ -49,15 +49,20 @@ class BuatBroadcastController extends Controller
     {
         $template = TemplateBroadcast::query()->orderBy('urutan')->orderBy('id')->get();
         $dari = $request->filled('dari') ? Broadcast::query()->find($request->integer('dari')) : null;
+        $ubah = $request->filled('ubah')
+            ? Broadcast::query()->where('status', StatusBroadcast::Draf)->find($request->integer('ubah'))
+            : null;
 
         $awal = match (true) {
+            // "Ubah" on a draft: saving writes over it
+            $ubah !== null => [...$this->dariKampanye($ubah), 'ubah' => $ubah->id],
             $dari !== null => $this->dariKampanye($dari),
             // Pipeline "Broadcast ke segmen ini": an empty form for that segment
             $request->hasAny(['tipe', 'skor']) => [...$this->kosong(), 'filter' => PenerimaBroadcast::normalisasi([
                 'tipe' => array_filter([(string) $request->query('tipe')]),
                 'skor' => array_filter([(string) $request->query('skor')]),
             ])],
-            $template->isNotEmpty() => $this->dariTemplate($template->first()),
+            // a new campaign starts empty: a filled-in template looked like a campaign ready to send
             default => $this->kosong(),
         };
 
@@ -91,7 +96,7 @@ class BuatBroadcastController extends Controller
         $jumlah = PenerimaBroadcast::query($filter)->count();
         $nomorBot = $request->string('nomor_bot')->value();
 
-        $broadcast = Broadcast::create([
+        $data = [
             'nama' => $request->string('nama')->value(),
             'segmen_keterangan' => PenerimaBroadcast::keterangan($filter),
             'filter' => $filter,
@@ -118,7 +123,11 @@ class BuatBroadcastController extends Controller
             },
             'mulai_at' => $aksi === 'kirim' ? now() : null,
             'user_id' => $user->id,
-        ]);
+        ];
+
+        // a draft being edited is written over; otherwise a new campaign
+        $draf = $request->filled('ubah') ? Broadcast::query()->where('status', StatusBroadcast::Draf)->find($request->integer('ubah')) : null;
+        $broadcast = $draf !== null ? tap($draf)->update($data) : Broadcast::create($data);
 
         // "Daftar penerima dikunci saat kampanye mulai": a scheduled one is counted again then
         if ($aksi === 'kirim') {
@@ -239,6 +248,7 @@ class BuatBroadcastController extends Controller
         $jadwal = CarbonImmutable::now()->addDays(2)->setTime(9, 0);
 
         return [
+            'ubah' => null,
             'template' => null,
             'nama' => '',
             'filter' => PenerimaBroadcast::normalisasi([]),
@@ -286,7 +296,7 @@ class BuatBroadcastController extends Controller
     {
         $kategori = [];
 
-        foreach (Produk::query()->orderBy('id')->whereNotNull('kategori_produk')->get() as $produk) {
+        foreach (Produk::query()->dijual()->orderBy('id')->whereNotNull('kategori_produk')->get() as $produk) {
             if ($produk->kategori_produk !== null && ! in_array($produk->kategori_produk, $kategori, true)) {
                 $kategori[] = $produk->kategori_produk;
             }

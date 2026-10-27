@@ -19,7 +19,7 @@ class VarianProduk
     {
         $varian = [];
 
-        foreach (Produk::query()->orderBy('id')->get() as $produk) {
+        foreach (Produk::query()->dijual()->orderBy('id')->get() as $produk) {
             $judul = collect(explode(',', (string) $produk->rasa))
                 ->map(fn (string $r) => Str::title(trim($r)))
                 ->filter()

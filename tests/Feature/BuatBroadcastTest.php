@@ -55,7 +55,7 @@ test('guests are sent to the login page and staff without access are refused', f
     $this->actingAs(User::factory()->create())->get('/broadcast/baru')->assertForbidden();
 });
 
-test('the form starts from the first template', function () {
+test('the form starts empty; the templates are offered, not filled in', function () {
     TemplateBroadcast::create(['nama' => 'Restock reseller', 'nama_kampanye' => 'Restock Kripca Oktober', 'filter' => filterRestock(), 'pesan' => 'Halo kak {nama}', 'tombol' => ['Mau order', 'Lihat harga'], 'urutan' => 1]);
     TemplateBroadcast::create(['nama' => 'Info libur', 'pesan' => '[Tulis pesan info libur.]', 'urutan' => 2]);
     reseller();
@@ -67,13 +67,13 @@ test('the form starts from the first template', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('broadcast/baru')
-            ->where('awal.nama', 'Restock Kripca Oktober')
-            ->where('awal.filter.minat', ['Keripik kaca'])
-            ->where('awal.tombol', ['Mau order', 'Lihat harga'])
-            ->where('awal.tanggal', '2026-09-30')
-            ->where('awal.jam', '09:00')
-            ->where('perkiraan', 1)
+            ->where('awal.nama', '')
+            ->where('awal.pesan', '')
+            ->where('awal.filter.minat', [])
             ->has('template', 2)
+            ->where('template.0.isian.nama', 'Restock Kripca Oktober')
+            ->where('template.0.isian.filter.minat', ['Keripik kaca'])
+            ->where('template.0.isian.tombol', ['Mau order', 'Lihat harga'])
             ->where('kosong.nama', '')
             // most wanted first: the two Kripca resellers, then Rina's Molreng
             ->where('pilihan.minat', ['Keripik kaca', 'Molreng'])
@@ -228,4 +228,40 @@ test('a test message needs the supervisor\'s number and says when WhatsApp refus
     $this->actingAs($falah)->post('/broadcast/uji', $isian)
         ->assertSessionHasErrors(['pesan' => 'Pesan uji gagal dikirim: WAHA tidak bisa dihubungi']);
     expect(ActivityLog::query()->count())->toBe(0);
+});
+
+test('a draft opens to be edited, and saving writes over it instead of adding one', function () {
+    $falah = User::factory()->falah()->create();
+    reseller();
+    $isi = ['aksi' => 'draf', 'nama' => 'Promo lama', 'pesan' => 'Halo', 'filter' => filterRestock(), 'kecepatan' => 'AMAN'];
+    $this->actingAs($falah)->post('/broadcast', $isi);
+    $draf = Broadcast::query()->sole();
+
+    $this->actingAs($falah)->get("/broadcast/baru?ubah={$draf->id}")
+        ->assertInertia(fn (Assert $page) => $page->where('awal.ubah', $draf->id)->where('awal.nama', 'Promo lama'));
+
+    $this->actingAs($falah)->post('/broadcast', [...$isi, 'ubah' => $draf->id, 'nama' => 'Promo baru'])->assertSessionHasNoErrors();
+
+    expect(Broadcast::query()->count())->toBe(1)
+        ->and($draf->refresh()->nama)->toBe('Promo baru');
+});
+
+test('only a draft can be edited or deleted', function () {
+    $falah = User::factory()->falah()->create();
+    reseller();
+    $isi = ['nama' => 'Kampanye', 'pesan' => 'Halo', 'filter' => filterRestock(), 'kecepatan' => 'AMAN'];
+    $this->actingAs($falah)->post('/broadcast', [...$isi, 'aksi' => 'kirim']);
+    $terkirim = Broadcast::query()->sole();
+
+    $this->actingAs($falah)->post('/broadcast', [...$isi, 'aksi' => 'draf', 'ubah' => $terkirim->id])->assertSessionHasErrors('ubah');
+    $this->actingAs($falah)->delete("/broadcast/{$terkirim->id}")->assertStatus(409);
+
+    $this->actingAs($falah)->post('/broadcast', [...$isi, 'aksi' => 'draf', 'filter' => filterRestock(['kota' => 'SURABAYA'])]);
+    $draf = Broadcast::query()->where('status', StatusBroadcast::Draf)->sole();
+
+    $this->actingAs(User::factory()->create())->delete("/broadcast/{$draf->id}")->assertForbidden();
+    $this->actingAs($falah)->delete("/broadcast/{$draf->id}")->assertRedirect('/broadcast');
+
+    expect(Broadcast::query()->pluck('id')->all())->toBe([$terkirim->id])
+        ->and(ActivityLog::query()->latest('id')->value('aksi'))->toBe('Hapus draf broadcast');
 });

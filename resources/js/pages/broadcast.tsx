@@ -12,7 +12,7 @@ import type { Nada } from '@/components/ui/status';
 import { cocok, LAYAR } from '@/hooks/use-layar';
 import { cn } from '@/lib/utils';
 import { broadcast, percakapan } from '@/routes';
-import { baru, ekspor, kirimUlang } from '@/routes/broadcast';
+import { baru, ekspor, hapus, kirimUlang } from '@/routes/broadcast';
 
 type Baris = {
     id: number;
@@ -34,6 +34,7 @@ type Laporan = {
     dampak: { naik: number; hot: number; stop: number };
     balasan: { nama: string; jam: string; teks: string }[];
     bisaKirimUlang: boolean;
+    draf: boolean;
 };
 
 type Props = {
@@ -351,7 +352,33 @@ function LaporanKampanye({ laporan }: { laporan: Laporan }) {
                     </a>
                 ))}
             </div>
-            <div className="flex gap-2 border-t border-line-softer pt-3.5">
+            <div className="flex flex-wrap gap-2 border-t border-line-softer pt-3.5">
+                {laporan.draf && (
+                    <>
+                        <button
+                            type="button"
+                            className={tombol}
+                            onClick={() =>
+                                router.visit(
+                                    baru.url({ query: { ubah: laporan.id } }),
+                                )
+                            }
+                        >
+                            Ubah draf
+                        </button>
+                        <button
+                            type="button"
+                            className={cn(tombol, 'text-red-text')}
+                            onClick={() =>
+                                window.confirm(
+                                    `Hapus draf "${laporan.nama}"? Draf yang dihapus tidak bisa dikembalikan.`,
+                                ) && router.delete(hapus.url(laporan.id))
+                            }
+                        >
+                            Hapus draf
+                        </button>
+                    </>
+                )}
                 <button
                     type="button"
                     className={tombol}
@@ -364,7 +391,7 @@ function LaporanKampanye({ laporan }: { laporan: Laporan }) {
                 </button>
                 <button
                     type="button"
-                    className={tombol}
+                    className={cn(tombol, laporan.draf && 'hidden')}
                     disabled={!laporan.bisaKirimUlang}
                     onClick={() =>
                         router.post(
