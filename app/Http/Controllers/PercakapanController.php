@@ -188,7 +188,8 @@ class PercakapanController extends Controller
 
         Aktivitas::catat($user, KategoriAktivitas::Percakapan, 'Hapus template balasan', Str::limit($template->teks, 60));
 
-        Inertia::flash('toast', 'Template balasan dihapus.');
+        // the page says it itself, with "Urungkan"
+        Inertia::flash('toast', false);
 
         return back();
     }

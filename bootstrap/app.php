@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -30,4 +32,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // a missing page, a refused one, or a server error is shown inside the panel with a
+        // way back, not as Laravel's bare page (Audit: old order links left people stranded)
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            $status = $response->getStatusCode();
+
+            if ($request->is('api/*') || $request->expectsJson() || ! in_array($status, [403, 404, 500, 503], true)) {
+                return $response;
+            }
+
+            // while developing, the error page with the trace is what helps
+            if ($status >= 500 && config('app.debug')) {
+                return $response;
+            }
+
+            return Inertia::render('galat', ['status' => $status])
+                ->toResponse($request)
+                ->setStatusCode($status);
+        });
     })->create();

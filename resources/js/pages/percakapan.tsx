@@ -761,14 +761,15 @@ function Utas({
                         <span className="max-md:hidden">Jeda bot</span>
                     </ButtonLink>
                 )}
+                {/* labelled: it cannot be undone, so it must not hide behind a bare icon */}
                 <button
                     type="button"
-                    aria-label="Reset memori chat"
-                    title="Reset memori chat — mulai sesi ingatan AI baru untuk customer ini"
+                    title="Adiva melupakan percakapan sebelumnya dengan customer ini"
                     onClick={() => setKonfirmasiReset(true)}
-                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:border-note-amber-line hover:bg-note-amber-bg hover:text-amber-text motion-safe:transition-colors"
+                    className="flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink hover:border-note-amber-line hover:bg-note-amber-bg hover:text-amber-text motion-safe:transition-colors max-xl:w-[38px] max-xl:justify-center max-xl:px-0"
                 >
-                    <Ikon nama="segarkan" tebal={2} />
+                    <Ikon nama="segarkan" ukuran={15} tebal={2} />
+                    <span className="max-xl:sr-only">Mulai ulang bot</span>
                 </button>
                 {konfirmasiReset && (
                     <div
@@ -787,20 +788,30 @@ function Utas({
                         >
                             <div className="flex items-center gap-3">
                                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-note-amber-bg text-amber-text">
-                                    <Ikon nama="segarkan" ukuran={20} tebal={2} />
+                                    <Ikon
+                                        nama="segarkan"
+                                        ukuran={20}
+                                        tebal={2}
+                                    />
                                 </div>
                                 <h3
                                     id="judul-reset-memori"
                                     className="m-0 text-panel font-semibold text-ink"
                                 >
-                                    Reset Memori Chat Adiva?
+                                    Mulai ulang percakapan bot?
                                 </h3>
                             </div>
                             <p className="mt-3 text-body leading-relaxed text-ink-2">
-                                Adiva akan melupakan riwayat percakapan sebelumnya dan memulai sesi ingatan AI baru untuk <strong>{p.nama}</strong>. Gunakan jika bot melantur atau ingin mengulang pemahaman bot dari awal.
+                                Adiva akan melupakan riwayat percakapan
+                                sebelumnya dan memulai sesi ingatan AI baru
+                                untuk <strong>{p.nama}</strong>. Gunakan jika
+                                bot melantur atau ingin mengulang pemahaman bot
+                                dari awal.
                             </p>
                             <div className="mt-2 rounded-control bg-subtle p-3 text-caption text-muted">
-                                ℹ️ Pesan WhatsApp asli di chat <strong>tidak dihapus</strong>, hanya konteks ingatan percakapan bot yang diulang dari awal.
+                                ℹ️ Pesan WhatsApp asli di chat{' '}
+                                <strong>tidak dihapus</strong>, hanya konteks
+                                ingatan percakapan bot yang diulang dari awal.
                             </div>
                             <div className="mt-5 flex justify-end gap-2.5">
                                 <Button
@@ -821,26 +832,21 @@ function Utas({
                                         );
                                     }}
                                 >
-                                    Ya, Reset Memori
+                                    Ya, mulai ulang
                                 </Button>
                             </div>
                         </div>
                     </div>
                 )}
-                <Link
-                    href={pelanggan.url({ query: { pilih: p.id } })}
-                    className="box-content flex h-[38px] shrink-0 items-center rounded-[9px] border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink no-underline hover:bg-subtle motion-safe:transition-colors max-md:hidden"
-                >
-                    Profil
-                </Link>
+                {/* one way to the customer: the side panel, which links on to the full profile */}
                 <button
                     type="button"
-                    aria-label="Info customer"
                     aria-controls="info-customer"
                     onClick={onInfo}
-                    className="flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-control border border-line-strong bg-surface text-ink hover:bg-subtle 2xl:hidden"
+                    className="flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink hover:bg-subtle max-xl:w-[38px] max-xl:justify-center max-xl:px-0 2xl:hidden"
                 >
-                    <Ikon nama="info" tebal={2} />
+                    <Ikon nama="info" ukuran={15} tebal={2} />
+                    <span className="max-xl:sr-only">Info customer</span>
                 </button>
             </div>
 

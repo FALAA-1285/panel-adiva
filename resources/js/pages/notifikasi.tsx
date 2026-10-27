@@ -108,14 +108,12 @@ export default function HalamanNotifikasi({ tab, jumlah, hari, pj }: Props) {
                                 key={p.kunci}
                                 className="flex flex-col gap-[3px] border-b border-line-soft py-2.5"
                             >
-                                <div className="flex items-baseline gap-2">
-                                    <span className="grow text-body font-semibold">
-                                        {p.nama}
-                                    </span>
-                                    <span className="font-mono text-tag whitespace-nowrap text-muted">
-                                        {p.kunci}
-                                    </span>
-                                </div>
+                                <span
+                                    className="text-body font-semibold"
+                                    title={p.kunci}
+                                >
+                                    {p.nama}
+                                </span>
                                 <span className="text-caption leading-[1.45] text-ink-3">
                                     {p.isi}
                                 </span>

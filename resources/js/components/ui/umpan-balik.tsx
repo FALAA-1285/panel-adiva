@@ -12,13 +12,17 @@ import { cn } from '@/lib/utils';
  */
 
 type Nada = 'ok' | 'galat';
-type Pesan = { id: number; teks: string; nada: Nada };
+/** One button in the message, e.g. "Urungkan" after a delete. */
+type Aksi = { label: string; jalankan: () => void };
+type Pesan = { id: number; teks: string; nada: Nada; aksi?: Aksi };
 
 const EVENT = 'adiva:toast';
 
 /** Show a message from anywhere (e.g. after a useHttp call). */
-export function toast(teks: string, nada: Nada = 'ok'): void {
-    window.dispatchEvent(new CustomEvent(EVENT, { detail: { teks, nada } }));
+export function toast(teks: string, nada: Nada = 'ok', aksi?: Aksi): void {
+    window.dispatchEvent(
+        new CustomEvent(EVENT, { detail: { teks, nada, aksi } }),
+    );
 }
 
 const mengubah = (visit: Pick<ActiveVisit, 'method'>) => visit.method !== 'get';
@@ -28,20 +32,20 @@ export function UmpanBalik() {
     const urut = useRef(0);
 
     useEffect(() => {
-        const tambah = (teks: string, nada: Nada) => {
+        const tambah = (teks: string, nada: Nada, aksi?: Aksi) => {
             const id = ++urut.current;
-            setPesan((p) => [...p.slice(-2), { id, teks, nada }]);
+            setPesan((p) => [...p.slice(-2), { id, teks, nada, aksi }]);
             window.setTimeout(
                 () => setPesan((p) => p.filter((x) => x.id !== id)),
-                nada === 'galat' ? 6000 : 4000,
+                aksi ? 8000 : nada === 'galat' ? 6000 : 4000,
             );
         };
 
         const dariLuar = (e: Event) => {
-            const { teks, nada } = (
-                e as CustomEvent<{ teks: string; nada: Nada }>
+            const { teks, nada, aksi } = (
+                e as CustomEvent<{ teks: string; nada: Nada; aksi?: Aksi }>
             ).detail;
-            tambah(teks, nada);
+            tambah(teks, nada, aksi);
         };
 
         // the button that started a change, and whether one is on its way
@@ -156,6 +160,18 @@ export function UmpanBalik() {
                         className="mt-px shrink-0"
                     />
                     <span className="grow leading-[1.45]">{p.teks}</span>
+                    {p.aksi && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                p.aksi?.jalankan();
+                                setPesan((x) => x.filter((y) => y.id !== p.id));
+                            }}
+                            className="-my-0.5 shrink-0 cursor-pointer rounded-tag border-none bg-transparent px-1.5 py-0.5 font-semibold text-current underline underline-offset-2"
+                        >
+                            {p.aksi.label}
+                        </button>
+                    )}
                     <button
                         type="button"
                         aria-label="Tutup pesan"

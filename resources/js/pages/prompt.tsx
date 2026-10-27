@@ -257,7 +257,7 @@ function PanelBagian({
         <Panel
             judul={`${bagian.no} · ${bagian.judul}`}
             sub={[
-                'Diambil dari prompt sistem node Agen AI Penjawab',
+                'Diambil dari prompt sistem Adiva',
                 bagian.keterangan,
             ]
                 .filter(Boolean)

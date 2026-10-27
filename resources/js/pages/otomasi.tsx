@@ -73,7 +73,11 @@ const kolom: KolomTabel<Workflow>[] = [
         cell: ({ row }) => (
             <>
                 <T1 className="font-semibold">{row.original.nama}</T1>
-                <T2>{row.original.jadwalKeterangan || row.original.jadwal || 'Otomasi Adiva'}</T2>
+                <T2>
+                    {row.original.jadwalKeterangan ||
+                        row.original.jadwal ||
+                        'Otomasi Adiva'}
+                </T2>
             </>
         ),
     },
@@ -643,12 +647,9 @@ function LangkahWaktu({
                 {no}
             </span>
             <div className="flex min-w-0 flex-col gap-0.5">
-                <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="text-body font-semibold">{judul}</span>
-                    <span className="font-mono text-tag whitespace-nowrap text-muted">
-                        {kunci}
-                    </span>
-                </div>
+                <span className="text-body font-semibold" title={kunci}>
+                    {judul}
+                </span>
                 <span className="text-caption leading-[1.45] text-ink-3">
                     {isi}
                 </span>
@@ -676,14 +677,9 @@ function Aturan({
                 !pertama && 'border-t border-line-soft',
             )}
         >
-            <div className="flex flex-col gap-0.5">
-                <span className="text-body font-semibold">{judul}</span>
-                {kunci && (
-                    <span className="font-mono text-key whitespace-nowrap text-muted">
-                        {kunci}
-                    </span>
-                )}
-            </div>
+            <span className="text-body font-semibold" title={kunci}>
+                {judul}
+            </span>
             <span className="text-caption leading-[1.45] text-ink-3">
                 {children}
             </span>

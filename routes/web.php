@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LupaSandiController;
 use App\Http\Controllers\Auth\MasukKodeController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\BuatBroadcastController;
+use App\Http\Controllers\CariController;
 use App\Http\Controllers\CatatOrderController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\DetailPesananController;
@@ -65,6 +66,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', [RingkasanController::class, 'index'])->name('home');
     Route::get('/ringkasan/ekspor', [RingkasanController::class, 'ekspor'])->name('ringkasan.ekspor');
+    Route::get('/cari', CariController::class)->middleware('throttle:60,1')->name('cari');
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan');
     Route::get('/pesanan/ekspor', [PesananController::class, 'ekspor'])->name('pesanan.ekspor');
     // before /pesanan/{order}, so "baru" is not read as an order number

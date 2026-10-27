@@ -15,7 +15,7 @@ import { Ikon } from '@/components/ui/ikon';
 import { InputCari } from '@/components/ui/input-cari';
 import { Panel } from '@/components/ui/panel';
 import { Status } from '@/components/ui/status';
-import { Mono, T1, T2 } from '@/components/ui/teks';
+import { T1, T2 } from '@/components/ui/teks';
 import { cn } from '@/lib/utils';
 
 type Produk = {
@@ -92,15 +92,15 @@ const kolom: KolomTabel<Produk>[] = [
     },
 ];
 
-// Tools in the n8n workflow that read this data (Katalog.dc.html).
+// What Adiva reads this data for; the n8n tool name is the tooltip.
 const tool = [
-    ['Cari_Produk_per_Kategori', 'Produk'],
-    ['Rekomendasi_Produk_Semua', 'Produk'],
-    ['Paket_Reseller', 'Paket reseller'],
-    ['Cari_Gambar_Produk', 'Gambar produk'],
-    ['KB_Kebijakan', 'Kebijakan'],
-    ['KB_Harga_Karyawan', 'Program karyawan'],
-    ['Cek_Order_Saya', 'Pesanan'],
+    ['Cari_Produk_per_Kategori', 'Mencari produk per kategori'],
+    ['Rekomendasi_Produk_Semua', 'Menyarankan produk yang cocok'],
+    ['Paket_Reseller', 'Menawarkan paket reseller'],
+    ['Cari_Gambar_Produk', 'Mengirim foto produk'],
+    ['KB_Kebijakan', 'Menjawab kebijakan toko'],
+    ['KB_Harga_Karyawan', 'Harga khusus karyawan'],
+    ['Cek_Order_Saya', 'Mengecek status pesanan'],
     ['Cek_Ongkir', 'Info pengiriman (ongkir COD)'],
 ];
 
@@ -270,7 +270,7 @@ export default function KatalogProduk({ tab, produk, arsip, uji }: Props) {
                         )}
                         <UjiAdiva uji={uji} bagian="KATALOG" />
                         <Panel
-                            judul="Tool yang membaca katalog"
+                            judul="Dipakai Adiva untuk menjawab"
                             isiClassName="px-[18px] pt-1 pb-2"
                         >
                             {tool.map(([nama, bagian]) => (
@@ -278,11 +278,10 @@ export default function KatalogProduk({ tab, produk, arsip, uji }: Props) {
                                     key={nama}
                                     className="flex items-center gap-2 border-b border-line-soft py-[7px]"
                                 >
-                                    <Mono className="text-tag font-normal text-ink">
-                                        {nama}
-                                    </Mono>
-                                    <span className="grow" />
-                                    <span className="text-caption text-muted">
+                                    <span
+                                        className="grow text-body text-ink"
+                                        title={nama}
+                                    >
                                         {bagian}
                                     </span>
                                 </div>

@@ -253,11 +253,6 @@ function Rincian({
                     <KeyValue label="Oleh">{rincian.oleh}</KeyValue>
                     <KeyValue label="Waktu">{rincian.waktu}</KeyValue>
                     <KeyValue label="Sumber">{rincian.sumber}</KeyValue>
-                    {rincian.kunci && (
-                        <KeyValue label="Kunci" mono>
-                            {rincian.kunci}
-                        </KeyValue>
-                    )}
                 </div>
                 {rincian.sebelum !== null && rincian.sesudah !== null && (
                     <div className="grid grid-cols-2 gap-2">

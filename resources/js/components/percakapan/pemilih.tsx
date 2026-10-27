@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Input } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { toast } from '@/components/ui/umpan-balik';
 import { cn } from '@/lib/utils';
 import { hapus, simpan } from '@/routes/percakapan/template';
 
@@ -126,6 +127,20 @@ export function MenuTemplate({
                                         preserveScroll: true,
                                         preserveState: true,
                                         only: ['template'],
+                                        onSuccess: () =>
+                                            toast('Template dihapus.', 'ok', {
+                                                label: 'Urungkan',
+                                                jalankan: () =>
+                                                    router.post(
+                                                        simpan.url(),
+                                                        { teks: t.teks },
+                                                        {
+                                                            preserveScroll: true,
+                                                            preserveState: true,
+                                                            only: ['template'],
+                                                        },
+                                                    ),
+                                            }),
                                     })
                                 }
                                 className="flex size-8 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted"

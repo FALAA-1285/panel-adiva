@@ -1508,7 +1508,7 @@ class DemoSeeder extends Seeder
             ['pantau_koneksi', '11:52', 'Nomor Lawang terputus ± 22 menit', 'Pantau Koneksi · 2× cek gagal → supervisor dikabari lewat Nomor Utama · tersambung lagi 11:52'],
             ['chatbot', '10:40', 'Invoice PDF gagal · ORD-260927-027', '2× percobaan gagal → invoice dikirim versi teks · admin dikabari'],
             ['chatbot', '09:05', 'Daftar jeda gagal dibaca', 'Supervisor dikabari supaya tidak ada customer dijeda yang disela bot'],
-            ['chatbot', '08:12', 'Nomor asli customer tidak ditemukan (ID @lid)', 'Chat tetap dijawab memakai ID chat'],
+            ['chatbot', '08:12', 'Nomor asli customer tidak ditemukan', 'WhatsApp menyembunyikan nomornya; chat tetap dijawab'],
             ['batas_bayar', '07:15', 'Workflow Batas Bayar Order gagal', 'Notifikasi Error mengirim detail ke supervisor · putaran 08:15 berjalan normal'],
         ] as [$kode, $jam, $judul, $detail]) {
             WorkflowEvent::create([
@@ -1720,12 +1720,12 @@ class DemoSeeder extends Seeder
         $utas = [
             [$customer('Rina Maharani'), '2026-09-28', [
                 ['c', "kak mau tanya paket reseller buat kantin sekolah\nmodal sekitar 1,5jt\nyg laris apa ya", '13:02'],
-                ['s', '3 pesan beruntun digabung · buffer 8 detik'],
+                ['s', '3 pesan beruntun dibaca sekaligus'],
                 ['b', 'Halo kak Rina, salam kenal ya. Untuk kantin sekolah dengan modal sekitar 1,5 juta, yang paling cepat habis biasanya Molreng Reguler dan Basreng Pedas Daun Jeruk. Mau Adiva kirimkan foto dan harga bertingkatnya?', '13:03', null, ['Mau, kirim foto', 'Lihat paket reseller']],
                 ['c', 'Mau, kirim foto', '13:03'],
                 ['b', 'Molreng Reguler Bawang Original — harga turun di pembelian 10+ dan 50+ pcs ya kak.', '13:03', 'Molreng Reguler Bawang Original'],
                 ['c', 'ok aku ambil molreng 40, basreng 30. kirim ke Dinoyo Lowokwaru ya', '13:05'],
-                ['s', 'Tool dipakai: Cari_Produk_per_Kategori · Cek_Ongkir'],
+                ['s', 'Adiva mengecek harga produk dan info pengiriman'],
                 ['b', "Siap kak. Ongkir dari Sawojajar ke Dinoyo (±1,6 kg):\n• JNE REG Rp38.000 (2–3 hari)\n• SiCepat REG Rp35.000\n• GoSend Instant Rp27.000\nMau pakai kurir yang mana?", '13:05'],
                 ['c', 'JNE aja kak', '13:06'],
                 ['b', "Ringkasan pesanan kak Rina:\n• Molreng Reguler Bawang Original × 40\n• Basreng Pedas Daun Jeruk × 30\nTotal produk Rp1.245.000 + ongkir Rp38.000\nPesanan sudah diteruskan ke admin untuk dicek, invoice menyusul ya kak.", '13:06'],
@@ -1734,9 +1734,9 @@ class DemoSeeder extends Seeder
             [$customer('Pak Hendra'), '2026-09-28', [
                 ['c', 'sore kak, saya punya toko oleh2 di Batu', '12:46'],
                 ['c', 'kalau ambil 200 pcs basreng bisa harga distributor?', '12:47'],
-                ['s', '2 pesan beruntun digabung · buffer 8 detik'],
+                ['s', '2 pesan beruntun dibaca sekaligus'],
                 ['b', 'Sore Pak Hendra, terima kasih sudah menghubungi Bang Bana. Untuk pembelian 200 pcs rutin, harga khususnya ditentukan langsung oleh admin kami ya Pak. Adiva sudah teruskan, admin akan segera menghubungi Bapak.', '12:48'],
-                ['s', 'butuh_admin = true · notifikasi terkirim ke supervisor (ADMIN_WA)'],
+                ['s', 'Adiva meminta bantuan admin · supervisor dikabari'],
             ]],
             [$customer('Bu Wati'), '2026-09-28', [
                 ['c', 'mbak seblak yg kemarin bungkusnya bocor 2', '10:01'],
@@ -1748,13 +1748,13 @@ class DemoSeeder extends Seeder
             ]],
             [$customer('Yoga'), '2026-09-28', [
                 ['c', 'mbak aku karyawan produksi, mau ambil basreng 4 pack harga karyawan', '10:29'],
-                ['s', 'Tool dipakai: KB_Harga_Karyawan · nomor cocok dengan tabel KARYAWAN'],
+                ['s', 'Adiva mengecek harga karyawan · nomor terdaftar sebagai karyawan'],
                 ['b', 'Siap mas Yoga. 4 pack Basreng Original harga karyawan totalnya Rp96.000, dibayar lewat potong gaji ya. Info pengambilan nanti diumumkan di grup Anak Bang Bana.', '10:30', null, ['Ya, konfirmasi', 'Ubah pesanan']],
                 ['c', 'potong gaji aja ya mbak', '10:31'],
-                ['s', 'ORD-260928-011 dicatat · diteruskan ke Bu Sarah (SARAH_WA)'],
+                ['s', 'ORD-260928-011 dicatat · diteruskan ke Bu Sarah'],
             ]],
             [$tanpaNama->refresh(), '2026-09-26', [
-                ['s', 'Nomor HP asli dicari dari ID @lid (Cari Nomor dari LID)', '09:13'],
+                ['s', 'Nomor HP customer disembunyikan WhatsApp · Adiva mencari nomor aslinya', '09:13'],
                 ['c', 'P', '09:13'],
                 ['c', 'kak', '09:13'],
                 ['b', 'Halo kak, dengan Adiva dari Bang Bana. Camilannya mau untuk dijual lagi atau dinikmati sendiri?', '09:14', null, ['Untuk dijual lagi', 'Untuk sendiri']],
