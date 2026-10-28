@@ -5,8 +5,9 @@ Panel web untuk memantau dan mengendalikan bot WhatsApp "Adiva". Bot-nya berjala
 ## Stack
 
 - Laravel 13 (PHP 8.4), Inertia 3, React 19 + TypeScript, Tailwind CSS 4
-- PostgreSQL 18, Redis + Horizon untuk antrean
-- Radix UI primitives tanpa gaya bawaan, `lucide-react`, TanStack Table, dnd-kit, grafik SVG sendiri
+- PostgreSQL (Supabase di produksi); antrean, cache, dan sesi memakai driver `database`
+- Komponen UI buatan sendiri di `resources/js/components/ui/` (tanpa pustaka komponen), ikon SVG sendiri, TanStack Table, grafik SVG sendiri
+- Build aset: `vite-plus` (`npm run build`)
 
 ## Menjalankan
 
@@ -16,9 +17,13 @@ cp .env.example .env && php artisan key:generate
 php artisan migrate
 npm run dev          # atau npm run build
 php artisan serve
+php artisan queue:work   # pesan masuk, balasan, broadcast
+php artisan schedule:work
 ```
 
-Pengaturan yang perlu diisi untuk menjalankan bot sungguhan: `BOT_DRIVER`, `WAHA_URL`, `WAHA_KEY`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`. `MENGANTAR_API_KEY` disimpan di tabel `config_toko` dan bisa diubah dari halaman Pengaturan. `GEMINI_API_KEY` tidak diperlukan panel — kunci itu tetap hanya di credential n8n.
+Pengaturan yang perlu diisi untuk menjalankan bot sungguhan: `BOT_DRIVER`, `WAHA_URL`, `WAHA_KEY`, `WAHA_WEBHOOK_SECRET`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`. Rekening, ongkir, dan packing disimpan di tabel `config_toko` dan diubah dari halaman Pengaturan. `GEMINI_API_KEY` tidak diperlukan panel — kunci itu tetap hanya di credential n8n.
+
+> `.env` lokal bisa menunjuk ke Supabase. Perintah yang menulis database (`migrate`, `db:seed`) sebaiknya selalu diberi target yang jelas.
 
 ## Mode demo
 
@@ -29,7 +34,21 @@ APP_DEMO=true DB_DATABASE=panel_adiva_demo php artisan migrate:fresh --seed
 APP_DEMO=true DB_DATABASE=panel_adiva_demo php artisan serve --port=8010
 ```
 
-Rute `/_demo/login` (masuk sebagai Falah, Supervisor) dan `/_demo/komponen/{sidebar|topbar}` hanya aktif saat `APP_DEMO=true`.
+Rute `/_demo/komponen/{sidebar|topbar}` aktif saat `APP_DEMO=true`. Rute `/_demo/login` (masuk sebagai Falah, Supervisor, **tanpa kata sandi**) hanya terbuka di luar `APP_ENV=production`; di produksi ia 404 kecuali `APP_DEMO_LOGIN=true` dipasang dengan sengaja.
+
+## Deploy ke Vercel
+
+Vercel **tidak** membangun aset sendiri (`vercel.json`: `buildCommand` hanya `echo`), karena build Vite memanggil `php artisan wayfinder:generate` dan mesin build Vercel tidak punya PHP. `public/build` juga tidak masuk git. Akibatnya **push ke GitHub saja tidak mengubah situs**. Deploy dari mesin lokal:
+
+```bash
+php artisan migrate --force   # bila ada migrasi baru; .env harus menunjuk ke Supabase
+npm run build
+vercel --prod                 # .vercelignore mengikutkan public/build
+```
+
+Env di `vercel.json`: `CACHE_STORE=database` dan `SESSION_DRIVER=database`. Jangan diganti `array`/`cookie`: pembatas percobaan login dan OTP, kunci perintah order, dan "keluarkan sesi" bergantung pada penyimpanan bersama.
+
+Worker antrean dan scheduler tidak bisa berjalan di Vercel; jalankan di VPS (`docs/deploy-vps.md`).
 
 ## Uji
 
@@ -41,13 +60,15 @@ npm run responsif           # cek tidak ada yang meluber ke samping di 1280/1024
 ./vendor/bin/phpstan
 ```
 
-`npm run responsif` membaca daftar halaman dari `scripts/halaman.json` dan menulis gambar ke `visual-diff/responsif/`.
+`npm run responsif` membaca daftar halaman dari `scripts/halaman.json` dan menulis gambar ke `visual-diff/responsif/`. Set `APP_URL` ke server demo (mis. `http://127.0.0.1:8010`).
 
 ## Dokumen
 
-| Path                      | Isi                                             |
-| ------------------------- | ----------------------------------------------- |
-| `CLAUDE.md`               | Aturan proyek untuk Claude Code                 |
-| `docs/kontrak-n8n.md`     | Kontrak antara panel dan workflow n8n           |
-| `docs/audit-kepadatan.md` | Hasil ukur tiap halaman sebelum desain dirombak |
-| `docs/urutan-prompt.md`   | Catatan urutan pembangunan panel                |
+| Path                      | Isi                                                        |
+| ------------------------- | ---------------------------------------------------------- |
+| `CLAUDE.md`               | Aturan proyek untuk Claude Code (lokal, tidak ikut repo)   |
+| `docs/kontrak-n8n.md`     | Kontrak antara panel dan workflow n8n                      |
+| `docs/deploy-vps.md`      | Worker, scheduler, WAHA, dan n8n di VPS                    |
+| `docs/studi-kasus.md`     | Ringkasan arsitektur untuk portofolio                      |
+| `docs/audit-kepadatan.md` | Hasil ukur tiap halaman sebelum desain dirombak            |
+| `docs/urutan-prompt.md`   | Catatan urutan pembangunan panel                           |

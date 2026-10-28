@@ -15,7 +15,7 @@ Empat container dari satu image:
 |---|---|---|
 | `panel-migrasi` | `migrate --force` | Sekali jalan lalu berhenti; yang lain menunggu sampai ia selesai |
 | `panel-web` | bawaan image | Melayani panel di `:8080` — **tidak perlu kalau panel disajikan Vercel** |
-| `panel-worker` | `queue:work` | 9 job di `app/Jobs/`: pesan masuk, balasan keluar, broadcast, order Mengantar |
+| `panel-worker` | `queue:work` | 8 job di `app/Jobs/`: pesan masuk, balasan keluar, broadcast, kabar ke n8n |
 | `panel-cron` | `schedule:work` | `broadcast:lanjutkan` tiap 5 menit, `notifikasi:kirim-wa` tiap 15 detik, `n8n:sinkron` tiap menit, `jeda:ingatkan` 09.00 |
 
 Tanpa `panel-worker`, pesan customer berhenti di tabel `jobs` dan Adiva tidak pernah menjawab. Tanpa `panel-cron`, broadcast berhenti di tengah dan notifikasi WhatsApp tidak terkirim.
