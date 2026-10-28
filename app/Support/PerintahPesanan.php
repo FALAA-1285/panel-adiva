@@ -267,12 +267,15 @@ class PerintahPesanan
         $awalan = 'INV/'.now()->format('Y/m').'/';
         $nomor = fn (?string $invoice) => str_starts_with((string) $invoice, $awalan) ? (int) substr((string) $invoice, strlen($awalan)) : 0;
 
+        // the row must exist to be locked: two ACCs on different orders take turns here
+        ConfigToko::query()->firstOrCreate(['kunci' => 'INVOICE_TERAKHIR'], ['nilai' => PengaturanToko::nilai('INVOICE_TERAKHIR')]);
         $config = ConfigToko::query()->where('kunci', 'INVOICE_TERAKHIR')->lockForUpdate()->first();
-        $terakhirConfig = $nomor($config ? $config->nilai : PengaturanToko::nilai('INVOICE_TERAKHIR'));
+        $terakhirConfig = $nomor($config?->nilai);
 
+        // by the number, not the text: "INV/2026/09/1000" comes after ".../999" (Audit AUD-018)
         $terakhirOrder = LogOrder::query()
             ->where('invoice_number', 'like', $awalan.'%')
-            ->orderByDesc('invoice_number')
+            ->orderByRaw("cast(split_part(invoice_number, '/', 4) as integer) desc")
             ->value('invoice_number');
 
         $terakhir = max($terakhirConfig, $nomor($terakhirOrder));

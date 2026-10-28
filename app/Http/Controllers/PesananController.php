@@ -25,10 +25,12 @@ use App\Support\PerintahPesanan;
 use App\Support\Rupiah;
 use App\Support\UbahItemPesanan;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,6 +47,9 @@ class PesananController extends Controller
 
     /** How the list may be sorted; "status" is the workflow order (running first). */
     private const URUTAN = ['status', 'terbaru', 'terlama', 'total'];
+
+    /** Seconds an order command waits for another command on the same order to finish. */
+    private const TUNGGU_KUNCI = 15;
 
     public function index(Request $request): Response
     {
@@ -82,20 +87,32 @@ class PesananController extends Controller
     {
         $user = $request->user() ?? abort(403);
         $aksi = $request->aksi();
+        $catatan = $request->validated('catatan');
 
-        if ($alasan = PerintahPesanan::alasanTidakBerlaku($aksi, $order, $user, $request->validated('catatan'))) {
-            throw ValidationException::withMessages(['aksi' => $alasan]);
-        }
-
-        // an expedition parcel is sent by the CS in the courier's app: KIRIM records its waybill
-        if ($aksi === AksiPesanan::Kirim && blank($request->validated('catatan')) && PerintahPesanan::butuhResi($order)) {
-            throw ValidationException::withMessages(['aksi' => 'Nomor resinya belum disertakan. Contoh: JNE1234567890']);
-        }
-
+        // One command per order at a time: two staff pressing ACC together would otherwise
+        // both pass the status check and send two invoices (Audit AUD-006). The second one
+        // waits, then is checked against the status the first one left.
         try {
-            $perintah->jalankan($aksi, $order, $user, $request->validated('catatan'));
-        } catch (PerintahGagal $e) {
-            throw ValidationException::withMessages(['aksi' => $e->getMessage()]);
+            Cache::lock("pesanan:{$order->id}", 60)->block(self::TUNGGU_KUNCI, function () use ($aksi, $order, $user, $catatan, $perintah) {
+                $order->refresh();
+
+                if ($alasan = PerintahPesanan::alasanTidakBerlaku($aksi, $order, $user, $catatan)) {
+                    throw ValidationException::withMessages(['aksi' => $alasan]);
+                }
+
+                // an expedition parcel is sent by the CS in the courier's app: KIRIM records its waybill
+                if ($aksi === AksiPesanan::Kirim && blank($catatan) && PerintahPesanan::butuhResi($order)) {
+                    throw ValidationException::withMessages(['aksi' => 'Nomor resinya belum disertakan. Contoh: JNE1234567890']);
+                }
+
+                try {
+                    $perintah->jalankan($aksi, $order, $user, $catatan);
+                } catch (PerintahGagal $e) {
+                    throw ValidationException::withMessages(['aksi' => $e->getMessage()]);
+                }
+            });
+        } catch (LockTimeoutException) {
+            throw ValidationException::withMessages(['aksi' => "{$order->order_id} sedang diproses staf lain. Tunggu sebentar, lalu coba lagi."]);
         }
 
         Inertia::flash('toast', "{$aksi->value} {$order->order_id} · {$aksi->keterangan()}.");

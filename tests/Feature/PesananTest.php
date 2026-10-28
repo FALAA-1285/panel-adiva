@@ -8,6 +8,8 @@ use App\Models\ActivityLog;
 use App\Models\ConfigToko;
 use App\Models\LogOrder;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -141,6 +143,45 @@ test('the next invoice follows INVOICE_TERAKHIR from Pengaturan', function () {
         // paid at pickup: no transfer deadline
         ->and($order->batas_bayar_at)->toBeNull()
         ->and(ConfigToko::query()->where('kunci', 'INVOICE_TERAKHIR')->value('nilai'))->toBe('INV/2026/09/142');
+});
+
+test('the next invoice counts past 999 by number, not by text', function () {
+    LogOrder::factory()->status(StatusOrder::Diacc)->create(['invoice_number' => 'INV/2026/09/999']);
+    LogOrder::factory()->status(StatusOrder::Diacc)->create(['invoice_number' => 'INV/2026/09/1000']);
+    $order = LogOrder::factory()->create(['order_id' => 'ORD-260928-014', 'metode_bayar' => 'TRANSFER']);
+
+    $this->actingAs(User::factory()->falah()->create())->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'ACC'])
+        ->assertSessionHasNoErrors();
+
+    expect($order->refresh()->invoice_number)->toBe('INV/2026/09/1001');
+});
+
+test('a command waits while another command runs on the same order', function () {
+    Sleep::fake(syncWithCarbon: true);
+    $order = LogOrder::factory()->create(['order_id' => 'ORD-260928-014', 'metode_bayar' => 'TRANSFER']);
+    // another staff member's ACC is still running
+    $lain = Cache::lock("pesanan:{$order->id}", 60);
+    $lain->get();
+
+    $this->actingAs(User::factory()->falah()->create())
+        ->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'ACC'])
+        ->assertSessionHasErrors(['aksi' => 'ORD-260928-014 sedang diproses staf lain. Tunggu sebentar, lalu coba lagi.']);
+
+    expect($order->refresh()->status_order)->toBe(StatusOrder::MenungguKonfirmasi)
+        ->and($order->invoice_number)->toBeNull();
+    $lain->release();
+});
+
+test('the second of two ACCs is checked against the status the first left', function () {
+    $order = LogOrder::factory()->create(['order_id' => 'ORD-260928-014', 'metode_bayar' => 'TRANSFER']);
+    $falah = User::factory()->falah()->create();
+
+    $this->actingAs($falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'ACC'])->assertSessionHasNoErrors();
+    $this->actingAs($falah)->post('/pesanan/ORD-260928-014/aksi', ['aksi' => 'ACC'])
+        ->assertSessionHasErrors('aksi');
+
+    expect($order->refresh()->invoice_number)->toBe('INV/2026/09/001')
+        ->and($order->riwayat()->count())->toBe(1);
 });
 
 test('a command that does not apply is refused', function () {
