@@ -159,7 +159,7 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
                     aria-label="Filter"
                     className="flex flex-wrap items-center gap-2.5"
                 >
-                    <label className="fokus-bingkai box-border flex h-[38px] w-[260px] items-center gap-2 rounded-control border border-line-control bg-surface px-3 text-muted max-md:w-full">
+                    <label className="box-border flex h-[38px] w-[260px] items-center gap-2 rounded-control border fokus-bingkai border-line-control bg-surface px-3 text-muted max-md:w-full">
                         <Ikon nama="cari" tebal={2} />
                         <input
                             type="search"

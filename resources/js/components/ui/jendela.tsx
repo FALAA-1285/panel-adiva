@@ -49,7 +49,7 @@ export function Jendela({
             // the backdrop is the dialog itself; the content is a child
             onClick={(e) => e.target === e.currentTarget && onTutup()}
             className={cn(
-                'm-auto w-[min(520px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] rounded-card border border-line bg-surface p-0 font-sans text-ink shadow-lg backdrop:bg-ink/40',
+                'm-auto max-h-[calc(100dvh-48px)] w-[min(520px,calc(100vw-32px))] rounded-card border border-line bg-surface p-0 font-sans text-ink shadow-lg backdrop:bg-ink/40',
                 className,
             )}
         >

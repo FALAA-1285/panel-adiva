@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm, useHttp } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import {
@@ -157,8 +157,7 @@ export default function Pengaturan({
     const ubahAi = (kunci: keyof Ai, nilaiBaru: string) =>
         form.setData('ai', { ...form.data.ai, [kunci]: nilaiBaru });
 
-    const simpanSemua = () =>
-        form.put(simpan.url(), { preserveScroll: true });
+    const simpanSemua = () => form.put(simpan.url(), { preserveScroll: true });
 
     const adaKolom1 =
         tabAktif === 'semua' ||

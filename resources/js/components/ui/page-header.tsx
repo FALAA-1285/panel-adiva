@@ -55,7 +55,7 @@ export function PageHeader({
                         aria-label={tabLabel}
                         // narrow screens: the tabs scroll sideways instead of wrapping
                         className={cn(
-                            'flex gap-6 border-b border-line [scrollbar-width:none] overflow-x-auto max-md:gap-5',
+                            'flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-line max-md:gap-5',
                             aksi && 'mt-3',
                         )}
                     >
@@ -119,7 +119,7 @@ export function PageHeader({
                 <nav
                     aria-label={tabLabel}
                     // narrow screens: the tabs scroll sideways instead of wrapping
-                    className="mt-3.5 flex gap-6 border-b border-line [scrollbar-width:none] overflow-x-auto max-md:gap-5"
+                    className="mt-3.5 flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-line max-md:gap-5"
                 >
                     {tab.map((t) => (
                         <TabItem key={t.label} tab={t} />

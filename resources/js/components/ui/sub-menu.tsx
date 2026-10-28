@@ -26,7 +26,7 @@ export function SubMenu({
     return (
         <nav
             aria-label={`Bagian ${sub.induk}`}
-            className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-line bg-surface px-6 py-2 [scrollbar-width:none] max-md:px-3"
+            className="flex shrink-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto border-b border-line bg-surface px-6 py-2 max-md:px-3"
         >
             {sub.halaman.map((h) => {
                 const aktif = h.kode === active;

@@ -5,12 +5,36 @@ import { cn } from '@/lib/utils';
 export type Nada = 'blue' | 'amber' | 'green' | 'red' | 'gray' | 'violet';
 
 const warna: Record<Nada, { teks: string; titik: string; pil: string }> = {
-    blue: { teks: 'text-blue-text', titik: 'bg-blue-dot', pil: 'bg-blue-bg border-line' },
-    amber: { teks: 'text-amber-text', titik: 'bg-amber-dot', pil: 'bg-amber-bg border-note-amber-line' },
-    green: { teks: 'text-green-text', titik: 'bg-green-dot', pil: 'bg-green-bg border-ok-line' },
-    red: { teks: 'text-red-text', titik: 'bg-red-dot', pil: 'bg-red-bg border-note-red-line' },
-    gray: { teks: 'text-gray-text', titik: 'bg-gray-dot', pil: 'bg-gray-bg border-line' },
-    violet: { teks: 'text-violet-text', titik: 'bg-violet-dot', pil: 'bg-violet-bg border-violet-dot/30' },
+    blue: {
+        teks: 'text-blue-text',
+        titik: 'bg-blue-dot',
+        pil: 'bg-blue-bg border-line',
+    },
+    amber: {
+        teks: 'text-amber-text',
+        titik: 'bg-amber-dot',
+        pil: 'bg-amber-bg border-note-amber-line',
+    },
+    green: {
+        teks: 'text-green-text',
+        titik: 'bg-green-dot',
+        pil: 'bg-green-bg border-ok-line',
+    },
+    red: {
+        teks: 'text-red-text',
+        titik: 'bg-red-dot',
+        pil: 'bg-red-bg border-note-red-line',
+    },
+    gray: {
+        teks: 'text-gray-text',
+        titik: 'bg-gray-dot',
+        pil: 'bg-gray-bg border-line',
+    },
+    violet: {
+        teks: 'text-violet-text',
+        titik: 'bg-violet-dot',
+        pil: 'bg-violet-bg border-violet-dot/30',
+    },
 };
 
 /** Done, waiting and stopped carry a sign besides their colour (✓ ⏳ ✕). */
@@ -69,7 +93,12 @@ export function Status({
             )}
         >
             {ikon ? (
-                <Ikon nama={ikon} ukuran={12} tebal={2.4} className="shrink-0" />
+                <Ikon
+                    nama={ikon}
+                    ukuran={12}
+                    tebal={2.4}
+                    className="shrink-0"
+                />
             ) : (
                 <span
                     className={cn(

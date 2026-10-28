@@ -255,7 +255,7 @@ export default function HalamanPercakapan({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 pt-3.5 pb-2.5">
-                        <label className="fokus-bingkai box-border flex h-10 items-center gap-2 rounded-control border border-line-control px-3 text-muted">
+                        <label className="box-border flex h-10 items-center gap-2 rounded-control border fokus-bingkai border-line-control px-3 text-muted">
                             <Ikon nama="cari" tebal={2} />
                             <input
                                 type="search"

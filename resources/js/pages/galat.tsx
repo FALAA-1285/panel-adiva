@@ -48,7 +48,7 @@ export default function Galat({ status }: { status: number }) {
                 </p>
                 {status === 404 && panel && (
                     <form
-                        className="fokus-bingkai flex h-10 w-full items-center gap-2 rounded-control border border-line-control px-3 text-muted"
+                        className="flex h-10 w-full items-center gap-2 rounded-control border fokus-bingkai border-line-control px-3 text-muted"
                         onSubmit={(e) => {
                             e.preventDefault();
                             const kata = cari.trim();

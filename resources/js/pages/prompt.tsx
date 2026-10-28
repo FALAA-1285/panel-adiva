@@ -256,10 +256,7 @@ function PanelBagian({
     return (
         <Panel
             judul={`${bagian.no} · ${bagian.judul}`}
-            sub={[
-                'Diambil dari prompt sistem Adiva',
-                bagian.keterangan,
-            ]
+            sub={['Diambil dari prompt sistem Adiva', bagian.keterangan]
                 .filter(Boolean)
                 .join(' · ')}
             aksi={

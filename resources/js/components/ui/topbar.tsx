@@ -162,14 +162,14 @@ export function Topbar({
             {judul && (
                 <span
                     aria-hidden="true"
-                    className="min-w-0 shrink truncate text-panel font-semibold lg:hidden max-md:grow"
+                    className="min-w-0 shrink truncate text-panel font-semibold max-md:grow lg:hidden"
                 >
                     {judul}
                 </span>
             )}
             <label
                 className={cn(
-                    'fokus-bingkai relative box-border flex h-9 w-[380px] items-center gap-2 rounded-control border border-line bg-latar pr-1.5 pl-[11px] text-muted',
+                    'relative box-border flex h-9 w-[380px] items-center gap-2 rounded-control border fokus-bingkai border-line bg-latar pr-1.5 pl-[11px] text-muted',
                     'focus-within:border-line-strong focus-within:bg-surface motion-safe:transition-colors',
                     'max-lg:w-auto max-lg:max-w-[380px] max-lg:grow',
                     // phones: hidden behind the search icon, then over the whole bar
