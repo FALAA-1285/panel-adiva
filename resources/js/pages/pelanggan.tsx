@@ -119,10 +119,12 @@ export default function Pelanggan({
     const [isian, setIsian] = useState(filter);
     const [dipilih, setDipilih] = useState(profil?.id);
     const pertama = useRef(true);
+    const { url, props } = usePage();
+    const panel = props.panel;
     // below 1024px the list and the profile take turns (?pilih= opens the profile)
-    const lihatProfil = new URLSearchParams(
-        usePage().url.split('?')[1] ?? '',
-    ).has('pilih');
+    const lihatProfil = new URLSearchParams(url.split('?')[1] ?? '').has(
+        'pilih',
+    );
 
     // search and filters reload the list, a moment after typing stops
     useEffect(() => {
@@ -215,17 +217,20 @@ export default function Pelanggan({
                 judul="Pelanggan"
                 sub="Profil, pesanan, dan riwayat interaksi tiap customer dalam satu tempat"
                 aksi={
-                    <Button
-                        className="px-3"
-                        onClick={() =>
-                            window.location.assign(
-                                ekspor.url({ query: query(isian) }),
-                            )
-                        }
-                    >
-                        <Ikon nama="unduh" ukuran={15} tebal={2} />
-                        Ekspor CSV
-                    </Button>
+                    // the full numbers in the file are for the staff who serve customers
+                    panel?.akses.balas && (
+                        <Button
+                            className="px-3"
+                            onClick={() =>
+                                window.location.assign(
+                                    ekspor.url({ query: query(isian) }),
+                                )
+                            }
+                        >
+                            <Ikon nama="unduh" ukuran={15} tebal={2} />
+                            Ekspor CSV
+                        </Button>
+                    )
                 }
             />
             <IsiHalaman className="flex-row gap-5 pb-6">

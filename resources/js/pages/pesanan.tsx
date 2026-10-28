@@ -125,10 +125,11 @@ export default function Pesanan({
     detail,
 }: Props) {
     const [dipilih, setDipilih] = useState(detail?.id);
+    const { url, props } = usePage();
     // ?order= opens the order in a pop-up over the list
-    const lihatDetail = new URLSearchParams(
-        usePage().url.split('?')[1] ?? '',
-    ).has('order');
+    const lihatDetail = new URLSearchParams(url.split('?')[1] ?? '').has(
+        'order',
+    );
 
     // orders from the chatbot and status changes from WhatsApp appear by themselves
     usePoll(10000, { only: ['tab', 'baris', 'detail', 'panel'] });
@@ -200,26 +201,31 @@ export default function Pesanan({
                 judul="Pesanan"
                 sub="Perintah order dijalankan dari sini, dengan urutan yang sama seperti workflow"
                 aksi={
+                    // each button only for the roles its page lets through
                     <>
-                        <Button
-                            className="px-3"
-                            onClick={() =>
-                                window.location.assign(
-                                    ekspor.url({ query: query(aktifTab) }),
-                                )
-                            }
-                        >
-                            <Ikon nama="unduh" ukuran={15} tebal={2} />
-                            Ekspor CSV
-                        </Button>
-                        <ButtonLink
-                            href={catat.url()}
-                            varian="primary"
-                            className="border-0"
-                        >
-                            <Ikon nama="tambah" ukuran={15} tebal={2} />
-                            Catat order manual
-                        </ButtonLink>
+                        {props.panel?.akses.balas && (
+                            <Button
+                                className="px-3"
+                                onClick={() =>
+                                    window.location.assign(
+                                        ekspor.url({ query: query(aktifTab) }),
+                                    )
+                                }
+                            >
+                                <Ikon nama="unduh" ukuran={15} tebal={2} />
+                                Ekspor CSV
+                            </Button>
+                        )}
+                        {props.panel?.akses.catat && (
+                            <ButtonLink
+                                href={catat.url()}
+                                varian="primary"
+                                className="border-0"
+                            >
+                                <Ikon nama="tambah" ukuran={15} tebal={2} />
+                                Catat order manual
+                            </ButtonLink>
+                        )}
                     </>
                 }
             />

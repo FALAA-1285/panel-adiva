@@ -87,6 +87,24 @@ test('Nonaktifkan ends their sessions, Aktifkan lagi lets them back in', functio
         ->and(ActivityLog::query()->pluck('aksi')->all())->toBe(['Nonaktifkan staf', 'Aktifkan staf']);
 });
 
+test('a deactivated staff member still signed in is signed out on their next request', function () {
+    $dina = User::factory()->create();
+    $dina->forceFill(['nonaktif_at' => now()])->save();
+
+    $this->actingAs($dina)->get('/pesanan')
+        ->assertRedirect('/masuk')
+        ->assertSessionHasErrors(['email' => 'Akun ini sudah dinonaktifkan. Hubungi supervisor.']);
+    $this->assertGuest();
+});
+
+test('Nonaktifkan voids "Ingat perangkat ini" on every device', function () {
+    $dina = User::factory()->create(['remember_token' => 'token-lama']);
+
+    $this->actingAs($this->falah)->post("/tim/staf/{$dina->id}/nonaktif");
+
+    expect($dina->refresh()->remember_token)->not->toBe('token-lama');
+});
+
 test('a supervisor cannot deactivate themselves', function () {
     $this->actingAs($this->falah)->post("/tim/staf/{$this->falah->id}/nonaktif")
         ->assertSessionHasErrors(['staf' => 'Anda tidak bisa menonaktifkan diri sendiri.']);

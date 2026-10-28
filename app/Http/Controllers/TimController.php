@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -105,6 +106,8 @@ class TimController extends Controller
             ->pluck('id');
 
         DB::table('sessions')->whereIn('id', $id)->delete();
+        // otherwise "Ingat perangkat ini" on that device signs them straight back in
+        $user->forceFill(['remember_token' => Str::random(60)])->save();
 
         Inertia::flash('toast', "{$user->name} dikeluarkan dari {$perangkat}.");
 
@@ -154,7 +157,8 @@ class TimController extends Controller
             throw ValidationException::withMessages(['staf' => 'Anda tidak bisa menonaktifkan diri sendiri.']);
         }
 
-        $user->forceFill(['nonaktif_at' => now()])->save();
+        // a new remember token voids "Ingat perangkat ini" on every device (Audit AUD-004)
+        $user->forceFill(['nonaktif_at' => now(), 'remember_token' => Str::random(60)])->save();
         DB::table('sessions')->where('user_id', $user->id)->delete();
 
         Aktivitas::catat($oleh, KategoriAktivitas::Pengaturan, 'Nonaktifkan staf', $user->name, $user);

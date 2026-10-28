@@ -254,6 +254,15 @@ test('the open tab is exported as CSV', function () {
         ->not->toContain('ORD-LUNAS');
 });
 
+test('the customer files are for the staff who serve customers, not the PJ karyawan', function () {
+    $pj = User::factory()->create(['peran' => Peran::PjKaryawan]);
+
+    $this->actingAs($pj)->get('/pesanan/ekspor')->assertForbidden();
+    $this->actingAs($pj)->get('/pelanggan/ekspor')->assertForbidden();
+    $this->actingAs($pj)->get('/pesanan')
+        ->assertInertia(fn (Assert $page) => $page->where('panel.akses.balas', false)->where('panel.akses.catat', false));
+});
+
 test('the order list sorts and pages, 25 at a time', function () {
     foreach (range(1, 27) as $i) {
         LogOrder::factory()->pada(now()->subMinutes($i)->format('Y-m-d H:i'))->create([

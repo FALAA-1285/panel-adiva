@@ -68,7 +68,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/ringkasan/ekspor', [RingkasanController::class, 'ekspor'])->name('ringkasan.ekspor');
     Route::get('/cari', CariController::class)->middleware('throttle:60,1')->name('cari');
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan');
-    Route::get('/pesanan/ekspor', [PesananController::class, 'ekspor'])->name('pesanan.ekspor');
+    // a file of every customer's name and full number: the staff who serve customers only (Audit AUD-008)
+    Route::get('/pesanan/ekspor', [PesananController::class, 'ekspor'])->middleware('can:balas')->name('pesanan.ekspor');
     // before /pesanan/{order}, so "baru" is not read as an order number
     Route::middleware('can:catat')->group(function () {
         Route::get('/pesanan/baru', [CatatOrderController::class, 'create'])->name('pesanan.catat');
@@ -133,7 +134,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/sosmed/sambungan/uji', [SosmedController::class, 'ujiSambungan'])->name('sosmed.sambungan.uji');
     });
     Route::get('/pelanggan', [PelangganController::class, 'index'])->name('pelanggan');
-    Route::get('/pelanggan/ekspor', [PelangganController::class, 'ekspor'])->name('pelanggan.ekspor');
+    Route::get('/pelanggan/ekspor', [PelangganController::class, 'ekspor'])->middleware('can:balas')->name('pelanggan.ekspor');
     Route::middleware('can:balas')->group(function () {
         Route::patch('/pelanggan/{customer}/optout', [PelangganController::class, 'optout'])->name('pelanggan.optout');
         Route::patch('/pelanggan/{customer}/penilaian', [PelangganController::class, 'penilaian'])->name('pelanggan.penilaian');
