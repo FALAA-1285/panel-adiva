@@ -38,6 +38,42 @@ export function PageHeader({
     tabLabel = 'Bagian',
     rapat = false,
 }: PageHeaderProps) {
+    // The title and its description take room the page needs, and the menu already
+    // says where you are: they stay for screen readers only. A page under a breadcrumb
+    // (an order) keeps its title, which carries the order number and status.
+    if (!breadcrumb) {
+        const judulTersembunyi = <h1 className="sr-only">{judul}</h1>;
+
+        if (!aksi && !tab) {
+            return judulTersembunyi;
+        }
+
+        return (
+            <header className="shrink-0 px-8 pt-5 max-md:px-4 max-md:pt-4">
+                {judulTersembunyi}
+                {aksi && (
+                    <div className="flex items-center justify-end gap-2 max-md:flex-wrap max-md:justify-start">
+                        {aksi}
+                    </div>
+                )}
+                {tab && (
+                    <nav
+                        aria-label={tabLabel}
+                        // narrow screens: the tabs scroll sideways instead of wrapping
+                        className={cn(
+                            'flex gap-6 border-b border-line [scrollbar-width:none] overflow-x-auto max-md:gap-5',
+                            aksi && 'mt-3',
+                        )}
+                    >
+                        {tab.map((t) => (
+                            <TabItem key={t.label} tab={t} />
+                        ))}
+                    </nav>
+                )}
+            </header>
+        );
+    }
+
     if (rapat) {
         return (
             <header className="flex shrink-0 items-end gap-2 px-8 pt-6 max-md:flex-wrap max-md:px-4 max-md:pt-4">
