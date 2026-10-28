@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { sedangMengetik } from '@/components/ui/topbar';
-import { cocok, LAYAR } from '@/hooks/use-layar';
 import { Halaman } from '@/components/ui/halaman';
 import type { InfoHalaman } from '@/components/ui/halaman';
 import { cn } from '@/lib/utils';
@@ -126,7 +125,7 @@ export default function Pesanan({
     detail,
 }: Props) {
     const [dipilih, setDipilih] = useState(detail?.id);
-    // below 1280px the list and the order take turns (?order= opens the order)
+    // ?order= opens the order in a pop-up over the list
     const lihatDetail = new URLSearchParams(
         usePage().url.split('?')[1] ?? '',
     ).has('order');
@@ -143,8 +142,9 @@ export default function Pesanan({
                 only: ['detail'],
                 preserveState: true,
                 preserveScroll: true,
-                // small screens: opening an order is a step the browser's Back undoes
-                replace: cocok(LAYAR.lebar),
+                // the first order opens as a step the browser's Back undoes; moving
+                // between orders (J / K) replaces it
+                replace: lihatDetail,
             },
         );
     };
@@ -282,10 +282,7 @@ export default function Pesanan({
                 <div className="flex min-h-0 grow gap-5">
                     <section
                         aria-label="Daftar pesanan"
-                        className={cn(
-                            'flex min-w-0 grow flex-col',
-                            lihatDetail && 'max-xl:hidden',
-                        )}
+                        className="flex min-w-0 grow flex-col"
                     >
                         <div className="flex min-h-0 grow flex-col overflow-hidden rounded-card border border-line bg-surface">
                             <div
@@ -307,6 +304,7 @@ export default function Pesanan({
                                         key={b.id}
                                         baris={b}
                                         dipilih={
+                                            lihatDetail &&
                                             b.id === (dipilih ?? detail?.id)
                                         }
                                         onPilih={() => pilih(b.id)}
@@ -338,12 +336,19 @@ export default function Pesanan({
                         </div>
                     </section>
                     {detail && (
-                        <PanelDetail
-                            key={detail.id}
-                            detail={detail}
-                            tampil={lihatDetail}
-                            onKembali={keDaftar}
-                        />
+                        <Jendela
+                            buka={lihatDetail}
+                            judul={`Detail pesanan ${detail.id}`}
+                            onTutup={keDaftar}
+                            className="w-[min(600px,calc(100vw-32px))]"
+                            polos
+                        >
+                            <PanelDetail
+                                key={detail.id}
+                                detail={detail}
+                                onTutup={keDaftar}
+                            />
+                        </Jendela>
                     )}
                 </div>
             </IsiHalaman>
@@ -511,15 +516,11 @@ const kelasTombolInvoice =
 
 function PanelDetail({
     detail,
-    tampil,
-    onKembali,
+    onTutup,
 }: {
     detail: Detail;
-    /** below 1280px: the order is open (else the list shows) */
-    tampil: boolean;
-    onKembali: () => void;
+    onTutup: () => void;
 }) {
-    const [rincian, setRincian] = useState(false);
     const [modalAksi, setModalAksi] = useState<{
         kode: string;
         judul: string;
@@ -632,30 +633,24 @@ function PanelDetail({
     };
 
     return (
-        <aside
-            aria-label="Detail pesanan"
-            className={cn(
-                'box-content flex w-[380px] max-w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-surface',
-                'max-xl:w-auto max-xl:min-w-0 max-xl:grow',
-                !tampil && 'max-xl:hidden',
-            )}
-        >
-            <div className="flex flex-col gap-2 border-b border-line-softer px-[18px] pt-4 pb-3">
+        // the header stays put while the rest scrolls inside the pop-up
+        <div className="flex min-h-0 flex-col">
+            <div className="flex flex-col gap-2 border-b border-line-softer px-5 pt-4 pb-3">
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        aria-label="Kembali ke daftar pesanan"
-                        onClick={onKembali}
-                        className="-ml-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-ink-2 hover:bg-line-softer xl:hidden"
-                    >
-                        <Ikon nama="kembali" ukuran={18} />
-                    </button>
-                    <span className="grow font-mono text-panel font-semibold">
+                    <h2 className="m-0 grow font-mono text-panel font-semibold">
                         {detail.id}
-                    </span>
+                    </h2>
                     <Status nada={detail.status.nada}>
                         {detail.status.label}
                     </Status>
+                    <button
+                        type="button"
+                        aria-label="Tutup detail pesanan"
+                        onClick={onTutup}
+                        className="-mr-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border-none bg-transparent text-ink-3 hover:bg-line-softer max-md:size-11"
+                    >
+                        <Ikon nama="tutup" ukuran={16} tebal={2} />
+                    </button>
                 </div>
                 <div className="text-body text-ink-3">
                     <Link
@@ -731,77 +726,45 @@ function PanelDetail({
                 </ol>
             </div>
 
-            <div className="flex grow flex-col gap-4 overflow-auto px-[18px] py-3.5">
-                {/* the items and the bill in one line; the whole list opens in a pop-up */}
+            <div className="flex min-h-0 grow flex-col gap-4 overflow-auto px-5 py-4">
                 <div className="flex flex-col gap-1.5">
                     <div className="text-caption font-semibold text-ink">
                         Item
                     </div>
-                    <div className="flex items-center gap-3 rounded-control border border-line-softer bg-subtle px-3 py-2.5">
-                        <span className="flex min-w-0 grow flex-col">
-                            <span className="truncate text-body text-ink-2">
-                                {detail.item.length} produk ·{' '}
-                                {detail.item
-                                    .reduce((n, it) => n + it.qty, 0)
-                                    .toLocaleString('id-ID')}{' '}
-                                pcs
-                            </span>
-                            <span className="text-panel font-semibold">
-                                {detail.total}
-                            </span>
-                        </span>
-                        <Button
-                            type="button"
-                            className="shrink-0 px-3"
-                            onClick={() => setRincian(true)}
+                    {detail.item.map((it, i) => (
+                        <div
+                            key={i}
+                            className="grid grid-cols-[minmax(0,1fr)_52px_104px] gap-2 text-body"
                         >
-                            Lihat rincian
-                        </Button>
+                            <span>{it.nama}</span>
+                            <span className="text-right text-ink-3 tabular-nums">
+                                ×{it.qty}
+                            </span>
+                            <span className="text-right font-semibold tabular-nums">
+                                {it.subtotal}
+                            </span>
+                        </div>
+                    ))}
+                    <div className="my-1 h-px bg-line-softer" />
+                    <div className="flex text-body text-ink-3">
+                        <span className="grow">Total produk</span>
+                        <span>{detail.produk}</span>
+                    </div>
+                    <div className="flex text-body text-ink-3">
+                        <span className="grow">Ongkir · {detail.kurir}</span>
+                        <span>{detail.ongkir}</span>
+                    </div>
+                    {detail.packing && (
+                        <div className="flex text-body text-ink-3">
+                            <span className="grow">Packing</span>
+                            <span>{detail.packing}</span>
+                        </div>
+                    )}
+                    <div className="flex text-panel font-semibold">
+                        <span className="grow">Total tagihan</span>
+                        <span>{detail.total}</span>
                     </div>
                 </div>
-                <Jendela
-                    buka={rincian}
-                    judul={`Item ${detail.id}`}
-                    onTutup={() => setRincian(false)}
-                >
-                    <div className="flex flex-col gap-2">
-                        {detail.item.map((it, i) => (
-                            <div
-                                key={i}
-                                className="grid grid-cols-[minmax(0,1fr)_52px_104px] gap-2 text-body"
-                            >
-                                <span>{it.nama}</span>
-                                <span className="text-right text-ink-3 tabular-nums">
-                                    ×{it.qty}
-                                </span>
-                                <span className="text-right font-semibold tabular-nums">
-                                    {it.subtotal}
-                                </span>
-                            </div>
-                        ))}
-                        <div className="my-1 h-px bg-line-softer" />
-                        <div className="flex text-body text-ink-3">
-                            <span className="grow">Total produk</span>
-                            <span>{detail.produk}</span>
-                        </div>
-                        <div className="flex text-body text-ink-3">
-                            <span className="grow">
-                                Ongkir · {detail.kurir}
-                            </span>
-                            <span>{detail.ongkir}</span>
-                        </div>
-                        {detail.packing && (
-                            <div className="flex text-body text-ink-3">
-                                <span className="grow">Packing</span>
-                                <span>{detail.packing}</span>
-                            </div>
-                        )}
-                        <div className="flex text-panel font-semibold">
-                            <span className="grow">Total tagihan</span>
-                            <span>{detail.total}</span>
-                        </div>
-                    </div>
-                </Jendela>
 
                 <div className="flex flex-col gap-1.5">
                     <div className="text-caption font-semibold text-ink">
@@ -1019,9 +982,14 @@ function PanelDetail({
                             aria-modal="true"
                             aria-labelledby="judul-modal-aksi"
                             onClick={(e) => e.stopPropagation()}
-                            onKeyDown={(e) =>
-                                e.key === 'Escape' && setModalAksi(null)
-                            }
+                            onKeyDown={(e) => {
+                                // Esc closes this box only, not the order around it
+                                if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setModalAksi(null);
+                                }
+                            }}
                             className="w-full max-w-[440px] rounded-card border border-line bg-surface p-5 font-sans text-ink shadow-lg"
                         >
                             <h3
@@ -1086,7 +1054,7 @@ function PanelDetail({
                     </div>
                 )}
             </div>
-        </aside>
+        </div>
     );
 }
 

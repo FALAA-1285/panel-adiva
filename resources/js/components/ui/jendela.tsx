@@ -14,12 +14,15 @@ export function Jendela({
     onTutup,
     children,
     className,
+    polos = false,
 }: {
     buka: boolean;
     judul: string;
     onTutup: () => void;
     children: ReactNode;
     className?: string;
+    /** The content brings its own header, close button and scrolling (Detail pesanan). */
+    polos?: boolean;
 }) {
     const ref = useRef<HTMLDialogElement>(null);
 
@@ -50,7 +53,12 @@ export function Jendela({
                 className,
             )}
         >
-            {buka && (
+            {buka && polos && (
+                <div className="flex max-h-[calc(100dvh-48px)] flex-col">
+                    {children}
+                </div>
+            )}
+            {buka && !polos && (
                 <div className="flex max-h-[calc(100dvh-48px)] flex-col">
                     <div className="flex items-center gap-2 border-b border-line-softer px-5 py-3.5">
                         <h2 className="m-0 grow text-panel font-semibold">
