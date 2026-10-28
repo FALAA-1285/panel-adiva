@@ -24,7 +24,6 @@ use App\Support\NomorBot;
 use App\Support\NomorWa;
 use App\Support\PengaturanToko;
 use App\Support\Rupiah;
-use App\Support\StatusIntegrasi;
 use App\Support\Waktu;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -81,7 +80,6 @@ class PercakapanController extends Controller
 
         return Inertia::render('percakapan', [
             'filter' => ['cari' => (string) $request->query('cari'), 'tab' => $tab, 'tipe' => $tipe?->value],
-            'waha' => $this->waha(),
             'jumlah' => fn () => $this->jumlah($tab, $tipe, $jeda, $menunggu),
             'muat' => function () use ($request, $tab, $tipe, $jeda, $menunggu) {
                 $total = $this->kueri($request, $tab, $tipe, $jeda, $menunggu)->count();
@@ -614,20 +612,5 @@ class PercakapanController extends Controller
                 ? ['label' => 'Order karyawan · potong gaji', 'nada' => 'gray']
                 : ['label' => $o->status_order->label(), 'nada' => $o->status_order->nada()],
         ])->all());
-    }
-
-    /**
-     * "Tersambung ke WAHA · 2 nomor bot".
-     *
-     * @return array{teks: string, tersambung: bool}
-     */
-    private function waha(): array
-    {
-        $koneksi = StatusIntegrasi::sekarang()->koneksiTerakhir();
-        $putus = collect($koneksi)->filter(fn ($e) => $e?->status !== 'TERHUBUNG')->count();
-
-        return $putus === 0
-            ? ['teks' => 'Tersambung ke WAHA · '.count($koneksi).' nomor bot', 'tersambung' => true]
-            : ['teks' => "{$putus} dari ".count($koneksi).' nomor bot terputus', 'tersambung' => false];
     }
 }

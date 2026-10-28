@@ -17,7 +17,6 @@ import { Button, ButtonLink } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import type { NamaIkon } from '@/components/ui/ikon';
-import { PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { Avatar } from '@/components/ui/teks';
@@ -85,7 +84,6 @@ type Percakapan = {
 
 type Props = {
     filter: Filter;
-    waha: { teks: string; tersambung: boolean };
     jumlah: { status: Record<string, number>; tipe: Record<string, number> };
     muat: { batas: number; tampil: number; total: number };
     daftar: Baris[];
@@ -180,7 +178,6 @@ function BarisSaring({
 
 export default function HalamanPercakapan({
     filter,
-    waha,
     jumlah,
     muat,
     daftar,
@@ -199,7 +196,7 @@ export default function HalamanPercakapan({
 
     // new chats and messages from n8n appear by themselves (not in the design)
     usePoll(5000, {
-        only: ['daftar', 'jumlah', 'percakapan', 'waha', 'panel'],
+        only: ['daftar', 'jumlah', 'percakapan', 'panel'],
     });
 
     // search and tabs reload the list, a moment after typing stops
@@ -294,30 +291,8 @@ export default function HalamanPercakapan({
     return (
         <AppLayout active="inbox" penuhLayar>
             <Head title="Percakapan" />
-            <PageHeader
-                rapat
-                judul="Percakapan"
-                sub="Pantau jawaban Adiva secara langsung, ambil alih kapan saja"
-                aksi={
-                    <span
-                        className={cn(
-                            'flex items-center gap-1.5 pb-1 text-caption font-medium whitespace-nowrap',
-                            waha.tersambung
-                                ? 'text-green-text'
-                                : 'text-red-text',
-                        )}
-                    >
-                        <span
-                            className={cn(
-                                'size-1.5 rounded-full',
-                                waha.tersambung ? 'bg-green-dot' : 'bg-red-dot',
-                            )}
-                        />
-                        {waha.teks}
-                    </span>
-                }
-            />
-            <div className="mx-8 mt-5 mb-6 flex min-h-0 grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">
+            <h1 className="sr-only">Percakapan</h1>
+            <div className="mx-5 mt-4 mb-5 flex min-h-0 grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">
                 <nav
                     aria-label="Saring percakapan"
                     className={cn(
