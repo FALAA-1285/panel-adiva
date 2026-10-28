@@ -6,6 +6,7 @@ use App\Enums\PengirimPesan;
 use App\Models\BroadcastPenerima;
 use App\Models\CrmCustomer;
 use App\Models\Pesan;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
  * A line from a customer goes into the chat (Percakapan), and when it is the first answer to
@@ -42,19 +43,24 @@ class CatatPesanMasuk
 
         $customer = CrmCustomer::query()->where('chat_id', $chatId)->first();
 
-        $pesan = Pesan::create([
-            'crm_customer_id' => $customer?->id,
-            'chat_id' => $chatId,
-            'sesi_wa' => filled($sesi) ? $sesi : null,
-            'waktu' => now(),
-            'pengirim' => PengirimPesan::Customer,
-            'teks' => filled($teks) ? $teks : null,
-            'lampiran_url' => filled($lampiranUrl) ? $lampiranUrl : null,
-            'lampiran_keterangan' => $keterangan,
-            'jalur' => $jalur,
-            'status_kirim' => null,
-            'wa_message_id' => filled($idWa) ? trim((string) $idWa) : null,
-        ]);
+        try {
+            $pesan = Pesan::create([
+                'crm_customer_id' => $customer?->id,
+                'chat_id' => $chatId,
+                'sesi_wa' => filled($sesi) ? $sesi : null,
+                'waktu' => now(),
+                'pengirim' => PengirimPesan::Customer,
+                'teks' => filled($teks) ? $teks : null,
+                'lampiran_url' => filled($lampiranUrl) ? $lampiranUrl : null,
+                'lampiran_keterangan' => $keterangan,
+                'jalur' => $jalur,
+                'status_kirim' => null,
+                'wa_message_id' => filled($idWa) ? trim((string) $idWa) : null,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            // the same message delivered twice at once: the other delivery stored it
+            return null;
+        }
 
         $penerima = BroadcastPenerima::query()
             ->where('chat_id', $chatId)

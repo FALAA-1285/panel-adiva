@@ -66,6 +66,10 @@ return [
 
     'demo' => (bool) env('APP_DEMO', false),
 
+    // /_demo/login signs anyone in as a Supervisor without a password: off on a
+    // production deployment (the public Vercel demo) unless switched on on purpose.
+    'demo_login' => (bool) env('APP_DEMO_LOGIN', env('APP_ENV', 'production') !== 'production'),
+
     'demo_now' => '2026-09-28 13:42:00',
 
     /*

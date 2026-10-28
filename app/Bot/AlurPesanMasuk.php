@@ -123,7 +123,10 @@ class AlurPesanMasuk
      */
     private function tampung(PesanMasuk $pesan, ?string $pn): void
     {
-        CatatPesanMasuk::dariCustomer($pesan->dari(), $pesan->sesi, $pesan->body(), $pesan->id(), 'D');
+        // WAHA delivered this message before: it is in the chat and waiting already (Audit AUD-013)
+        if (CatatPesanMasuk::dariCustomer($pesan->dari(), $pesan->sesi, $pesan->body(), $pesan->id(), 'D') === null) {
+            return;
+        }
 
         DB::table('buffer_pesan')->insert([
             'chat_id' => $pesan->dari(), 'message_id' => $pesan->id(), 'teks' => $pesan->body(), 'waktu_ms' => (int) (microtime(true) * 1000),

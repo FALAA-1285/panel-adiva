@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowEvent;
 use App\Support\CatatPesanMasuk;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -224,6 +225,27 @@ test('a customer\'s chat is kept and handed on after the wait for the next messa
         ->and($this->wa->terkirim)->toBeEmpty();
     // 8 seconds is the wait when the setting is empty
     Queue::assertPushed(GabungPesanMasuk::class, fn ($job) => $job->delay->equalTo(now()->addSeconds(8)));
+});
+
+test('a message WAHA delivers twice is kept and answered once', function () {
+    Queue::fake();
+
+    ($this->alur)(($this->pesan)());
+    ($this->alur)(($this->pesan)());
+
+    expect(Pesan::query()->count())->toBe(1)
+        ->and(DB::table('buffer_pesan')->count())->toBe(1);
+    Queue::assertPushed(GabungPesanMasuk::class, 1);
+});
+
+test('the database refuses a second line with the same WhatsApp id', function () {
+    // lines without an id (Adiva, admin, system) are not affected
+    Pesan::factory()->count(2)->create(['wa_message_id' => null]);
+    Pesan::factory()->create(['wa_message_id' => 'false_6281234567890@c.us_A1']);
+
+    expect(Pesan::query()->whereNull('wa_message_id')->count())->toBe(2)
+        ->and(fn () => Pesan::factory()->create(['wa_message_id' => 'false_6281234567890@c.us_A1']))
+        ->toThrow(UniqueConstraintViolationException::class);
 });
 
 test('the wait for the next message comes from the AI settings', function () {

@@ -37,8 +37,8 @@
         "APP_ROUTES_CACHE": "/tmp/routes.php",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "VIEW_COMPILED_PATH": "/tmp/views",
-        "CACHE_STORE": "array",
-        "SESSION_DRIVER": "cookie",
+        "CACHE_STORE": "database",
+        "SESSION_DRIVER": "database",
         "LARAVEL_STORAGE_PATH": "/tmp/storage"
     }
 }

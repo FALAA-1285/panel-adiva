@@ -71,6 +71,14 @@ test('demo routes are not found when demo mode is off', function (string $uri) {
     $this->assertGuest();
 })->with(['/_demo/login', '/_demo/komponen/sidebar', '/_demo/komponen/topbar']);
 
+test('demo login is closed on a production deployment unless switched on', function () {
+    config(['app.demo_login' => false]);
+
+    $this->get(route('demo.login'))->assertNotFound();
+    $this->assertGuest();
+    expect(User::count())->toBe(0);
+});
+
 afterEach(function () {
     Demo::bekukanJam();
 });

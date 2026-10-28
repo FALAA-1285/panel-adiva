@@ -18,6 +18,9 @@ class DemoController extends Controller
      */
     public function login(Request $request): RedirectResponse
     {
+        // a public deployment with demo data must not hand out a supervisor session (Audit AUD-001)
+        abort_unless(config('app.demo_login'), 404);
+
         $user = User::firstOrCreate(
             ['email' => 'falah@bangbana.id'],
             [
