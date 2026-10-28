@@ -2,7 +2,7 @@ import { Head, router, useForm, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppLayout } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
-import { Field, Input, Textarea, Toggle } from '@/components/ui/form';
+import { Field, Input, Select, Textarea, Toggle } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
@@ -240,12 +240,6 @@ export default function HalamanSosmed({
                         )}
                     </>
                 }
-                tab={tab.map((t) => ({
-                    label: t.label,
-                    n: t.n,
-                    aktif: t.kode === aktifTab,
-                    href: ruteSosmed.url({ query: query(t.kode, cari) }),
-                }))}
             />
             {aturSambungan && sambungan.boleh && (
                 <div className="mx-8 mt-5 max-md:mx-4">
@@ -264,7 +258,7 @@ export default function HalamanSosmed({
                         lihatUtas && 'max-lg:hidden',
                     )}
                 >
-                    <div className="border-b border-line-softer px-4 pt-3.5 pb-3">
+                    <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 pt-3.5 pb-3">
                         <label className="fokus-bingkai box-border flex h-10 items-center gap-2 rounded-control border border-line-control px-3 text-muted">
                             <Ikon nama="cari" tebal={2} />
                             <input
@@ -276,6 +270,26 @@ export default function HalamanSosmed({
                                 onChange={(e) => setCari(e.target.value)}
                             />
                         </label>
+                        <Select
+                            aria-label="Filter kontak"
+                            className="h-9 px-2 text-caption max-md:h-11"
+                            value={aktifTab}
+                            onChange={(e) =>
+                                router.get(
+                                    ruteSosmed.url({
+                                        query: query(e.target.value, cari),
+                                    }),
+                                    {},
+                                    { preserveScroll: true },
+                                )
+                            }
+                        >
+                            {tab.map((t) => (
+                                <option key={t.kode} value={t.kode}>
+                                    {t.label} ({t.n})
+                                </option>
+                            ))}
+                        </Select>
                     </div>
                     <div className="grow overflow-auto">
                         {daftar.length === 0 && (
@@ -645,10 +659,7 @@ function FormSambungan({
 
     const isian = (
         kunci:
-            | 'META_PAGE_ID'
-            | 'META_IG_ID'
-            | 'META_APP_ID'
-            | 'META_VERIFY_TOKEN',
+            'META_PAGE_ID' | 'META_IG_ID' | 'META_APP_ID' | 'META_VERIFY_TOKEN',
         label: string,
         sub?: string,
     ) => (
@@ -692,11 +703,7 @@ function FormSambungan({
                         Uji sambungan
                     </Button>
                     {onTutup && (
-                        <Button
-                            ukuran="sm"
-                            type="button"
-                            onClick={onTutup}
-                        >
+                        <Button ukuran="sm" type="button" onClick={onTutup}>
                             Tutup
                         </Button>
                     )}

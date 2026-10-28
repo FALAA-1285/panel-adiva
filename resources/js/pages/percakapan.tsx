@@ -14,9 +14,8 @@ import type {
 } from '@/components/percakapan/pemilih';
 import { AppLayout } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/form';
+import { Select, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
-import type { NamaIkon } from '@/components/ui/ikon';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { Avatar } from '@/components/ui/teks';
@@ -92,12 +91,12 @@ type Props = {
     gambar: FotoProduk[];
 };
 
-/** The filter rail beside the list: two groups that narrow each other. */
+/** The two filters above the list, which narrow each other. */
 const STATUS = [
-    ['semua', 'Semua', 'percakapan'],
-    ['belum-dibalas', 'Belum dibalas', 'riwayat'],
-    ['butuh-admin', 'Butuh admin', 'pengguna'],
-    ['dijeda', 'Dijeda', 'jeda'],
+    ['semua', 'Semua'],
+    ['belum-dibalas', 'Belum dibalas'],
+    ['butuh-admin', 'Butuh admin'],
+    ['dijeda', 'Dijeda'],
 ] as const;
 
 const TIPE = [
@@ -129,52 +128,6 @@ const query = (f: Filter, pilih?: number) => ({
     tipe: f.tipe ?? undefined,
     pilih,
 });
-
-/**
- * One line in the filter rail: label on the left, how many it would give on the right.
- * Picking the type that is already on clears it, so the rail never traps the list.
- */
-function BarisSaring({
-    label,
-    ikon,
-    n,
-    aktif,
-    onPilih,
-}: {
-    label: string;
-    ikon?: NamaIkon;
-    n: number;
-    aktif: boolean;
-    onPilih: () => void;
-}) {
-    return (
-        <button
-            type="button"
-            aria-pressed={aktif}
-            onClick={onPilih}
-            className={cn(
-                'flex w-full cursor-pointer items-center gap-2.5 rounded-nav border-0 px-2.5 py-1.5 text-left text-body',
-                aktif
-                    ? 'bg-nav-active font-semibold text-primary-ink'
-                    : 'bg-transparent text-ink-2 hover:bg-subtle',
-                'motion-safe:transition-colors',
-            )}
-        >
-            {ikon && <Ikon nama={ikon} ukuran={15} />}
-            <span className="grow truncate">{label}</span>
-            {n > 0 && (
-                <span
-                    className={cn(
-                        'shrink-0 text-tag font-semibold tabular-nums',
-                        aktif ? 'text-primary-ink' : 'text-muted',
-                    )}
-                >
-                    {n.toLocaleString('id-ID')}
-                </span>
-            )}
-        </button>
-    );
-}
 
 export default function HalamanPercakapan({
     filter,
@@ -293,53 +246,6 @@ export default function HalamanPercakapan({
             <Head title="Percakapan" />
             <h1 className="sr-only">Percakapan</h1>
             <div className="mx-5 mt-4 mb-5 flex min-h-0 grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">
-                <nav
-                    aria-label="Saring percakapan"
-                    className={cn(
-                        'flex w-[188px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-subtle px-2.5 py-3.5',
-                        // narrower screens get the same filters as the chip row above the list
-                        'max-xl:hidden',
-                    )}
-                >
-                    <div className="flex flex-col gap-0.5">
-                        <span className="px-2.5 pb-1 text-tag font-semibold tracking-[0.06em] text-muted uppercase">
-                            Status
-                        </span>
-                        {STATUS.map(([nilai, label, ikon]) => (
-                            <BarisSaring
-                                key={nilai}
-                                label={label}
-                                ikon={ikon}
-                                n={jumlah.status[nilai] ?? 0}
-                                aktif={isian.tab === nilai}
-                                onPilih={() =>
-                                    setIsian({ ...isian, tab: nilai })
-                                }
-                            />
-                        ))}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                        <span className="px-2.5 pb-1 text-tag font-semibold tracking-[0.06em] text-muted uppercase">
-                            Tipe customer
-                        </span>
-                        {TIPE.map(([nilai, label]) => (
-                            <BarisSaring
-                                key={nilai}
-                                label={label}
-                                n={jumlah.tipe[nilai] ?? 0}
-                                aktif={isian.tipe === nilai}
-                                onPilih={() =>
-                                    setIsian({
-                                        ...isian,
-                                        tipe:
-                                            isian.tipe === nilai ? null : nilai,
-                                    })
-                                }
-                            />
-                        ))}
-                    </div>
-                </nav>
-
                 <section
                     aria-label="Daftar chat"
                     className={cn(
@@ -362,95 +268,40 @@ export default function HalamanPercakapan({
                                 }
                             />
                         </label>
-                        {/* the rail's filters, for screens too narrow to hold it: separated by category */}
-                        <div className="flex flex-col gap-2 xl:hidden">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-                                <span className="mr-1 shrink-0 text-tag font-semibold tracking-wider text-muted uppercase">
-                                    Status:
-                                </span>
-                                {STATUS.map(([nilai, label]) => {
-                                    const n = jumlah.status[nilai] ?? 0;
-                                    const aktif = isian.tab === nilai;
-                                    return (
-                                        <button
-                                            key={`tab:${nilai}`}
-                                            type="button"
-                                            aria-pressed={aktif}
-                                            onClick={() =>
-                                                setIsian({
-                                                    ...isian,
-                                                    tab: nilai,
-                                                })
-                                            }
-                                            className={cn(
-                                                'inline-flex h-[28px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
-                                                aktif
-                                                    ? 'border-primary-line bg-primary-soft text-primary-ink'
-                                                    : 'border-line-strong bg-surface text-ink hover:bg-subtle',
-                                                'motion-safe:transition-colors',
-                                            )}
-                                        >
-                                            <span>{label}</span>
-                                            <span
-                                                className={cn(
-                                                    'text-tag tabular-nums',
-                                                    aktif
-                                                        ? 'text-primary-ink'
-                                                        : 'text-muted',
-                                                )}
-                                            >
-                                                {n}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-                                <span className="mr-1 shrink-0 text-tag font-semibold tracking-wider text-muted uppercase">
-                                    Tipe:
-                                </span>
-                                {TIPE.map(([nilai, label]) => {
-                                    const n = jumlah.tipe[nilai] ?? 0;
-                                    const aktif = isian.tipe === nilai;
-                                    return (
-                                        <button
-                                            key={`tipe:${nilai}`}
-                                            type="button"
-                                            aria-pressed={aktif}
-                                            onClick={() =>
-                                                setIsian({
-                                                    ...isian,
-                                                    tipe:
-                                                        isian.tipe === nilai
-                                                            ? null
-                                                            : nilai,
-                                                })
-                                            }
-                                            className={cn(
-                                                'inline-flex h-[28px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-caption font-semibold whitespace-nowrap',
-                                                aktif
-                                                    ? 'border-primary-line bg-primary-soft text-primary-ink'
-                                                    : 'border-line-strong bg-surface text-ink hover:bg-subtle',
-                                                'motion-safe:transition-colors',
-                                            )}
-                                        >
-                                            <span>{label}</span>
-                                            {n > 0 && (
-                                                <span
-                                                    className={cn(
-                                                        'text-tag tabular-nums',
-                                                        aktif
-                                                            ? 'text-primary-ink'
-                                                            : 'text-muted',
-                                                    )}
-                                                >
-                                                    {n}
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                        {/* status and customer type narrow each other; each option says how many it gives */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <Select
+                                aria-label="Filter status"
+                                className="h-9 min-w-0 px-2 text-caption max-md:h-11"
+                                value={isian.tab}
+                                onChange={(e) =>
+                                    setIsian({ ...isian, tab: e.target.value })
+                                }
+                            >
+                                {STATUS.map(([nilai, label]) => (
+                                    <option key={nilai} value={nilai}>
+                                        {label} ({jumlah.status[nilai] ?? 0})
+                                    </option>
+                                ))}
+                            </Select>
+                            <Select
+                                aria-label="Filter tipe customer"
+                                className="h-9 min-w-0 px-2 text-caption max-md:h-11"
+                                value={isian.tipe ?? ''}
+                                onChange={(e) =>
+                                    setIsian({
+                                        ...isian,
+                                        tipe: e.target.value || null,
+                                    })
+                                }
+                            >
+                                <option value="">Semua tipe</option>
+                                {TIPE.map(([nilai, label]) => (
+                                    <option key={nilai} value={nilai}>
+                                        {label} ({jumlah.tipe[nilai] ?? 0})
+                                    </option>
+                                ))}
+                            </Select>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1 border-b border-line-softer px-4 py-2.5">

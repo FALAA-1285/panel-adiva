@@ -5,7 +5,8 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
-import { DaftarTab, PageHeader } from '@/components/ui/page-header';
+import { Jendela } from '@/components/ui/jendela';
+import { PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { sedangMengetik } from '@/components/ui/topbar';
@@ -223,20 +224,24 @@ export default function Pesanan({
                 }
             />
             <IsiHalaman className="gap-4 pb-6">
-                <div className="flex items-center gap-2 md:hidden">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-caption text-muted">Status</span>
                     <Select
                         aria-label="Filter status"
-                        className="h-11 grow"
+                        className="h-9 w-auto max-md:h-11 max-md:grow"
                         value={aktifTab}
                         onChange={(e) =>
                             router.get(
                                 pesanan.url({
+                                    // the selected order stays open
                                     query: query(
                                         e.target.value,
-                                        undefined,
+                                        detail?.id,
                                         urut,
                                     ),
                                 }),
+                                {},
+                                { preserveScroll: true },
                             )
                         }
                     >
@@ -246,36 +251,9 @@ export default function Pesanan({
                             </option>
                         ))}
                     </Select>
-                </div>
-                <div className="flex items-end gap-4 max-md:hidden">
-                    <DaftarTab
-                        label="Filter status"
-                        className="-mt-1 grow gap-[22px]"
-                        tab={tab.map((t) => ({
-                            label: t.label,
-                            n: t.n,
-                            aktif: t.kode === aktifTab,
-                            // three groups: what waits for a decision, what is on its
-                            // way, and what is closed
-                            pisah: [
-                                'menunggu-acc',
-                                'lunas',
-                                'selesai',
-                            ].includes(t.kode),
-                            // the selected order stays open, as in the design
-                            onClick: () =>
-                                router.get(
-                                    pesanan.url({
-                                        query: query(t.kode, detail?.id, urut),
-                                    }),
-                                    {},
-                                    { preserveScroll: true },
-                                ),
-                        }))}
-                    />
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-caption text-muted">Urutkan</span>
+                    <span className="pl-2 text-caption text-muted max-md:pl-0">
+                        Urutkan
+                    </span>
                     <Select
                         aria-label="Urutkan pesanan"
                         className="h-9 w-auto max-md:h-11 max-md:grow"
@@ -541,6 +519,7 @@ function PanelDetail({
     tampil: boolean;
     onKembali: () => void;
 }) {
+    const [rincian, setRincian] = useState(false);
     const [modalAksi, setModalAksi] = useState<{
         kode: string;
         judul: string;
@@ -753,44 +732,76 @@ function PanelDetail({
             </div>
 
             <div className="flex grow flex-col gap-4 overflow-auto px-[18px] py-3.5">
+                {/* the items and the bill in one line; the whole list opens in a pop-up */}
                 <div className="flex flex-col gap-1.5">
                     <div className="text-caption font-semibold text-ink">
                         Item
                     </div>
-                    {detail.item.map((it, i) => (
-                        <div
-                            key={i}
-                            className="grid grid-cols-[minmax(0,1fr)_44px_92px] gap-2 text-body"
+                    <div className="flex items-center gap-3 rounded-control border border-line-softer bg-subtle px-3 py-2.5">
+                        <span className="flex min-w-0 grow flex-col">
+                            <span className="truncate text-body text-ink-2">
+                                {detail.item.length} produk ·{' '}
+                                {detail.item
+                                    .reduce((n, it) => n + it.qty, 0)
+                                    .toLocaleString('id-ID')}{' '}
+                                pcs
+                            </span>
+                            <span className="text-panel font-semibold">
+                                {detail.total}
+                            </span>
+                        </span>
+                        <Button
+                            type="button"
+                            className="shrink-0 px-3"
+                            onClick={() => setRincian(true)}
                         >
-                            <span>{it.nama}</span>
-                            <span className="text-right text-ink-3">
-                                ×{it.qty}
-                            </span>
-                            <span className="text-right font-semibold">
-                                {it.subtotal}
-                            </span>
-                        </div>
-                    ))}
-                    <div className="my-1 h-px bg-line-softer" />
-                    <div className="flex text-body text-ink-3">
-                        <span className="grow">Total produk</span>
-                        <span>{detail.produk}</span>
-                    </div>
-                    <div className="flex text-body text-ink-3">
-                        <span className="grow">Ongkir · {detail.kurir}</span>
-                        <span>{detail.ongkir}</span>
-                    </div>
-                    {detail.packing && (
-                        <div className="flex text-body text-ink-3">
-                            <span className="grow">Packing</span>
-                            <span>{detail.packing}</span>
-                        </div>
-                    )}
-                    <div className="flex text-panel font-semibold">
-                        <span className="grow">Total tagihan</span>
-                        <span>{detail.total}</span>
+                            Lihat rincian
+                        </Button>
                     </div>
                 </div>
+                <Jendela
+                    buka={rincian}
+                    judul={`Item ${detail.id}`}
+                    onTutup={() => setRincian(false)}
+                >
+                    <div className="flex flex-col gap-2">
+                        {detail.item.map((it, i) => (
+                            <div
+                                key={i}
+                                className="grid grid-cols-[minmax(0,1fr)_52px_104px] gap-2 text-body"
+                            >
+                                <span>{it.nama}</span>
+                                <span className="text-right text-ink-3 tabular-nums">
+                                    ×{it.qty}
+                                </span>
+                                <span className="text-right font-semibold tabular-nums">
+                                    {it.subtotal}
+                                </span>
+                            </div>
+                        ))}
+                        <div className="my-1 h-px bg-line-softer" />
+                        <div className="flex text-body text-ink-3">
+                            <span className="grow">Total produk</span>
+                            <span>{detail.produk}</span>
+                        </div>
+                        <div className="flex text-body text-ink-3">
+                            <span className="grow">
+                                Ongkir · {detail.kurir}
+                            </span>
+                            <span>{detail.ongkir}</span>
+                        </div>
+                        {detail.packing && (
+                            <div className="flex text-body text-ink-3">
+                                <span className="grow">Packing</span>
+                                <span>{detail.packing}</span>
+                            </div>
+                        )}
+                        <div className="flex text-panel font-semibold">
+                            <span className="grow">Total tagihan</span>
+                            <span>{detail.total}</span>
+                        </div>
+                    </div>
+                </Jendela>
 
                 <div className="flex flex-col gap-1.5">
                     <div className="text-caption font-semibold text-ink">

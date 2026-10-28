@@ -2,6 +2,7 @@ import { Head, router, usePoll } from '@inertiajs/react';
 import { Fragment } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
+import { Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
@@ -72,16 +73,33 @@ export default function HalamanNotifikasi({ tab, jumlah, hari, pj }: Props) {
                         Tandai semua dibaca
                     </Button>
                 }
-                tab={jumlah.map((t) => ({
-                    label: t.label,
-                    n: t.n,
-                    aktif: t.kode === tab,
-                    href: halaman.url(
-                        t.kode === 'semua' ? {} : { query: { tab: t.kode } },
-                    ),
-                }))}
             />
             <IsiHalaman>
+                <div className="flex items-center gap-2">
+                    <span className="text-caption text-muted">Tampilkan</span>
+                    <Select
+                        aria-label="Filter notifikasi"
+                        className="h-9 w-auto max-md:h-11 max-md:grow"
+                        value={tab}
+                        onChange={(e) =>
+                            router.get(
+                                halaman.url(
+                                    e.target.value === 'semua'
+                                        ? {}
+                                        : { query: { tab: e.target.value } },
+                                ),
+                                {},
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        {jumlah.map((t) => (
+                            <option key={t.kode} value={t.kode}>
+                                {t.label} ({t.n})
+                            </option>
+                        ))}
+                    </Select>
+                </div>
                 <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-5 max-xl:grid-cols-[minmax(0,1fr)_300px] max-lg:grid-cols-1">
                     <Panel isiClassName="p-0">
                         {hari.map((h) => (

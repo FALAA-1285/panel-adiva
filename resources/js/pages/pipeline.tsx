@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { ButtonLink } from '@/components/ui/button';
+import { Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatStrip } from '@/components/ui/stat-strip';
@@ -175,7 +176,7 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
                     <span className="pl-1.5 text-caption font-medium text-muted">
                         Tipe
                     </span>
-                    <GrupChip
+                    <PilihSaring
                         label="Tipe"
                         pilihan={pilihanTipe}
                         nilai={isian.tipe}
@@ -184,7 +185,7 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
                     <span className="pl-2.5 text-caption font-medium text-muted">
                         Skor
                     </span>
-                    <GrupChip
+                    <PilihSaring
                         label="Skor"
                         pilihan={pilihanSkor}
                         nilai={isian.skor}
@@ -243,41 +244,27 @@ function segmen(f: Filter) {
     return { tipe: f.tipe || undefined, skor: f.skor || undefined };
 }
 
-type GrupChipProps = {
+type PilihSaringProps = {
     label: string;
     pilihan: readonly (readonly [string, string])[];
     nilai: string;
     onUbah: (nilai: string) => void;
 };
 
-function GrupChip({ label, pilihan, nilai, onUbah }: GrupChipProps) {
+function PilihSaring({ label, pilihan, nilai, onUbah }: PilihSaringProps) {
     return (
-        <div
-            role="group"
+        <Select
             aria-label={label}
-            className="flex gap-0.5 rounded-control bg-line-softer p-[3px]"
+            className="h-[34px] w-auto px-2 text-caption max-md:h-11"
+            value={nilai}
+            onChange={(e) => onUbah(e.target.value)}
         >
-            {pilihan.map(([kode, teks]) => {
-                const aktif = kode === nilai;
-
-                return (
-                    <button
-                        key={kode}
-                        type="button"
-                        aria-pressed={aktif}
-                        onClick={() => onUbah(kode)}
-                        className={cn(
-                            'h-7 cursor-pointer rounded-chip border-none px-2.5 text-caption whitespace-nowrap',
-                            aktif
-                                ? 'bg-surface font-semibold text-ink shadow-[0_0_0_1px_var(--color-line)]'
-                                : 'bg-transparent font-medium text-ink-3',
-                        )}
-                    >
-                        {teks}
-                    </button>
-                );
-            })}
-        </div>
+            {pilihan.map(([kode, teks]) => (
+                <option key={kode} value={kode}>
+                    {teks}
+                </option>
+            ))}
+        </Select>
     );
 }
 
