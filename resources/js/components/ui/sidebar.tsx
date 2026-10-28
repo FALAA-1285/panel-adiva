@@ -59,8 +59,8 @@ type ItemMenu = {
 };
 
 /*
- * Eight items in shop words (Audit Panel Adiva, E.2): staff see the four they work
- * in, supervisors also the four they manage. The technical pages sit under Laporan
+ * Nine items in shop words (Audit Panel Adiva, E.2; Pipeline split from Pelanggan):
+ * staff see the five they work in, supervisors also the four they manage. The technical pages sit under Laporan
  * and Pengaturan as sub-pages; no page was removed and no route changed.
  */
 const grup: { judul: string; item: ItemMenu[] }[] = [
@@ -117,9 +117,16 @@ const grup: { judul: string; item: ItemMenu[] }[] = [
                 halaman: [
                     {
                         kode: 'customer',
-                        label: 'Daftar pelanggan',
+                        label: 'Pelanggan',
                         href: pelanggan.url(),
                     },
+                ],
+            },
+            {
+                kunci: 'pipeline',
+                label: 'Pipeline',
+                ikon: 'pipeline',
+                halaman: [
                     {
                         kode: 'pipeline',
                         label: 'Pipeline',
