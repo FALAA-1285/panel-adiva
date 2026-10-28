@@ -69,7 +69,6 @@ export default function Monitoring({
         <AppLayout active="monitoring">
             <Head title="Monitoring sistem" />
             <PageHeader
-                rapat
                 judul="Monitoring sistem"
                 sub="Kesehatan workflow n8n, kegagalan yang sudah ditangani, dan status integrasi"
                 aksi={

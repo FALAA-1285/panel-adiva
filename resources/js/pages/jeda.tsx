@@ -147,7 +147,6 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
         <AppLayout active="jeda">
             <Head title="Ambil alih chat" />
             <PageHeader
-                rapat
                 judul="Ambil alih chat"
                 sub="Bot diam untuk customer tertentu selama admin membalas sendiri — sama dengan perintah JEDA dan LANJUT di WhatsApp"
             />

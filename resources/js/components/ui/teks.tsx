@@ -73,19 +73,6 @@ export function KeyValue({
     );
 }
 
-export function Tag({ children, className }: TeksProps) {
-    return (
-        <span
-            className={cn(
-                'rounded-tag bg-line-softer px-1.5 py-0.5 text-tag font-medium text-ink-3',
-                className,
-            )}
-        >
-            {children}
-        </span>
-    );
-}
-
 type AvatarProps = {
     inisial: string;
     /** Diameter in px; the letter is 0.38 × the diameter. */

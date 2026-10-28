@@ -213,7 +213,6 @@ export default function BuatKampanye({
         <AppLayout active="broadcast">
             <Head title="Buat kampanye" />
             <PageHeader
-                rapat
                 judul="Buat kampanye"
                 sub={
                     <>

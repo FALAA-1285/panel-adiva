@@ -118,7 +118,6 @@ export default function Broadcast({
         <AppLayout active="broadcast">
             <Head title="Broadcast" />
             <PageHeader
-                rapat
                 judul="Broadcast"
                 sub="Kirim pesan ke kelompok customer lewat WhatsApp. Balasan mereka tetap dijawab Adiva."
                 aksi={

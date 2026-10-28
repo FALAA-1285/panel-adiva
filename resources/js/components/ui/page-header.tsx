@@ -22,11 +22,6 @@ type PageHeaderProps = {
     aksi?: ReactNode;
     tab?: Tab[];
     tabLabel?: string;
-    /**
-     * The title row of Settings.dc.html and Orders.dc.html: 8px gaps, the actions
-     * bottom-aligned on their own, and no line-height on the title and subtitle.
-     */
-    rapat?: boolean;
 };
 
 export function PageHeader({
@@ -36,7 +31,6 @@ export function PageHeader({
     aksi,
     tab,
     tabLabel = 'Bagian',
-    rapat = false,
 }: PageHeaderProps) {
     // The title and its description take room the page needs, and the menu already
     // says where you are: they stay for screen readers only. A page under a breadcrumb
@@ -70,20 +64,6 @@ export function PageHeader({
                         ))}
                     </nav>
                 )}
-            </header>
-        );
-    }
-
-    if (rapat) {
-        return (
-            <header className="flex shrink-0 items-end gap-2 px-8 pt-6 max-md:flex-wrap max-md:px-4 max-md:pt-4">
-                <div className="flex min-w-0 grow flex-col gap-1 max-md:basis-full">
-                    <h1 className="m-0 flex items-center gap-2.5 text-page font-semibold tracking-[-0.015em]">
-                        {judul}
-                    </h1>
-                    {sub && <div className="text-body text-muted">{sub}</div>}
-                </div>
-                {aksi}
             </header>
         );
     }
@@ -210,51 +190,5 @@ function TabItem({ tab }: { tab: Tab }) {
         <Link href={tab.href} className={cn(kelas, 'box-content')}>
             <IsiTab tab={tab} />
         </Link>
-    );
-}
-
-type DaftarTabProps = {
-    label: string;
-    /** `pisah` draws a divider before the tab: it starts a new group. */
-    tab: (Tab & { onClick: () => void; pisah?: boolean })[];
-    className?: string;
-};
-
-/**
- * Tabs inside the page instead of under the title (Orders.dc.html: "Filter status").
- */
-export function DaftarTab({ label, tab, className }: DaftarTabProps) {
-    return (
-        <div
-            role="tablist"
-            aria-label={label}
-            className={cn(
-                'flex border-b border-line [scrollbar-width:none] overflow-x-auto',
-                className,
-            )}
-        >
-            {tab.map((t) => (
-                <Fragment key={t.label}>
-                    {t.pisah && (
-                        <span
-                            aria-hidden="true"
-                            className="my-2.5 w-px shrink-0 self-stretch bg-line"
-                        />
-                    )}
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={t.aktif ?? false}
-                        onClick={t.onClick}
-                        className={cn(
-                            kelasTab(t.aktif),
-                            'cursor-pointer bg-transparent px-0.5',
-                        )}
-                    >
-                        <IsiTab tab={t} />
-                    </button>
-                </Fragment>
-            ))}
-        </div>
     );
 }

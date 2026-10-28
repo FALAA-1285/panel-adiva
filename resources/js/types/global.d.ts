@@ -1,4 +1,3 @@
-import type { Auth } from '@/types/auth';
 import type { Panel } from '@/types/panel';
 
 declare module 'react' {
@@ -11,7 +10,6 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
-            auth: Auth;
             panel: Panel | null;
             [key: string]: unknown;
         };

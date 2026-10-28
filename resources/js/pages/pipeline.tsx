@@ -122,7 +122,6 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
         <AppLayout active="pipeline" penuhLayar>
             <Head title="CRM Pipeline" />
             <PageHeader
-                rapat
                 judul="CRM Pipeline"
                 sub="Tahap tiap customer diperbarui Adiva di setiap balasan. Pilih kartu untuk memindahkannya secara manual."
                 aksi={

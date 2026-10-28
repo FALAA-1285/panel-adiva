@@ -213,7 +213,6 @@ export default function Pelanggan({
         <AppLayout active="customer" penuhLayar>
             <Head title="Pelanggan" />
             <PageHeader
-                rapat
                 judul="Pelanggan"
                 sub="Profil, pesanan, dan riwayat interaksi tiap customer dalam satu tempat"
                 aksi={

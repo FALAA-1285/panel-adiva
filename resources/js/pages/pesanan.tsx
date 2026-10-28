@@ -197,7 +197,6 @@ export default function Pesanan({
         <AppLayout active="orders" penuhLayar>
             <Head title="Pesanan" />
             <PageHeader
-                rapat
                 judul="Pesanan"
                 sub="Perintah order dijalankan dari sini, dengan urutan yang sama seperti workflow"
                 aksi={
