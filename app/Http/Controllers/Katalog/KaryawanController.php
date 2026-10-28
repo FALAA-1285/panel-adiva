@@ -14,7 +14,7 @@ use App\Models\LogOrder;
 use App\Models\OrderItem;
 use App\Models\User;
 use App\Support\Aktivitas;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\NomorWa;
 use App\Support\PengaturanToko;
 use App\Support\Rupiah;
@@ -223,32 +223,20 @@ class KaryawanController extends Controller
             ->with(['karyawan:id,nama,nomor_wa,bagian', 'items'])
             ->orderBy('tanggal');
 
-        return response()->streamDownload(function () use ($order, $pj) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            // BOM so Excel reads "·" and "×" as UTF-8
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Tanggal', 'Order', 'Karyawan', 'Bagian', 'Nomor WA', 'Item', 'Potong gaji', 'Status'], escape: '');
-
-            $order->lazy()->each(function (LogOrder $o) use ($keluar, $pj) {
-                fputcsv($keluar, CsvSanitizer::baris([
-                    $o->tanggal->format('Y-m-d H:i'),
-                    $o->order_id,
-                    $o->karyawan->nama ?? $o->nama_penerima,
-                    $o->karyawan->bagian ?? '',
-                    $o->karyawan->nomor_wa ?? $o->nomor_wa,
-                    $o->items->map(fn (OrderItem $item) => "{$item->nama_produk} ×{$item->qty}")->implode(', '),
-                    $o->tagihan(),
-                    $this->status($o, $pj)['label'],
-                ]), escape: '');
-            });
-
-            fclose($keluar);
-        }, 'rekap-karyawan-'.now()->format('Y-m').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            'rekap-karyawan-'.now()->format('Y-m').'.csv',
+            ['Tanggal', 'Order', 'Karyawan', 'Bagian', 'Nomor WA', 'Item', 'Potong gaji', 'Status'],
+            $order->lazy()->map(fn (LogOrder $o) => [
+                $o->tanggal->format('Y-m-d H:i'),
+                $o->order_id,
+                $o->karyawan->nama ?? $o->nama_penerima,
+                $o->karyawan->bagian ?? '',
+                $o->karyawan->nomor_wa ?? $o->nomor_wa,
+                $o->items->map(fn (OrderItem $item) => "{$item->nama_produk} ×{$item->qty}")->implode(', '),
+                $o->tagihan(),
+                $this->status($o, $pj)['label'],
+            ]),
+        );
     }
 
     /**

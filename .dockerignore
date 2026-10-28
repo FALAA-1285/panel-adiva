@@ -1,7 +1,14 @@
 .git
 .github
+# local AI tool settings and notes
 .claude
 .codex
+.agents
+.cursor
+.gemini
+.mcp.json
+boost.json
+.vercel
 node_modules
 vendor
 public/build
@@ -10,13 +17,16 @@ public/storage
 # cache paket/konfigurasi dari mesin lokal menunjuk paket dev yang tidak ikut
 # ter-install dengan --no-dev; dibangun ulang saat start oleh docker/mulai.sh
 bootstrap/cache/*
-storage/app/public/*
+# uploads, private files and local backups (cadangan-user, n8n-cadangan) must not be baked
+# into the image; the Dockerfile makes the folders and storage/app/public is a volume
+storage/app/*
 storage/framework/cache/data/*
 storage/framework/sessions/*
 storage/framework/views/*
 storage/logs/*
 visual-diff
 tests
+docs
 .env
 .env.*
 !.env.example

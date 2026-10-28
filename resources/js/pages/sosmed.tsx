@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea, Toggle } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { KotakCari } from '@/components/ui/input-cari';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
 import { Status } from '@/components/ui/status';
@@ -259,17 +260,12 @@ export default function HalamanSosmed({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 pt-3.5 pb-3">
-                        <label className="box-border flex h-10 items-center gap-2 rounded-control border fokus-bingkai border-line-control px-3 text-muted">
-                            <Ikon nama="cari" tebal={2} />
-                            <input
-                                type="search"
-                                aria-label="Cari kontak"
-                                placeholder="Cari nama, username, atau pesan"
-                                className="grow border-none bg-transparent text-body text-ink outline-none"
-                                value={cari}
-                                onChange={(e) => setCari(e.target.value)}
-                            />
-                        </label>
+                        <KotakCari
+                            aria-label="Cari kontak"
+                            placeholder="Cari nama, username, atau pesan"
+                            value={cari}
+                            onChange={(e) => setCari(e.target.value)}
+                        />
                         <Select
                             aria-label="Filter kontak"
                             className="h-9 px-2 text-caption max-md:h-11"

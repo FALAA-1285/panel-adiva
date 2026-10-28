@@ -13,7 +13,7 @@ use App\Models\LogOrder;
 use App\Models\OrderItem;
 use App\Models\Riwayat;
 use App\Support\Aktivitas;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\Nama;
 use App\Support\NomorBot;
 use App\Support\NomorWa;
@@ -91,30 +91,19 @@ class PelangganController extends Controller
     {
         $query = $this->cari($request);
 
-        return response()->streamDownload(function () use ($query) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Nama', 'Nomor WA', 'Tipe', 'Tahap', 'Skor', 'Kota', 'Interaksi terakhir'], escape: '');
-
-            $query->lazy()->each(function (CrmCustomer $c) use ($keluar) {
-                fputcsv($keluar, CsvSanitizer::baris([
-                    $c->nama,
-                    $c->nomor_wa,
-                    $c->tipe_customer->label(),
-                    $c->tahap_funnel->label(),
-                    $c->skor_prospek->value,
-                    $c->kota,
-                    $c->tgl_interaksi_terakhir?->format('Y-m-d H:i'),
-                ]), escape: '');
-            });
-
-            fclose($keluar);
-        }, 'pelanggan-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            'pelanggan-'.now()->format('Y-m-d').'.csv',
+            ['Nama', 'Nomor WA', 'Tipe', 'Tahap', 'Skor', 'Kota', 'Interaksi terakhir'],
+            $query->lazy()->map(fn (CrmCustomer $c) => [
+                $c->nama,
+                $c->nomor_wa,
+                $c->tipe_customer->label(),
+                $c->tahap_funnel->label(),
+                $c->skor_prospek->value,
+                $c->kota,
+                $c->tgl_interaksi_terakhir?->format('Y-m-d H:i'),
+            ]),
+        );
     }
 
     /**

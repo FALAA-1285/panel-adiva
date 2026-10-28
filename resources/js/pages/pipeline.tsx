@@ -4,6 +4,7 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { ButtonLink } from '@/components/ui/button';
 import { Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { KotakCari } from '@/components/ui/input-cari';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatStrip } from '@/components/ui/stat-strip';
 import type { Stat } from '@/components/ui/stat-strip';
@@ -159,19 +160,15 @@ export default function Pipeline({ filter, angka, kolom }: Props) {
                     aria-label="Filter"
                     className="flex flex-wrap items-center gap-2.5"
                 >
-                    <label className="box-border flex h-[38px] w-[260px] items-center gap-2 rounded-control border fokus-bingkai border-line-control bg-surface px-3 text-muted max-md:w-full">
-                        <Ikon nama="cari" tebal={2} />
-                        <input
-                            type="search"
-                            aria-label="Cari customer"
-                            placeholder="Cari nama, kota, produk"
-                            className="grow border-none bg-transparent text-body text-ink outline-none"
-                            value={isian.cari}
-                            onChange={(e) =>
-                                setIsian({ ...isian, cari: e.target.value })
-                            }
-                        />
-                    </label>
+                    <KotakCari
+                        className="h-[38px] w-[260px] bg-surface max-md:w-full"
+                        aria-label="Cari customer"
+                        placeholder="Cari nama, kota, produk"
+                        value={isian.cari}
+                        onChange={(e) =>
+                            setIsian({ ...isian, cari: e.target.value })
+                        }
+                    />
                     <span className="pl-1.5 text-caption font-medium text-muted">
                         Tipe
                     </span>

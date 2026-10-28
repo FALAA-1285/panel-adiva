@@ -151,6 +151,20 @@ test('the list is exported as CSV', function () {
         ->not->toContain('Bu Wati');
 });
 
+test('a name a customer typed as a spreadsheet formula is exported as text', function () {
+    // WhatsApp names come from customers: one could be a formula that runs when the CSV is opened
+    CrmCustomer::factory()->create(['nama' => '=HYPERLINK("http://contoh.test","klik")', 'kota' => '@SUM(1+1)']);
+
+    $csv = $this->actingAs(User::factory()->falah()->create())
+        ->get('/pelanggan/ekspor')
+        ->streamedContent();
+
+    expect($csv)->toStartWith("\xEF\xBB\xBFNama,")
+        ->toContain('"\'=HYPERLINK(""http://contoh.test"",""klik"")"')
+        ->toContain("'@SUM(1+1)")
+        ->not->toContain(',=HYPERLINK');
+});
+
 test('only staff with balas access can change opt-out', function () {
     $sarah = User::factory()->create(['peran' => Peran::PjKaryawan]);
     $rina = CrmCustomer::factory()->create(['nama' => 'Rina Maharani']);

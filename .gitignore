@@ -23,23 +23,50 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+*.log
 /auth.json
+# keys, certificates and database dumps
+*.pem
+*.p12
+*.pfx
+*.sql
+*.dump
+# test and tool output
+/coverage
+/playwright-report
+/test-results
+# OS and editor leftovers
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.bak
+*.orig
+*~
 /.fleet
 /.idea
 /.nova
 /.vscode
 /.zed
+# AI tools: local settings, prompts and notes (nothing in them is shared with the team)
+/.agent
 /.agents
+/.aider*
 /.amp
+/.antigravity
 /.claude
 /CLAUDE.md
 /.codex
+/.continue
 /.cursor
 /.factory
+/.gemini
+/GEMINI.md
 /.grok
 /.junie
 /.kiro
 /.pi
+/.windsurf
 /.mcp.json
 /AGENTS.md
 /boost.json

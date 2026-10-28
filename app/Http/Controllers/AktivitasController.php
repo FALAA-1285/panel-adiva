@@ -7,7 +7,7 @@ use App\Enums\SumberAktivitas;
 use App\Models\ActivityLog;
 use App\Models\ConfigToko;
 use App\Models\User;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\KunciPengaturan;
 use App\Support\PengaturanToko;
 use App\Support\Perangkat;
@@ -83,29 +83,17 @@ class AktivitasController extends Controller
     {
         $query = $this->cari($this->filter($request))->orderByDesc('waktu')->orderByDesc('id');
 
-        return response()->streamDownload(function () use ($query) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            // BOM so Excel reads "·" and "→" as UTF-8
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Waktu', 'Oleh', 'Aksi', 'Detail', 'Sumber'], escape: '');
-
-            $query->lazy()->each(function (ActivityLog $baris) use ($keluar) {
-                fputcsv($keluar, CsvSanitizer::baris([
-                    $baris->waktu->format('Y-m-d H:i'),
-                    $baris->pelaku,
-                    $baris->aksi,
-                    $baris->detail,
-                    $baris->sumber->label(),
-                ]), escape: '');
-            });
-
-            fclose($keluar);
-        }, 'log-aktivitas-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            'log-aktivitas-'.now()->format('Y-m-d').'.csv',
+            ['Waktu', 'Oleh', 'Aksi', 'Detail', 'Sumber'],
+            $query->lazy()->map(fn (ActivityLog $baris) => [
+                $baris->waktu->format('Y-m-d H:i'),
+                $baris->pelaku,
+                $baris->aksi,
+                $baris->detail,
+                $baris->sumber->label(),
+            ]),
+        );
     }
 
     /**

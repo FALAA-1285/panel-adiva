@@ -16,6 +16,7 @@ import { AppLayout } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Select, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { KotakCari } from '@/components/ui/input-cari';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { Avatar } from '@/components/ui/teks';
@@ -255,19 +256,14 @@ export default function HalamanPercakapan({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 pt-3.5 pb-2.5">
-                        <label className="box-border flex h-10 items-center gap-2 rounded-control border fokus-bingkai border-line-control px-3 text-muted">
-                            <Ikon nama="cari" tebal={2} />
-                            <input
-                                type="search"
-                                aria-label="Cari chat"
-                                placeholder="Cari nama atau nomor"
-                                className="grow border-none bg-transparent text-body text-ink outline-none"
-                                value={isian.cari}
-                                onChange={(e) =>
-                                    setIsian({ ...isian, cari: e.target.value })
-                                }
-                            />
-                        </label>
+                        <KotakCari
+                            aria-label="Cari chat"
+                            placeholder="Cari nama atau nomor"
+                            value={isian.cari}
+                            onChange={(e) =>
+                                setIsian({ ...isian, cari: e.target.value })
+                            }
+                        />
                         {/* status and customer type narrow each other; each option says how many it gives */}
                         <div className="grid grid-cols-2 gap-2">
                             <Select

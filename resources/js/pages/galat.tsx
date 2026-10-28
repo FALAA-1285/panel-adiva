@@ -76,7 +76,7 @@ export default function Galat({ status }: { status: number }) {
                 )}
                 <div className="flex flex-wrap justify-center gap-2">
                     <ButtonLink href={home.url()} varian="primary">
-                        Kembali ke Tugas
+                        Kembali ke Dashboard
                     </ButtonLink>
                     {status === 404 && panel && (
                         <ButtonLink href={pesanan.url()}>

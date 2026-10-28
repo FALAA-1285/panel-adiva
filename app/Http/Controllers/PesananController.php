@@ -18,7 +18,7 @@ use App\Models\Riwayat;
 use App\Models\User;
 use App\Support\Aktivitas;
 use App\Support\AlurPesanan;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\JamKerja;
 use App\Support\NomorWa;
 use App\Support\PerintahPesanan;
@@ -203,33 +203,21 @@ class PesananController extends Controller
         $tab = TabPesanan::tryFrom((string) $request->query('tab')) ?? TabPesanan::Semua;
         $query = $this->daftar($tab);
 
-        return response()->streamDownload(function () use ($query) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            // BOM so Excel reads "·" and "×" as UTF-8
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Order', 'Tanggal', 'Customer', 'Tipe', 'Item', 'Total', 'Metode bayar', 'Kurir', 'Status'], escape: '');
-
-            $query->lazy()->each(function (LogOrder $o) use ($keluar) {
-                fputcsv($keluar, CsvSanitizer::baris([
-                    $o->order_id,
-                    $o->tanggal->format('Y-m-d H:i'),
-                    $o->namaCustomer(),
-                    $o->tipe_customer?->label(),
-                    $this->item($o),
-                    $o->tagihan(),
-                    $o->metode_bayar,
-                    $o->kurir(),
-                    $o->status_order->label(),
-                ]), escape: '');
-            });
-
-            fclose($keluar);
-        }, "pesanan-{$tab->value}-".now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            "pesanan-{$tab->value}-".now()->format('Y-m-d').'.csv',
+            ['Order', 'Tanggal', 'Customer', 'Tipe', 'Item', 'Total', 'Metode bayar', 'Kurir', 'Status'],
+            $query->lazy()->map(fn (LogOrder $o) => [
+                $o->order_id,
+                $o->tanggal->format('Y-m-d H:i'),
+                $o->namaCustomer(),
+                $o->tipe_customer?->label(),
+                $this->item($o),
+                $o->tagihan(),
+                $o->metode_bayar,
+                $o->kurir(),
+                $o->status_order->label(),
+            ]),
+        );
     }
 
     /**

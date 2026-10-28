@@ -7,6 +7,7 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Select, Toggle } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { KotakCari } from '@/components/ui/input-cari';
 import { PageHeader } from '@/components/ui/page-header';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
@@ -242,19 +243,14 @@ export default function Pelanggan({
                     )}
                 >
                     <div className="flex flex-col gap-2.5 border-b border-line-softer px-4 py-3.5">
-                        <label className="box-border flex h-10 items-center gap-2 rounded-control border fokus-bingkai border-line-control px-3 text-muted">
-                            <Ikon nama="cari" tebal={2} />
-                            <input
-                                type="search"
-                                aria-label="Cari pelanggan"
-                                placeholder="Cari nama, nomor, kota"
-                                className="grow border-none bg-transparent text-body text-ink outline-none"
-                                value={isian.cari}
-                                onChange={(e) =>
-                                    setIsian({ ...isian, cari: e.target.value })
-                                }
-                            />
-                        </label>
+                        <KotakCari
+                            aria-label="Cari pelanggan"
+                            placeholder="Cari nama, nomor, kota"
+                            value={isian.cari}
+                            onChange={(e) =>
+                                setIsian({ ...isian, cari: e.target.value })
+                            }
+                        />
                         <div className="flex gap-1.5">
                             <Select
                                 aria-label="Tipe"

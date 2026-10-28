@@ -10,7 +10,7 @@ use App\Models\Karyawan;
 use App\Models\LogOrder;
 use App\Support\Aktivitas;
 use App\Support\AturanBroadcast;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\NomorWa;
 use App\Support\Rupiah;
 use Carbon\CarbonInterface;
@@ -94,31 +94,20 @@ class BroadcastController extends Controller
     {
         $penerima = $broadcast->penerima()->with(['customer', 'order'])->orderBy('id');
 
-        return response()->streamDownload(function () use ($penerima) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Nama', 'Nomor WA', 'Status', 'Terkirim', 'Dibaca', 'Dibalas', 'Balasan', 'Order'], escape: '');
-
-            $penerima->lazy()->each(function (BroadcastPenerima $p) use ($keluar) {
-                fputcsv($keluar, CsvSanitizer::baris([
-                    $p->customer?->nama,
-                    Str::before($p->chat_id, '@'),
-                    $p->status,
-                    $p->terkirim_at?->format('Y-m-d H:i'),
-                    $p->dibaca_at?->format('Y-m-d H:i'),
-                    $p->dibalas_at?->format('Y-m-d H:i'),
-                    $p->balasan,
-                    $p->order?->order_id,
-                ]), escape: '');
-            });
-
-            fclose($keluar);
-        }, 'broadcast-'.Str::slug($broadcast->nama).'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            'broadcast-'.Str::slug($broadcast->nama).'.csv',
+            ['Nama', 'Nomor WA', 'Status', 'Terkirim', 'Dibaca', 'Dibalas', 'Balasan', 'Order'],
+            $penerima->lazy()->map(fn (BroadcastPenerima $p) => [
+                $p->customer?->nama,
+                Str::before($p->chat_id, '@'),
+                $p->status,
+                $p->terkirim_at?->format('Y-m-d H:i'),
+                $p->dibaca_at?->format('Y-m-d H:i'),
+                $p->dibalas_at?->format('Y-m-d H:i'),
+                $p->balasan,
+                $p->order?->order_id,
+            ]),
+        );
     }
 
     /**

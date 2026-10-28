@@ -15,7 +15,7 @@ use App\Models\Pesan;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowEvent;
-use App\Support\CsvSanitizer;
+use App\Support\CsvUnduhan;
 use App\Support\JamKerja;
 use App\Support\PengaturanToko;
 use App\Support\Rupiah;
@@ -125,34 +125,30 @@ class RingkasanController extends Controller
         $hari = self::RENTANG[$this->rentang($request)]['hari'];
         $status = StatusIntegrasi::sekarang();
 
-        return response()->streamDownload(function () use ($hari, $status) {
-            $keluar = fopen('php://output', 'w');
-
-            if ($keluar === false) {
-                return;
-            }
-
-            fwrite($keluar, "\xEF\xBB\xBF");
-            fputcsv($keluar, ['Tanggal', 'Chat masuk', 'Diteruskan ke admin', 'Order baru', 'Pembayaran lunas', 'Order lunas'], escape: '');
-
+        // a generator: each day is counted while its line goes out
+        $baris = function () use ($hari, $status) {
             foreach (range($hari - 1, 0) as $mundur) {
                 $awal = CarbonImmutable::now()->subDays($mundur)->startOfDay();
                 $akhir = $awal->endOfDay();
                 $chat = $this->chat($status, $awal, $akhir);
                 $lunas = LogOrder::query()->whereBetween('lunas_at', [$awal, $akhir])->get(['total_produk', 'ongkir']);
 
-                fputcsv($keluar, CsvSanitizer::baris([
+                yield [
                     $awal->format('Y-m-d'),
                     $chat['chat'],
                     $chat['diteruskan'],
                     LogOrder::query()->whereBetween('tanggal', [$awal, $akhir])->count(),
                     $lunas->sum(fn (LogOrder $o) => $o->tagihan()),
                     $lunas->count(),
-                ]), escape: '');
+                ];
             }
+        };
 
-            fclose($keluar);
-        }, 'ringkasan-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return CsvUnduhan::buat(
+            'ringkasan-'.now()->format('Y-m-d').'.csv',
+            ['Tanggal', 'Chat masuk', 'Diteruskan ke admin', 'Order baru', 'Pembayaran lunas', 'Order lunas'],
+            $baris(),
+        );
     }
 
     private function rentang(Request $request): string
