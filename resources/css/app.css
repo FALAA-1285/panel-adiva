@@ -106,13 +106,13 @@
     --text-nota-mini: 9.5px; /* lembar invoice: label kolom, catatan kaki */
     --text-nota: 10px; /* lembar invoice: isi */
     --text-key: 11px; /* kunci CONFIG_TOKO (mono) */
-    --text-tag: 12px; /* tag, badge angka */
-    --text-caption: 13px; /* label tabel, hint, grup sidebar, meta, status */
-    --text-body: 14px; /* isi, tombol md, nav, sub-judul halaman */
-    --text-panel: 16px; /* judul panel (h2), nama di daftar */
-    --text-judul: 18px; /* nama customer/kampanye, judul langkah formulir */
-    --text-page: 26px; /* judul halaman (h1), letter-spacing -0.02em */
-    --text-stat: 28px; /* angka di strip statistik */
+    --text-tag: 11px; /* tag, badge angka */
+    --text-caption: 12px; /* label tabel, hint, grup sidebar, meta, status */
+    --text-body: 13px; /* isi, tombol md, nav, sub-judul halaman */
+    --text-panel: 14.5px; /* judul panel (h2), nama di daftar */
+    --text-judul: 16px; /* nama customer/kampanye, judul langkah formulir */
+    --text-page: 22px; /* judul halaman (h1), letter-spacing -0.02em */
+    --text-stat: 24px; /* angka di strip statistik */
     --text-display-sm: 36px; /* panel kiri Masuk di bawah 1280 px */
     --text-display: 44px; /* panel kiri Masuk */
 

@@ -66,7 +66,7 @@ export function StatStrip({
                         <span
                             className={cn(
                                 'font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums',
-                                rapat ? 'text-[22px]' : 'text-stat',
+                                rapat ? 'text-[20px]' : 'text-stat',
                                 s.sorot && 'text-primary-ink',
                             )}
                         >

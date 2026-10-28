@@ -217,7 +217,7 @@ export default function Ringkasan(props: Props) {
                                 </span>
                             </div>
                         </div>
-                        <div className="relative px-[18px] pb-3 text-[40px] leading-none font-semibold tracking-[-0.02em] text-primary-ink tabular-nums">
+                        <div className="relative px-[18px] pb-3 text-[34px] leading-none font-semibold tracking-[-0.02em] text-primary-ink tabular-nums">
                             {props.tindakan.length === 0
                                 ? 'Semua beres'
                                 : `${props.tindakan.length} tugas`}
