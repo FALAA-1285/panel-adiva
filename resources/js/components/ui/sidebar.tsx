@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FocusEvent, MouseEvent } from 'react';
 import { Count } from '@/components/ui/count';
 import { Ikon } from '@/components/ui/ikon';
@@ -287,15 +287,19 @@ type SidebarProps = {
  * Which parts show, as classes, so the first paint is right on every screen:
  * `penuh` = labels, counts and the status block; `ikon` = their icon-only stand-ins.
  */
-function kelasMode(ciut: boolean, tetap: boolean) {
+function kelasMode(ciut: boolean, tetap: boolean, baruMelebar = false) {
     if (tetap) {
         return { penuh: ciut ? 'hidden' : '', ikon: ciut ? '' : 'hidden' };
     }
 
     // from 1024px the menu shows its names unless collapsed (Audit: icons alone left
-    // new staff guessing); below 1024px it is a drawer with names
+    // new staff guessing); below 1024px it is a drawer with names. Widening, the names
+    // fade in while the width grows, instead of appearing all at once.
     return {
-        penuh: cn(ciut && 'lg:hidden'),
+        penuh: cn(
+            ciut && 'lg:hidden',
+            baruMelebar && 'motion-safe:lg:animate-[pudar_220ms_ease-out]',
+        ),
         ikon: cn(!ciut && 'lg:hidden', 'max-lg:hidden'),
     };
 }
@@ -309,7 +313,13 @@ export function Sidebar({
     tetap = false,
 }: SidebarProps) {
     const { hitungan, status, pengguna, akses } = panel;
-    const mode = kelasMode(ciut, tetap);
+    // the render right after collapsed → full: the names fade in with the width
+    const ciutTadi = useRef(ciut);
+    const baruMelebar = ciutTadi.current && !ciut;
+    useEffect(() => {
+        ciutTadi.current = ciut;
+    }, [ciut]);
+    const mode = kelasMode(ciut, tetap, baruMelebar);
     // collapsed to icons: the name shows at once beside the icon under the pointer or
     // keyboard focus, so nobody has to widen the sidebar to read it
     const [tip, setTip] = useState<{
@@ -347,6 +357,8 @@ export function Sidebar({
             className={cn(
                 'box-border flex h-full shrink-0 flex-col gap-[18px] overflow-y-auto border-r border-line bg-latar px-3 pt-3 pb-3 font-sans text-ink-2',
                 ciut ? 'w-16' : 'w-[248px]',
+                // collapsing and widening glide; the names are cut at the edge meanwhile
+                'lg:overflow-x-hidden motion-safe:lg:transition-[width] motion-safe:lg:duration-200 motion-safe:lg:ease-out',
                 !tetap && [
                     // the drawer: over the page, scrolls on short phones
                     'max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-40 max-lg:w-[280px] max-lg:max-w-[85vw] max-lg:overflow-y-auto',
@@ -399,7 +411,7 @@ export function Sidebar({
                         />
                         <div
                             className={cn(
-                                'px-2.5 pb-1.5 text-caption font-medium text-muted',
+                                'px-2.5 pb-1.5 text-caption font-medium whitespace-nowrap text-muted',
                                 mode.penuh,
                             )}
                         >
@@ -436,7 +448,12 @@ export function Sidebar({
                                     )}
                                 >
                                     <Ikon nama={item.ikon} />
-                                    <span className={cn('grow', mode.penuh)}>
+                                    <span
+                                        className={cn(
+                                            'grow whitespace-nowrap',
+                                            mode.penuh,
+                                        )}
+                                    >
                                         {item.label}
                                     </span>
                                     {n > 0 && (
@@ -490,7 +507,7 @@ export function Sidebar({
                         </div>
                         <div
                             className={cn(
-                                'flex flex-col gap-[3px] border-t border-line px-2.5 py-3',
+                                'flex flex-col gap-[3px] border-t border-line px-2.5 py-3 whitespace-nowrap',
                                 mode.penuh,
                             )}
                         >
@@ -537,7 +554,7 @@ export function Sidebar({
                 </span>
                 <span
                     className={cn(
-                        'flex min-w-0 grow flex-col gap-px',
+                        'flex min-w-0 grow flex-col gap-px whitespace-nowrap',
                         mode.penuh,
                     )}
                 >

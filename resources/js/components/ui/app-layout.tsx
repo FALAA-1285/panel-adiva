@@ -39,13 +39,26 @@ export function AppLayout({
     ciutkanSidebar = false,
 }: AppLayoutProps) {
     const { panel } = usePage().props;
-    // the saved choice is read after the first paint; a chat page starts collapsed at once
-    const [ciut, setCiut] = useState(ciutkanSidebar);
+    // each page mounts its own layout: it starts as the sidebar was on the page just
+    // left, then moves to its own state, so the width animates instead of jumping
+    const [ciut, setCiut] = useState(
+        () => ciutSebelumnya ?? (ciutkanSidebar || bacaCiut()),
+    );
     const [laci, setLaci] = useState(false);
     const [bantuan, setBantuan] = useState(false);
     const layarSedang = useLayar(LAYAR.sedang);
 
-    useEffect(() => setCiut(ciutkanSidebar || bacaCiut()), [ciutkanSidebar]);
+    useEffect(() => {
+        const tujuan = ciutkanSidebar || bacaCiut();
+        // one frame later, so the browser has painted the starting width
+        const bingkai = requestAnimationFrame(() => setCiut(tujuan));
+
+        return () => cancelAnimationFrame(bingkai);
+    }, [ciutkanSidebar]);
+
+    useEffect(() => {
+        ciutSebelumnya = ciut;
+    }, [ciut]);
 
     // the sidebar button and "[": from 1024px it collapses (remembered, except on the
     // chat pages, which always open collapsed), phones open the drawer
@@ -166,6 +179,9 @@ export function AppLayout({
         </div>
     );
 }
+
+/** The sidebar's state on the page just left, kept while the panel stays open. */
+let ciutSebelumnya: boolean | null = null;
 
 /** "Ciutkan sidebar" is remembered per browser; storage may be unavailable. */
 const KUNCI_CIUT = 'panel-adiva:sidebar-ciut';
