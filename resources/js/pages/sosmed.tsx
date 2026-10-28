@@ -202,7 +202,7 @@ export default function HalamanSosmed({
     });
 
     return (
-        <AppLayout active="sosmed" penuhLayar>
+        <AppLayout active="sosmed" penuhLayar ciutkanSidebar>
             <Head title="Instagram & Facebook" />
             <PageHeader
                 judul="Instagram & Facebook"

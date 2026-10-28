@@ -19,6 +19,11 @@ type AppLayoutProps = {
     penuhLayar?: boolean;
     /** The page's name in the top bar on small screens, for a page outside the menu. */
     judul?: string;
+    /**
+     * The chat pages open with the sidebar collapsed, so the conversation gets the
+     * width. It can still be widened there; the saved choice for other pages stays.
+     */
+    ciutkanSidebar?: boolean;
 };
 
 /**
@@ -31,21 +36,26 @@ export function AppLayout({
     children,
     penuhLayar = false,
     judul,
+    ciutkanSidebar = false,
 }: AppLayoutProps) {
     const { panel } = usePage().props;
-    // the server renders the full sidebar, so the saved choice is applied after hydration
-    const [ciut, setCiut] = useState(false);
+    // the saved choice is read after the first paint; a chat page starts collapsed at once
+    const [ciut, setCiut] = useState(ciutkanSidebar);
     const [laci, setLaci] = useState(false);
     const [bantuan, setBantuan] = useState(false);
     const layarSedang = useLayar(LAYAR.sedang);
 
-    useEffect(() => setCiut(bacaCiut()), []);
+    useEffect(() => setCiut(ciutkanSidebar || bacaCiut()), [ciutkanSidebar]);
 
-    // the sidebar button and "[": from 1024px it collapses (remembered), phones open the drawer
+    // the sidebar button and "[": from 1024px it collapses (remembered, except on the
+    // chat pages, which always open collapsed), phones open the drawer
     function ubahCiut() {
         if (cocok(LAYAR.sedang)) {
             setCiut(!ciut);
-            simpanCiut(!ciut);
+
+            if (!ciutkanSidebar) {
+                simpanCiut(!ciut);
+            }
         } else {
             setLaci(!laci);
         }

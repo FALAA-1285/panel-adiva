@@ -1,7 +1,10 @@
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
+import type { FocusEvent, MouseEvent } from 'react';
 import { Count } from '@/components/ui/count';
 import { Ikon } from '@/components/ui/ikon';
 import type { NamaIkon } from '@/components/ui/ikon';
+import { cocok, LAYAR } from '@/hooks/use-layar';
 import { cn } from '@/lib/utils';
 import {
     broadcast,
@@ -69,9 +72,11 @@ const grup: { judul: string; item: ItemMenu[] }[] = [
         item: [
             {
                 kunci: 'tugas',
-                label: 'Tugas',
+                label: 'Dashboard',
                 ikon: 'tugas',
-                halaman: [{ kode: 'main', label: 'Tugas', href: home.url() }],
+                halaman: [
+                    { kode: 'main', label: 'Dashboard', href: home.url() },
+                ],
             },
             {
                 kunci: 'chat',
@@ -305,11 +310,39 @@ export function Sidebar({
 }: SidebarProps) {
     const { hitungan, status, pengguna, akses } = panel;
     const mode = kelasMode(ciut, tetap);
+    // collapsed to icons: the name shows at once beside the icon under the pointer or
+    // keyboard focus, so nobody has to widen the sidebar to read it
+    const [tip, setTip] = useState<{
+        teks: string;
+        top: number;
+        left: number;
+    } | null>(null);
+    const tampilkanTip = (el: HTMLElement, teks: string) => {
+        if (!ciut || tetap || !cocok(LAYAR.sedang)) {
+            return;
+        }
+
+        const kotak = el.getBoundingClientRect();
+        setTip({
+            teks,
+            top: kotak.top + kotak.height / 2,
+            left: kotak.right + 10,
+        });
+    };
+    const tipPada = (teks: string) => ({
+        onMouseEnter: (e: MouseEvent<HTMLElement>) =>
+            tampilkanTip(e.currentTarget, teks),
+        onFocus: (e: FocusEvent<HTMLElement>) =>
+            tampilkanTip(e.currentTarget, teks),
+        onMouseLeave: () => setTip(null),
+        onBlur: () => setTip(null),
+    });
 
     return (
         <nav
             id="menu-utama"
             aria-label="Menu utama"
+            onScroll={() => setTip(null)}
             onKeyDown={(e) => e.key === 'Escape' && onTutupLaci?.()}
             className={cn(
                 'box-border flex h-full shrink-0 flex-col gap-[18px] overflow-y-auto border-r border-line bg-latar px-3 pt-3 pb-3 font-sans text-ink-2',
@@ -326,7 +359,7 @@ export function Sidebar({
         >
             <Link
                 href={home.url()}
-                aria-label="Bang Bana — ke Ringkasan"
+                aria-label="Bang Bana — ke Dashboard"
                 className={cn(
                     'flex items-center gap-2.5 rounded-ikon p-2 text-ink no-underline',
                     !ciut && 'bg-subtle',
@@ -392,7 +425,7 @@ export function Sidebar({
                                     href={halaman[0].href}
                                     aria-current={aktif ? 'page' : undefined}
                                     aria-label={judulTooltip}
-                                    title={judulTooltip}
+                                    {...tipPada(judulTooltip)}
                                     className={cn(
                                         'relative flex h-9 items-center gap-2.5 rounded-nav px-2.5 text-body no-underline motion-safe:transition-colors motion-safe:duration-150',
                                         aktif
@@ -421,7 +454,6 @@ export function Sidebar({
                                                     'absolute top-1 right-1 size-[7px] rounded-full bg-primary',
                                                     mode.ikon,
                                                 )}
-                                                title={`${n} perlu tindakan`}
                                             />
                                         </>
                                     )}
@@ -520,11 +552,22 @@ export function Sidebar({
                     href={logout()}
                     as="button"
                     aria-label="Keluar"
+                    {...tipPada('Keluar')}
                     className="flex size-[30px] cursor-pointer items-center justify-center rounded-nav text-muted hover:bg-line-softer hover:text-ink motion-safe:transition-colors"
                 >
                     <Ikon nama="keluar" />
                 </Link>
             </div>
+
+            {tip && (
+                <span
+                    role="tooltip"
+                    className="pointer-events-none fixed z-50 -translate-y-1/2 rounded-control bg-ink px-2.5 py-1.5 text-caption font-medium whitespace-nowrap text-white shadow-lg motion-safe:animate-[pudar_120ms_ease-out]"
+                    style={{ top: tip.top, left: tip.left }}
+                >
+                    {tip.teks}
+                </span>
+            )}
         </nav>
     );
 }

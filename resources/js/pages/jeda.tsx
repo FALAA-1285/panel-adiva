@@ -144,7 +144,7 @@ export default function Jeda({ ringkasan, aktif, riwayat, terakhir }: Props) {
     };
 
     return (
-        <AppLayout active="jeda">
+        <AppLayout active="jeda" ciutkanSidebar>
             <Head title="Ambil alih chat" />
             <PageHeader
                 judul="Ambil alih chat"

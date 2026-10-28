@@ -242,7 +242,7 @@ export default function HalamanPercakapan({
     });
 
     return (
-        <AppLayout active="inbox" penuhLayar>
+        <AppLayout active="inbox" penuhLayar ciutkanSidebar>
             <Head title="Percakapan" />
             <h1 className="sr-only">Percakapan</h1>
             <div className="mx-5 mt-4 mb-5 flex min-h-0 grow overflow-hidden rounded-card border border-line max-md:mx-0 max-md:mt-3 max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0">

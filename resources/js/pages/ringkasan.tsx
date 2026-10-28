@@ -143,7 +143,7 @@ export default function Ringkasan(props: Props) {
 
     return (
         <AppLayout active="main">
-            <Head title="Tugas" />
+            <Head title="Dashboard" />
             <PageHeader
                 judul="Yang perlu dikerjakan"
                 sub={tanggal}
