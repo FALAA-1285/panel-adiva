@@ -54,7 +54,7 @@ export default function HalamanNotifikasi({ tab, jumlah, hari, pj }: Props) {
     usePintasanBaris();
 
     return (
-        <AppLayout active="none">
+        <AppLayout active="none" judul="Notifikasi">
             <Head title="Notifikasi" />
             <PageHeader
                 judul="Notifikasi"

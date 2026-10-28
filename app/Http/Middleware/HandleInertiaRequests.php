@@ -65,7 +65,7 @@ class HandleInertiaRequests extends Middleware
     protected function panel(User $user): array
     {
         $hitungan = Demo::aktif()
-            ? $this->hitungan()
+            ? $this->hitunganDemo()
             : Cache::remember('panel:hitungan', 10, fn () => $this->hitungan());
 
         $dijeda = $hitungan['jeda'];
@@ -99,6 +99,30 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
     }
+
+    /**
+     * The demo's clock is frozen, so a cache entry with a lifetime never runs out there.
+     * The counts are kept in this process for 10 real seconds instead: a warm serverless
+     * instance answers the 5-second polls without eight count queries each (Audit AUD-010).
+     *
+     * @return array<string, int>
+     */
+    protected function hitunganDemo(): array
+    {
+        // tests change the data between requests in one process
+        if (app()->runningUnitTests()) {
+            return $this->hitungan();
+        }
+
+        if (self::$simpananDemo === null || time() - self::$simpananDemo['pada'] >= 10) {
+            self::$simpananDemo = ['pada' => time(), 'hitungan' => $this->hitungan()];
+        }
+
+        return self::$simpananDemo['hitungan'];
+    }
+
+    /** @var array{pada: int, hitungan: array<string, int>}|null */
+    private static ?array $simpananDemo = null;
 
     /**
      * @return array<string, int>

@@ -11,6 +11,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/form';
 import type { KolomTabel } from '@/components/ui/data-table';
 import { Ikon } from '@/components/ui/ikon';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
 import { Status, titikNada } from '@/components/ui/status';
@@ -133,6 +134,7 @@ export default function DetailPesanan({
     aksi,
 }: Props) {
     const [mengubahItem, setMengubahItem] = useState(false);
+    const [konfirmasi, tanya] = useKonfirmasi();
     // the first command that moves the order forward is the one to stand out
     const langkahBerikut = aksi.find((a) => !a.bahaya);
     const jalankan = (kode: string) =>
@@ -396,13 +398,19 @@ export default function DetailPesanan({
                                           ? 'primary'
                                           : 'secondary'
                                 }
-                                onClick={() =>
-                                    (!a.bahaya ||
-                                        window.confirm(
-                                            `${a.label} pesanan ${order.id}? Customer akan dikabari.`,
-                                        )) &&
-                                    jalankan(a.kode)
-                                }
+                                onClick={async () => {
+                                    if (
+                                        !a.bahaya ||
+                                        (await tanya({
+                                            judul: `${a.label} pesanan ${order.id}?`,
+                                            pesan: 'Customer akan dikabari lewat WhatsApp.',
+                                            ya: a.label,
+                                            bahaya: true,
+                                        }))
+                                    ) {
+                                        jalankan(a.kode);
+                                    }
+                                }}
                             >
                                 {a.label}
                             </Button>
@@ -435,6 +443,7 @@ export default function DetailPesanan({
                     </div>
                 )}
             </IsiHalaman>
+            {konfirmasi}
         </AppLayout>
     );
 }
@@ -528,7 +537,9 @@ function KertasInvoice({ invoice }: { invoice: Invoice }) {
                             <span
                                 className={cn(
                                     'text-right',
-                                    invoice.ongkir.cod ? 'text-muted' : 'w-[78px]',
+                                    invoice.ongkir.cod
+                                        ? 'text-muted'
+                                        : 'w-[78px]',
                                 )}
                             >
                                 {invoice.ongkir.nilai}

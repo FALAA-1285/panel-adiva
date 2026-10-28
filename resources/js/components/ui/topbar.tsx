@@ -24,6 +24,8 @@ type TopbarProps = {
     /** below 1024px: opens the sidebar drawer (not in the design) */
     onMenu?: () => void;
     laciTerbuka?: boolean;
+    /** below 1024px, where the sidebar is hidden: which page this is (Audit AUD-011) */
+    judul?: string | null;
 };
 
 /** Typing in a field: page shortcuts stay quiet. */
@@ -43,6 +45,7 @@ export function Topbar({
     onCiutkan,
     onMenu,
     laciTerbuka = false,
+    judul = null,
 }: TopbarProps) {
     const n = panel.hitungan.notifikasi;
     const [cari, setCari] = useState('');
@@ -156,6 +159,14 @@ export function Topbar({
             >
                 <Ikon nama="menu" ukuran={20} />
             </button>
+            {judul && (
+                <span
+                    aria-hidden="true"
+                    className="min-w-0 shrink truncate text-panel font-semibold lg:hidden max-md:grow"
+                >
+                    {judul}
+                </span>
+            )}
             <label
                 className={cn(
                     'fokus-bingkai relative box-border flex h-9 w-[380px] items-center gap-2 rounded-control border border-line bg-latar pr-1.5 pl-[11px] text-muted',

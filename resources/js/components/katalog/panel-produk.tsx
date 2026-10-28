@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
 import { Panel } from '@/components/ui/panel';
 import { arsip, impor, simpan, tambah } from '@/routes/katalog/produk';
 
@@ -73,6 +74,7 @@ export function PanelProduk({
         ([k]) => k !== 'jenis_produk' && k !== 'tier' && !k.startsWith('tier.'),
     )?.[1];
     const bingkai = useRef<HTMLDivElement>(null);
+    const [konfirmasi, tanya] = useKonfirmasi();
 
     // opened from a row far down the list: bring the form into view, ready to type
     useEffect(() => {
@@ -278,19 +280,25 @@ export function PanelProduk({
                             <Button
                                 varian="danger"
                                 className="ml-auto"
-                                onClick={() =>
-                                    window.confirm(
-                                        `Arsipkan ${nama}? Adiva berhenti menawarkannya. Pesanan lama tetap menampilkannya, dan produk bisa dipulihkan dari daftar Arsip.`,
-                                    ) &&
-                                    router.post(
-                                        arsip.url(id),
-                                        {},
-                                        {
-                                            preserveScroll: true,
-                                            onSuccess: onTutup,
-                                        },
-                                    )
-                                }
+                                onClick={async () => {
+                                    if (
+                                        await tanya({
+                                            judul: `Arsipkan ${nama}?`,
+                                            pesan: 'Adiva berhenti menawarkannya. Pesanan lama tetap menampilkannya, dan produk bisa dipulihkan dari daftar Arsip.',
+                                            ya: 'Arsipkan',
+                                            bahaya: true,
+                                        })
+                                    ) {
+                                        router.post(
+                                            arsip.url(id),
+                                            {},
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: onTutup,
+                                            },
+                                        );
+                                    }
+                                }}
                             >
                                 Arsipkan
                             </Button>
@@ -298,6 +306,7 @@ export function PanelProduk({
                     </div>
                 </div>
             </Panel>
+            {konfirmasi}
         </div>
     );
 }

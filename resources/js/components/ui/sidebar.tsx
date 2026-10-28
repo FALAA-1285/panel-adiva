@@ -247,6 +247,24 @@ export function subHalaman(
     return null;
 }
 
+/**
+ * The open page's name in the menu ("Pesanan", "Semua chat"), shown in the top bar on
+ * screens where the sidebar is a drawer; null for a page outside the menu.
+ */
+export function namaHalaman(active: MenuAktif): string | null {
+    for (const g of grup) {
+        for (const item of g.item) {
+            const halaman = item.halaman.find((h) => h.kode === active);
+
+            if (halaman) {
+                return halaman.label;
+            }
+        }
+    }
+
+    return null;
+}
+
 type SidebarProps = {
     active: MenuAktif;
     panel: Panel;

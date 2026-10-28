@@ -4,6 +4,7 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { ButtonLink } from '@/components/ui/button';
 import { Select } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatStrip } from '@/components/ui/stat-strip';
 import type { Stat } from '@/components/ui/stat-strip';
@@ -258,6 +259,7 @@ function BarisKampanye({ baris, terpilih, onPilih }: BarisKampanyeProps) {
 }
 
 function LaporanKampanye({ laporan }: { laporan: Laporan }) {
+    const [konfirmasi, tanya] = useKonfirmasi();
     const tombol =
         'h-9 grow cursor-pointer rounded-control border border-line-strong bg-surface text-caption font-semibold text-ink';
 
@@ -368,11 +370,18 @@ function LaporanKampanye({ laporan }: { laporan: Laporan }) {
                         <button
                             type="button"
                             className={cn(tombol, 'text-red-text')}
-                            onClick={() =>
-                                window.confirm(
-                                    `Hapus draf "${laporan.nama}"? Draf yang dihapus tidak bisa dikembalikan.`,
-                                ) && router.delete(hapus.url(laporan.id))
-                            }
+                            onClick={async () => {
+                                if (
+                                    await tanya({
+                                        judul: `Hapus draf "${laporan.nama}"?`,
+                                        pesan: 'Draf yang dihapus tidak bisa dikembalikan.',
+                                        ya: 'Hapus draf',
+                                        bahaya: true,
+                                    })
+                                ) {
+                                    router.delete(hapus.url(laporan.id));
+                                }
+                            }}
                         >
                             Hapus draf
                         </button>
@@ -412,6 +421,7 @@ function LaporanKampanye({ laporan }: { laporan: Laporan }) {
                     Ekspor penerima
                 </button>
             </div>
+            {konfirmasi}
         </aside>
     );
 }

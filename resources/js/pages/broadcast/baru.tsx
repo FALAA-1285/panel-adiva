@@ -5,6 +5,7 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input, Select, Textarea } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
 import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/utils';
 import { broadcast } from '@/routes';
@@ -121,6 +122,7 @@ export default function BuatKampanye({
     const [untuk, setUntuk] = useState(0);
     const [galat, setGalat] = useState<Record<string, string>>({});
     const pertama = useRef(true);
+    const [konfirmasi, tanya] = useKonfirmasi();
 
     const ubah = (isi: Partial<Isian>) => setIsian({ ...isian, ...isi });
     const ubahFilter = (isi: Partial<Filter>) =>
@@ -174,14 +176,26 @@ export default function BuatKampanye({
     // sending needs a name, a message and someone to send to; it is confirmed with the count
     const siapKirim =
         isian.nama.trim() !== '' && isian.pesan.trim() !== '' && jumlah > 0;
-    const kirimKampanye = () => {
-        const aksi = terjadwal ? 'jadwal' : 'kirim';
-        const kalimat = terjadwal
-            ? `Jadwalkan "${isian.nama}" untuk ${jumlah.toLocaleString('id-ID')} orang?`
-            : `Kirim "${isian.nama}" ke ${jumlah.toLocaleString('id-ID')} orang sekarang? Pesan yang sudah terkirim tidak bisa ditarik.`;
+    const kirimKampanye = async () => {
+        const orang = `${jumlah.toLocaleString('id-ID')} orang`;
+        const setuju =
+            siapKirim &&
+            (await tanya(
+                terjadwal
+                    ? {
+                          judul: `Jadwalkan "${isian.nama}"?`,
+                          pesan: `Kampanye dikirim ke ${orang} pada jadwalnya.`,
+                          ya: 'Jadwalkan',
+                      }
+                    : {
+                          judul: `Kirim ke ${orang} sekarang?`,
+                          pesan: `"${isian.nama}" langsung dikirim. Pesan yang sudah terkirim tidak bisa ditarik.`,
+                          ya: 'Kirim sekarang',
+                      },
+            ));
 
-        if (siapKirim && window.confirm(kalimat)) {
-            kirim(aksi);
+        if (setuju) {
+            kirim(terjadwal ? 'jadwal' : 'kirim');
         }
     };
 
@@ -747,6 +761,7 @@ export default function BuatKampanye({
                     </div>
                 </aside>
             </IsiHalaman>
+            {konfirmasi}
         </AppLayout>
     );
 }

@@ -6,6 +6,7 @@ import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea, Toggle } from '@/components/ui/form';
 import { Ikon } from '@/components/ui/ikon';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
 import { Panel } from '@/components/ui/panel';
 import { Status } from '@/components/ui/status';
 import { cn } from '@/lib/utils';
@@ -197,6 +198,7 @@ function DetailFoto({
 }) {
     const [tags, setTags] = useState(gambar.tags ?? '');
     const [caption, setCaption] = useState(gambar.caption ?? '');
+    const [konfirmasi, tanya] = useKonfirmasi();
     const pilihan = varian.some((v) => v.judul === gambar.judul)
         ? varian
         : [{ judul: gambar.judul, produkId: gambar.produkId ?? 0 }, ...varian];
@@ -238,8 +240,15 @@ function DetailFoto({
                     <Button
                         ukuran="sm"
                         varian="danger"
-                        onClick={() => {
-                            if (window.confirm(`Hapus foto ${gambar.judul}?`)) {
+                        onClick={async () => {
+                            if (
+                                await tanya({
+                                    judul: `Hapus foto ${gambar.judul}?`,
+                                    pesan: 'Adiva tidak bisa mengirim foto ini lagi ke customer.',
+                                    ya: 'Hapus foto',
+                                    bahaya: true,
+                                })
+                            ) {
                                 router.delete(hapus.url(gambar.id), opsi);
                             }
                         }}
@@ -311,6 +320,7 @@ function DetailFoto({
                     </span>
                 )}
             </div>
+            {konfirmasi}
         </Panel>
     );
 }

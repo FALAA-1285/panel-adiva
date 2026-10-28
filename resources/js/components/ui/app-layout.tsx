@@ -1,7 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Sidebar } from '@/components/ui/sidebar';
+import { namaHalaman, Sidebar } from '@/components/ui/sidebar';
 import type { MenuAktif } from '@/components/ui/sidebar';
 import { SubMenu } from '@/components/ui/sub-menu';
 import { sedangMengetik, Topbar } from '@/components/ui/topbar';
@@ -17,6 +17,8 @@ type AppLayoutProps = {
      * Pipeline, Pelanggan). Other pages scroll as a whole under the Topbar.
      */
     penuhLayar?: boolean;
+    /** The page's name in the top bar on small screens, for a page outside the menu. */
+    judul?: string;
 };
 
 /**
@@ -28,6 +30,7 @@ export function AppLayout({
     active,
     children,
     penuhLayar = false,
+    judul,
 }: AppLayoutProps) {
     const { panel } = usePage().props;
     // the server renders the full sidebar, so the saved choice is applied after hydration
@@ -131,6 +134,7 @@ export function AppLayout({
                         onCiutkan={ubahCiut}
                         onMenu={() => setLaci(true)}
                         laciTerbuka={laci}
+                        judul={judul ?? namaHalaman(active)}
                     />
                 </div>
                 <SubMenu active={active} panel={panel} />
