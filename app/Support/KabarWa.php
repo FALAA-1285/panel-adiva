@@ -49,6 +49,8 @@ class KabarWa
             JenisNotifikasi::OrderDibatalkan, JenisNotifikasi::OrderDitutup => 'order_otomatis',
             JenisNotifikasi::NomorPutus => 'nomor_putus',
             JenisNotifikasi::PengingatJeda, JenisNotifikasi::LaporanHarian, JenisNotifikasi::Arsip => 'terjadwal',
+            // a security notice: not a row of the card, so it cannot be switched off
+            JenisNotifikasi::LoginMencurigakan => 'keamanan',
             JenisNotifikasi::BroadcastSelesai, JenisNotifikasi::Pengiriman, null => null,
         };
     }

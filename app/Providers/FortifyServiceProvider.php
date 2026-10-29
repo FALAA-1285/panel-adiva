@@ -7,13 +7,14 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
 use App\Support\Demo;
-use App\Support\NomorWa;
+use App\Support\KunciMasuk;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\AttemptToAuthenticate;
 use Laravel\Fortify\Actions\CanonicalizeUsername;
@@ -50,25 +51,18 @@ class FortifyServiceProvider extends ServiceProvider
             PrepareAuthenticatedSession::class,
         ]);
 
-        // Deactivated staff (Tim & akses, "Nonaktifkan") and staff without an account yet cannot sign in
+        // Deactivated staff (Tim & akses, "Nonaktifkan") and staff without an account yet cannot sign in;
+        // an account locked after five wrong passwords waits 15 minutes, even with the right one
         Fortify::authenticateUsing(function (Request $request): ?User {
-            $input = Str::lower(trim((string) $request->input('email')));
-            $hanyaAngka = preg_replace('/\D/', '', $input);
-            $nomor = $hanyaAngka !== null && strlen($hanyaAngka) >= 8 ? NomorWa::normalisasi($input) : null;
+            $masukan = (string) $request->input('email');
 
-            $user = User::query()
-                ->where(function ($query) use ($input, $nomor) {
-                    $query->where('email', $input)
-                        ->orWhere('name', $input);
+            if (KunciMasuk::terkunci($masukan)) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => 'Akun ini dikunci '.KunciMasuk::MENIT.' menit karena kata sandi salah berulang kali. Supervisor sudah dikabari.',
+                ]);
+            }
 
-                    if ($input === 'tkt.food.com') {
-                        $query->orWhere('email', 'tkt.food@gmail.com');
-                    }
-
-                    if (filled($nomor)) {
-                        $query->orWhere('nomor_wa', $nomor);
-                    }
-                })
+            $user = KunciMasuk::akun($masukan)
                 ->whereNull('nonaktif_at')
                 ->whereNotNull('password')
                 ->first();

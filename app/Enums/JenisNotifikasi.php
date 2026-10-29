@@ -30,6 +30,8 @@ enum JenisNotifikasi: string
     case LampiranMasuk = 'LAMPIRAN_MASUK';
     case Pengiriman = 'PENGIRIMAN';
     case SosmedButuhAdmin = 'SOSMED_BUTUH_ADMIN';
+    // an account locked after repeated wrong passwords (KunciMasuk)
+    case LoginMencurigakan = 'LOGIN_MENCURIGAKAN';
 
     /**
      * The tab the workflows file this type under.
@@ -42,7 +44,7 @@ enum JenisNotifikasi: string
             self::OrderBaru, self::InvoiceGagal, self::OrderKaryawan, self::OrderDitutup,
             self::OrderDibatalkan, self::BuktiMasuk, self::Pengiriman => KategoriNotifikasi::Order,
             self::BalasanGagal, self::NomorPutus, self::WorkflowError, self::PengingatJeda,
-            self::LaporanHarian, self::BroadcastSelesai, self::Arsip => KategoriNotifikasi::Sistem,
+            self::LaporanHarian, self::BroadcastSelesai, self::Arsip, self::LoginMencurigakan => KategoriNotifikasi::Sistem,
         };
     }
 
@@ -63,6 +65,7 @@ enum JenisNotifikasi: string
             self::OrderKaryawan, self::OrderDitutup, self::OrderDibatalkan => 'Lihat',
             self::LaporanHarian => 'Ringkasan',
             self::BroadcastSelesai => 'Laporan',
+            self::LoginMencurigakan => 'Log aktivitas',
             self::JedaKedaluwarsa, self::PengingatJeda, self::Arsip => null,
         };
     }
@@ -84,6 +87,7 @@ enum JenisNotifikasi: string
             self::OrderKaryawan => route('katalog.karyawan', absolute: false),
             self::LaporanHarian => route('home', absolute: false),
             self::BroadcastSelesai => '/broadcast',
+            self::LoginMencurigakan => route('aktivitas', absolute: false),
             self::JedaKedaluwarsa, self::PengingatJeda, self::Arsip => null,
         };
     }

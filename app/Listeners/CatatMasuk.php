@@ -6,6 +6,7 @@ use App\Enums\KategoriAktivitas;
 use App\Jobs\KabariKonfigN8n;
 use App\Models\User;
 use App\Support\Aktivitas;
+use App\Support\KunciMasuk;
 use App\Support\Perangkat;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class CatatMasuk
             return;
         }
 
+        // the right password: the count of wrong ones starts again
+        KunciMasuk::berhasil($event->user);
         $this->bukaWhatsapp($event->user);
 
         // /_demo/login is a shortcut into the demo; leave the design's data alone
