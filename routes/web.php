@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\Auth\DaftarController;
+use App\Http\Controllers\Auth\GantiSandiController;
 use App\Http\Controllers\Auth\LupaSandiController;
 use App\Http\Controllers\Auth\MasukKodeController;
 use App\Http\Controllers\BroadcastController;
@@ -64,6 +65,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/ganti-sandi', [GantiSandiController::class, 'show'])->name('sandi.ganti');
+    Route::put('/ganti-sandi', [GantiSandiController::class, 'update'])->middleware('throttle:reset-cek')->name('sandi.simpan');
     Route::get('/', [RingkasanController::class, 'index'])->name('home');
     Route::get('/ringkasan/ekspor', [RingkasanController::class, 'ekspor'])->name('ringkasan.ekspor');
     Route::get('/cari', CariController::class)->middleware('throttle:60,1')->name('cari');

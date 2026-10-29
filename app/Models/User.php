@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Peran $peran
  * @property Carbon|null $email_verified_at
  * @property string|null $password
+ * @property Carbon|null $sandi_diubah_at when the password was last set; 90 days later a new one is asked for
  * @property string|null $remember_token
  * @property Carbon|null $diundang_at
  * @property Carbon|null $nonaktif_at
@@ -40,6 +41,30 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, ZonaWaktuAplikasi;
+
+    /** A password is used this many days, then the panel asks for a new one (BCA CSA butir 23). */
+    public const MASA_SANDI_HARI = 90;
+
+    protected static function booted(): void
+    {
+        // however the password changes (Daftar, Lupa sandi, Ganti kata sandi, artisan),
+        // its 90 days start again
+        static::saving(function (User $user) {
+            if ($user->isDirty('password') && $user->password !== null) {
+                $user->setAttribute('sandi_diubah_at', now());
+            }
+        });
+    }
+
+    /**
+     * Whether the password is older than 90 days and must be replaced before going on.
+     */
+    public function sandiKedaluwarsa(): bool
+    {
+        return $this->password !== null
+            && $this->sandi_diubah_at !== null
+            && $this->sandi_diubah_at->lte(now()->subDays(self::MASA_SANDI_HARI));
+    }
 
     /**
      * The PJ karyawan (SARAH_WA), who receives the order karyawan. The first one
@@ -61,6 +86,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'peran' => Peran::class,
             'password' => 'hashed',
+            'sandi_diubah_at' => 'datetime',
             'diundang_at' => 'datetime',
             'nonaktif_at' => 'datetime',
             'wa_dicabut_at' => 'datetime',

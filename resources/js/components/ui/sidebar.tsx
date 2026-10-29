@@ -22,6 +22,7 @@ import {
     sosmed,
     tim,
 } from '@/routes';
+import { ganti as gantiSandi } from '@/routes/sandi';
 import type { Panel } from '@/types';
 
 export type MenuAktif =
@@ -565,6 +566,14 @@ export function Sidebar({
                         {pengguna.peran}
                     </span>
                 </span>
+                <Link
+                    href={gantiSandi.url()}
+                    aria-label="Ganti kata sandi"
+                    {...tipPada('Ganti kata sandi')}
+                    className="flex size-[30px] shrink-0 items-center justify-center rounded-nav text-muted hover:bg-line-softer hover:text-ink motion-safe:transition-colors"
+                >
+                    <Ikon nama="gembok" />
+                </Link>
                 <Link
                     href={logout()}
                     as="button"

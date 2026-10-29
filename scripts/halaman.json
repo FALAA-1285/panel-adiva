@@ -18,6 +18,11 @@
     "login": false
   },
   {
+    "kode": "GantiSandi",
+    "nama": "00d · Ganti kata sandi",
+    "rute": "/ganti-sandi"
+  },
+  {
     "kode": "Main",
     "nama": "01 · Ringkasan",
     "rute": "/"
