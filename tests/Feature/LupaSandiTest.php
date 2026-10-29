@@ -124,8 +124,8 @@ test('the new password cannot be saved before the code is checked', function () 
     $this->postJson('/lupa-sandi/kode', ['nomor_wa' => '812 3456 0007']);
 
     $this->post('/lupa-sandi/simpan', [
-        'password' => 'sandibaru123',
-        'password_confirmation' => 'sandibaru123',
+        'password' => 'SandiBaru#123',
+        'password_confirmation' => 'SandiBaru#123',
     ])->assertSessionHasErrors('password');
 });
 
@@ -139,14 +139,14 @@ test('saving the new password logs out other devices and is written to the activ
 
     $this->withHeader('User-Agent', UserAgent::WINDOWS)
         ->post('/lupa-sandi/simpan', [
-            'password' => 'sandibaru123',
-            'password_confirmation' => 'sandibaru123',
+            'password' => 'SandiBaru#123',
+            'password_confirmation' => 'SandiBaru#123',
             'keluarkan' => '1',
         ])
         ->assertRedirect(route('login'));
 
     $falah->refresh();
-    expect(Hash::check('sandibaru123', $falah->password))->toBeTrue()
+    expect(Hash::check('SandiBaru#123', $falah->password))->toBeTrue()
         ->and($falah->remember_token)->not->toBe('token-lama')
         ->and(DB::table('sessions')->where('user_id', $falah->id)->exists())->toBeFalse();
 
@@ -163,7 +163,7 @@ test('the new password must be typed twice the same', function () {
     $this->postJson('/lupa-sandi/cek-kode', ['kode' => LupaSandiController::KODE_DEMO]);
 
     $this->post('/lupa-sandi/simpan', [
-        'password' => 'sandibaru123',
-        'password_confirmation' => 'sandilain123',
+        'password' => 'SandiBaru#123',
+        'password_confirmation' => 'SandiLain#123',
     ])->assertSessionHasErrors('password');
 });

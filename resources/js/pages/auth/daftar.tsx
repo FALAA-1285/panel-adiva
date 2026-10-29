@@ -198,7 +198,7 @@ export default function Daftar() {
                         </label>
                         <AuthPassword
                             id="pw"
-                            placeholder="Minimal 8 karakter"
+                            placeholder="Min. 8: huruf besar, kecil, angka, simbol"
                             autoComplete="new-password"
                             value={form.data.password}
                             onChange={(e) =>

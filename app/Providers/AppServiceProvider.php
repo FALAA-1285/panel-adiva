@@ -172,14 +172,13 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        // one rule for every password a staff member sets (BCA CSA butir 23): at least 8
+        // characters with upper and lower case, a number and a symbol; in production it is
+        // also checked against known leaked passwords
+        Password::defaults(function (): Password {
+            $aturan = Password::min(8)->mixedCase()->numbers()->symbols();
+
+            return app()->isProduction() ? $aturan->uncompromised() : $aturan;
+        });
     }
 }

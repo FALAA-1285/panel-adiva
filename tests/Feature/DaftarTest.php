@@ -90,15 +90,27 @@ test('staff who already have a panel password cannot register again', function (
     $this->postJson('/daftar/kode', AlurDaftar::isian())->assertJsonValidationErrors('nomor_wa');
 });
 
-test('the password needs 8 characters with letters and numbers, and consent', function (array $ubah, string $kolom) {
+test('the password needs 8 characters with upper and lower case, a number and a symbol, and consent', function (array $ubah, string $kolom) {
     User::factory()->dina()->create();
 
     $this->postJson('/daftar/kode', AlurDaftar::isian($ubah))->assertJsonValidationErrors($kolom);
 })->with([
-    'terlalu pendek' => [['password' => 'abc123'], 'password'],
-    'tanpa angka' => [['password' => 'rahasiasaja'], 'password'],
+    'terlalu pendek' => [['password' => 'Ab#1234'], 'password'],
+    'tanpa angka' => [['password' => 'Rahasia#Saja'], 'password'],
+    'tanpa huruf besar' => [['password' => 'rahasia#123'], 'password'],
+    'tanpa simbol' => [['password' => 'Rahasia123'], 'password'],
     'tidak setuju' => [['setuju' => false], 'setuju'],
 ]);
+
+test('a password that breaks the rule is explained in Indonesian', function () {
+    User::factory()->dina()->create();
+
+    $this->postJson('/daftar/kode', AlurDaftar::isian(['password' => 'rahasia123']))
+        ->assertJsonValidationErrors(['password' => [
+            'Kata sandi harus memuat huruf besar dan huruf kecil.',
+            'Kata sandi harus memuat simbol, misalnya ! @ # atau ?.',
+        ]]);
+});
 
 test('the right code saves the password and logs the staff member in', function () {
     $dina = User::factory()->dina()->create();
@@ -107,7 +119,7 @@ test('the right code saves the password and logs the staff member in', function 
     $this->post('/daftar/verifikasi', ['kode' => $kode])->assertRedirect('/');
 
     $this->assertAuthenticatedAs($dina);
-    expect(Hash::check('rahasia123', $dina->fresh()->password))->toBeTrue();
+    expect(Hash::check('Rahasia#123', $dina->fresh()->password))->toBeTrue();
 });
 
 test('three wrong codes cancel the registration', function () {

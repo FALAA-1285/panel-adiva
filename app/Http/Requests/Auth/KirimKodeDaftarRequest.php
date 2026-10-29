@@ -19,8 +19,8 @@ class KirimKodeDaftarRequest extends FormRequest
             'nama' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'nomor_wa' => ['required', 'string', 'max:30'],
-            // "Minimal 8 karakter, campur huruf dan angka."
-            'password' => ['required', 'string', Password::min(8)->letters()->numbers()],
+            // the panel's one password rule (AppServiceProvider: Password::defaults)
+            'password' => ['required', 'string', Password::defaults()],
             'setuju' => ['accepted'],
         ];
     }

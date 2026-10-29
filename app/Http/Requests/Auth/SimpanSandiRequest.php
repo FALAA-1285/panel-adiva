@@ -16,8 +16,8 @@ class SimpanSandiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Same rule as Daftar: "Minimal 8 karakter, campur huruf dan angka."
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->letters()->numbers()],
+            // the panel's one password rule (AppServiceProvider: Password::defaults)
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'keluarkan' => ['boolean'],
         ];
     }

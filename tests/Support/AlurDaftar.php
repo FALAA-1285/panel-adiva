@@ -19,7 +19,7 @@ final class AlurDaftar
             'nama' => 'Dina',
             'email' => 'dina@bangbana.id',
             'nomor_wa' => '857 1234 0036',
-            'password' => 'rahasia123',
+            'password' => 'Rahasia#123',
             'setuju' => true,
             ...$ubah,
         ];

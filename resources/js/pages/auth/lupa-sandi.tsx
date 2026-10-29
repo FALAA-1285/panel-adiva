@@ -220,7 +220,7 @@ export default function LupaSandi() {
                         <AuthPassword
                             id="pw"
                             name="password"
-                            placeholder="Minimal 8 karakter"
+                            placeholder="Min. 8: huruf besar, kecil, angka, simbol"
                             autoComplete="new-password"
                         />
                     </div>
