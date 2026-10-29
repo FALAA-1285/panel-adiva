@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\FreezeDemoClock;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\HeaderKeamanan;
 use App\Http\Middleware\TerapkanKeluarOtomatis;
 use App\Http\Middleware\TolakAkunNonaktif;
 use Illuminate\Foundation\Application;
@@ -21,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        // every response, error pages included
+        $middleware->append(HeaderKeamanan::class);
         $middleware->web(prepend: [
             TerapkanKeluarOtomatis::class,
         ], append: [
