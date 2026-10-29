@@ -51,5 +51,11 @@ jobs:
       - name: Setup Application
         run: composer setup
 
+      # known vulnerabilities in the packages the panel runs on (BCA CSA butir 17 dan 22)
+      - name: Audit dependencies
+        run: |
+          composer audit
+          npm audit --omit=dev --audit-level=high
+
       - name: Run CI Checks
         run: composer ci:check
