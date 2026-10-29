@@ -20,11 +20,20 @@ class PengaturanKeamanan
     public const PILIHAN_JAM = [12, 4, 24];
 
     /**
-     * "Kode WhatsApp di perangkat baru" (on unless switched off).
+     * "Kode WhatsApp di perangkat baru" (on unless switched off; always on where it is required).
      */
     public static function kodePerangkatBaru(): bool
     {
-        return PengaturanToko::nilai(self::KODE_PERANGKAT_BARU) !== '0';
+        return self::kodePerangkatWajib() || PengaturanToko::nilai(self::KODE_PERANGKAT_BARU) !== '0';
+    }
+
+    /**
+     * The second factor cannot be switched off in production (BCA CSA butir 26). The public
+     * demo is left out: its WhatsApp sender is a stand-in, so a code would never arrive.
+     */
+    public static function kodePerangkatWajib(): bool
+    {
+        return app()->isProduction() && ! Demo::aktif();
     }
 
     /**

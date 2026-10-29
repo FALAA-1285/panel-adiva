@@ -128,17 +128,27 @@ type ToggleProps = {
     onUbah: (nyala: boolean) => void;
     'aria-label': string;
     className?: string;
+    /** a setting that cannot be changed here (title says why) */
+    disabled?: boolean;
+    title?: string;
 };
 
 /** 36×20 switch (aria-pressed, as in the design). */
-export function Toggle({ nyala, onUbah, className, ...props }: ToggleProps) {
+export function Toggle({
+    nyala,
+    onUbah,
+    className,
+    disabled = false,
+    ...props
+}: ToggleProps) {
     return (
         <button
             type="button"
             aria-pressed={nyala}
+            disabled={disabled}
             onClick={() => onUbah(!nyala)}
             className={cn(
-                'relative h-5 w-9 shrink-0 cursor-pointer rounded-full border-none p-0',
+                'relative h-5 w-9 shrink-0 cursor-pointer rounded-full border-none p-0 disabled:cursor-not-allowed disabled:opacity-60',
                 nyala ? 'bg-primary' : 'bg-line-strong',
                 className,
             )}

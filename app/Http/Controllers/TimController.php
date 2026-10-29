@@ -63,6 +63,7 @@ class TimController extends Controller
             'sesi' => $this->sesi($request, $staf),
             'keamanan' => [
                 'kodePerangkatBaru' => PengaturanKeamanan::kodePerangkatBaru(),
+                'kodePerangkatWajib' => PengaturanKeamanan::kodePerangkatWajib(),
                 'keluarOtomatis' => PengaturanKeamanan::keluarOtomatisJam(),
                 'pilihan' => PengaturanKeamanan::PILIHAN_JAM,
             ],
@@ -77,6 +78,10 @@ class TimController extends Controller
     {
         $oleh = $request->user();
         $perangkat = Perangkat::dari($request->userAgent());
+
+        if ($request->has('kode_perangkat_baru') && ! $request->boolean('kode_perangkat_baru') && PengaturanKeamanan::kodePerangkatWajib()) {
+            throw ValidationException::withMessages(['kode_perangkat_baru' => 'Kode WhatsApp di perangkat baru wajib menyala di panel produksi.']);
+        }
 
         if ($oleh && $request->has('kode_perangkat_baru')) {
             PengaturanToko::ubah(PengaturanKeamanan::KODE_PERANGKAT_BARU, $request->boolean('kode_perangkat_baru') ? '1' : '0', $oleh, $perangkat);

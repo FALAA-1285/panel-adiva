@@ -54,6 +54,8 @@ type Props = {
     sesi: Sesi[];
     keamanan: {
         kodePerangkatBaru: boolean;
+        /** production: always on, cannot be switched off */
+        kodePerangkatWajib: boolean;
         keluarOtomatis: number;
         pilihan: number[];
     };
@@ -303,10 +305,18 @@ function Keamanan({ pengaturan }: { pengaturan: Props['keamanan'] }) {
                     <span className="text-caption text-muted">
                         Adiva mengirim kode 6 digit saat login dari perangkat
                         yang belum dikenal
+                        {pengaturan.kodePerangkatWajib &&
+                            ' · wajib menyala di panel produksi'}
                     </span>
                 </div>
                 <Toggle
                     aria-label="Kode WhatsApp di perangkat baru"
+                    disabled={pengaturan.kodePerangkatWajib}
+                    title={
+                        pengaturan.kodePerangkatWajib
+                            ? 'Wajib menyala di panel produksi'
+                            : undefined
+                    }
                     nyala={kode}
                     onUbah={(nyala) => {
                         setKode(nyala);
