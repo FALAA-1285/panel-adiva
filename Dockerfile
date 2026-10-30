@@ -35,6 +35,8 @@ RUN cp .env.example .env \
 FROM dunglas/frankenphp:1-php8.4-alpine
 
 RUN install-php-extensions pdo_pgsql pgsql gd zip intl opcache pcntl
+# pg_dump for `php artisan cadangan:buat` on the cron container (same major version as Supabase)
+RUN apk add --no-cache postgresql17-client
 
 WORKDIR /app
 

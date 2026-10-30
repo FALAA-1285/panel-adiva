@@ -20,5 +20,7 @@ Schedule::command('n8n:sinkron')->everyMinute()->withoutOverlapping()->skip(fn (
 Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapping()->skip(fn () => Demo::aktif());
 
 // the daily reminder of who the bot is still paused for (BOT_DRIVER=lokal; n8n did this at 09:00)
+// on the VPS cron container only (CADANGAN_AKTIF=true), where pg_dump is installed
+Schedule::command('cadangan:buat')->dailyAt('02:00')->withoutOverlapping()->when(fn () => (bool) config('cadangan.aktif') && ! Demo::aktif());
 Schedule::command('jeda:ingatkan')->dailyAt('09:00')
     ->skip(fn () => Demo::aktif() || config('services.bot.driver') !== 'lokal');
