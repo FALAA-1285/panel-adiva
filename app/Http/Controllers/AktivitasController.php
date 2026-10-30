@@ -11,6 +11,7 @@ use App\Support\CsvUnduhan;
 use App\Support\KunciPengaturan;
 use App\Support\PengaturanToko;
 use App\Support\Perangkat;
+use App\Support\Tinjauan;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -73,7 +74,28 @@ class AktivitasController extends Controller
                 fn (KategoriAktivitas $k) => ['nilai' => $k->value, 'label' => $k->label()],
                 KategoriAktivitas::pilihanFilter(),
             ),
+            'tinjauan' => Tinjauan::ringkas(Tinjauan::LOG),
         ]);
+    }
+
+    /**
+     * "Tandai sudah ditinjau": the week's log has been read, with the count of wrong
+     * passwords in it kept alongside (BCA CSA butir 21).
+     */
+    public function tinjau(Request $request): RedirectResponse
+    {
+        $oleh = $request->user() ?? abort(403);
+        $sejak = now()->subDays(Tinjauan::JARAK_HARI[Tinjauan::LOG]);
+        $gagal = ActivityLog::query()->where('aksi', 'Gagal masuk')->where('waktu', '>=', $sejak)->count();
+
+        Tinjauan::catat($oleh, Tinjauan::LOG, "Log 7 hari terakhir ditinjau · {$gagal} gagal masuk", [
+            'sejak' => $sejak->toIso8601String(),
+            'gagal_masuk' => $gagal,
+        ]);
+
+        Inertia::flash('toast', 'Tinjauan log dicatat.');
+
+        return back();
     }
 
     /**

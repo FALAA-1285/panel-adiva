@@ -16,6 +16,7 @@ use App\Support\NomorWa;
 use App\Support\PengaturanKeamanan;
 use App\Support\PengaturanToko;
 use App\Support\Perangkat;
+use App\Support\Tinjauan;
 use App\Support\Waktu;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,7 +68,26 @@ class TimController extends Controller
                 'keluarOtomatis' => PengaturanKeamanan::keluarOtomatisJam(),
                 'pilihan' => PengaturanKeamanan::PILIHAN_JAM,
             ],
+            'tinjauan' => Tinjauan::ringkas(Tinjauan::AKSES),
         ]);
+    }
+
+    /**
+     * "Tandai sudah ditinjau": the supervisor has gone through who has access and with which
+     * role; the list as it stood is kept in Log aktivitas (BCA CSA butir 24).
+     */
+    public function tinjau(Request $request): RedirectResponse
+    {
+        $oleh = $request->user() ?? abort(403);
+        $aktif = User::query()->whereNull('nonaktif_at')->orderBy('id')->get();
+
+        Tinjauan::catat($oleh, Tinjauan::AKSES, $aktif->count().' akun aktif ditinjau', [
+            'akun' => $aktif->map(fn (User $u) => ['nama' => $u->name, 'peran' => $u->peran->label(), 'terakhir_masuk' => $u->terakhir_masuk_at?->toIso8601String()])->all(),
+        ]);
+
+        Inertia::flash('toast', 'Tinjauan akses dicatat di Log aktivitas.');
+
+        return back();
     }
 
     /**

@@ -13,7 +13,9 @@ import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { KeyValue, T1, T2 } from '@/components/ui/teks';
 import { aktivitas } from '@/routes';
-import { ekspor, kembalikan } from '@/routes/aktivitas';
+import { Tinjauan } from '@/components/ui/tinjauan';
+import type { InfoTinjauan } from '@/components/ui/tinjauan';
+import { ekspor, kembalikan, tinjau } from '@/routes/aktivitas';
 
 type Kejadian = {
     id: number;
@@ -48,6 +50,7 @@ type Props = {
     filter: Filter;
     orang: Pilihan[];
     kategori: Pilihan[];
+    tinjauan: InfoTinjauan;
 };
 
 const sumber = [
@@ -105,6 +108,7 @@ export default function Aktivitas({
     filter: awal,
     orang,
     kategori,
+    tinjauan,
 }: Props) {
     const [filter, setFilter] = useState(awal);
     const [pilihan, setPilihan] = useState(pilih);
@@ -144,16 +148,23 @@ export default function Aktivitas({
                 judul="Log aktivitas"
                 sub="Semua perubahan dan aksi penting, dari panel, perintah WhatsApp, maupun Adiva sendiri."
                 aksi={
-                    <Button
-                        onClick={() =>
-                            window.location.assign(
-                                ekspor.url({ query: isiFilter(filter) }),
-                            )
-                        }
-                    >
-                        <Ikon nama="unduh" ukuran={15} tebal={2} />
-                        Ekspor CSV
-                    </Button>
+                    <>
+                        <Tinjauan
+                            tinjauan={tinjauan}
+                            url={tinjau.url()}
+                            apa="log"
+                        />
+                        <Button
+                            onClick={() =>
+                                window.location.assign(
+                                    ekspor.url({ query: isiFilter(filter) }),
+                                )
+                            }
+                        >
+                            <Ikon nama="unduh" ukuran={15} tebal={2} />
+                            Ekspor CSV
+                        </Button>
+                    </>
                 }
             />
             <IsiHalaman>

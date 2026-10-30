@@ -158,6 +158,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:aktivitas')->group(function () {
         Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas');
         Route::get('/aktivitas/ekspor', [AktivitasController::class, 'ekspor'])->name('aktivitas.ekspor');
+        Route::post('/aktivitas/tinjau', [AktivitasController::class, 'tinjau'])->name('aktivitas.tinjau');
         Route::post('/aktivitas/{log}/kembalikan', [AktivitasController::class, 'kembalikan'])->name('aktivitas.kembalikan');
     });
 
@@ -202,6 +203,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:tim')->group(function () {
         Route::get('/tim', [TimController::class, 'index'])->name('tim');
         Route::patch('/tim/keamanan', [TimController::class, 'simpanKeamanan'])->name('tim.keamanan');
+        Route::post('/tim/tinjau', [TimController::class, 'tinjau'])->name('tim.tinjau');
         Route::delete('/tim/{user}/sesi', [TimController::class, 'keluarkan'])->name('tim.sesi.keluarkan');
         Route::post('/tim/staf', [TimController::class, 'undang'])->name('tim.staf.undang');
         Route::put('/tim/staf/{user}', [TimController::class, 'ubah'])->name('tim.staf.ubah');

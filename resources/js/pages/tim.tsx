@@ -13,8 +13,10 @@ import { Panel } from '@/components/ui/panel';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
 import { Avatar, Mono, Note, T1, T2 } from '@/components/ui/teks';
+import { Tinjauan } from '@/components/ui/tinjauan';
+import type { InfoTinjauan } from '@/components/ui/tinjauan';
 import { cn } from '@/lib/utils';
-import { keamanan } from '@/routes/tim';
+import { keamanan, tinjau } from '@/routes/tim';
 import { keluarkan } from '@/routes/tim/sesi';
 
 type Staf = {
@@ -59,6 +61,7 @@ type Props = {
         keluarOtomatis: number;
         pilihan: number[];
     };
+    tinjauan: InfoTinjauan;
 };
 
 /** The open staff panel: a new invitation, or one staff member's form or actions. */
@@ -135,6 +138,7 @@ export default function Tim({
     hakAkses,
     sesi,
     keamanan: pengaturan,
+    tinjauan,
 }: Props) {
     const [terbuka, setTerbuka] = useState<Terbuka>(null);
     const kolom = useMemo(
@@ -152,15 +156,22 @@ export default function Tim({
                 judul="Tim & akses"
                 sub="Siapa yang bisa masuk panel, dan nomor mana yang dianggap admin oleh Adiva."
                 aksi={
-                    <Button
-                        varian="primary"
-                        onClick={() =>
-                            setTerbuka({ id: null, bagian: 'isian' })
-                        }
-                    >
-                        <Ikon nama="tambah" ukuran={15} tebal={2} />
-                        Undang staf
-                    </Button>
+                    <>
+                        <Tinjauan
+                            tinjauan={tinjauan}
+                            url={tinjau.url()}
+                            apa="akses"
+                        />
+                        <Button
+                            varian="primary"
+                            onClick={() =>
+                                setTerbuka({ id: null, bagian: 'isian' })
+                            }
+                        >
+                            <Ikon nama="tambah" ukuran={15} tebal={2} />
+                            Undang staf
+                        </Button>
+                    </>
                 }
             />
             <IsiHalaman>
