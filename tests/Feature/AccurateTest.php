@@ -19,6 +19,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 // no token: demo mode (as in phpunit.xml) reads the stand-in shelf; the API tests set one
 beforeEach(function () {
     config([
+        'services.accurate.client_id' => null,
+        'services.accurate.client_secret' => null,
         'services.accurate.token' => null,
         'services.accurate.signature_secret' => 'rahasia-uji',
         'services.accurate.db_id' => '2743429',

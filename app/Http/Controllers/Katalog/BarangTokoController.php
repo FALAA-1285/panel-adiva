@@ -97,7 +97,7 @@ class BarangTokoController extends Controller
     {
         $user = $request->user() ?? abort(403);
 
-        SinkronkanBarangToko::dispatch($user);
+        SinkronkanBarangToko::dispatchSync($user);
 
         Aktivitas::catat($user, KategoriAktivitas::Pengaturan, 'Sinkron barang toko', 'Accurate → Katalog · Barang toko');
 

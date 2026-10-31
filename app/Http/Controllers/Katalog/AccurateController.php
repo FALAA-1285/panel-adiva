@@ -63,7 +63,7 @@ class AccurateController extends Controller
         }
 
         Aktivitas::catat($user, KategoriAktivitas::Pengaturan, 'Sambungkan Accurate', 'Database Bana Food · akses lihat barang');
-        SinkronkanBarangToko::dispatch($user);
+        SinkronkanBarangToko::dispatchSync($user);
         Inertia::flash('toast', 'Accurate tersambung. Barang toko sedang diambil.');
 
         return to_route('katalog.toko');
