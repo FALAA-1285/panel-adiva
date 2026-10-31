@@ -98,6 +98,11 @@
     "rute": "/katalog/karyawan"
   },
   {
+    "kode": "BarangToko",
+    "nama": "09e · Barang toko",
+    "rute": "/katalog/toko"
+  },
+  {
     "kode": "Prompt",
     "nama": "10 · Prompt Adiva",
     "rute": "/prompt"

@@ -32,6 +32,8 @@ enum JenisNotifikasi: string
     case SosmedButuhAdmin = 'SOSMED_BUTUH_ADMIN';
     // an account locked after repeated wrong passwords (KunciMasuk)
     case LoginMencurigakan = 'LOGIN_MENCURIGAKAN';
+    // Toko Sawojajar's goods have not come from Accurate for hours (SinkronBarangToko)
+    case SinkronAccurate = 'SINKRON_ACCURATE';
 
     /**
      * The tab the workflows file this type under.
@@ -44,7 +46,8 @@ enum JenisNotifikasi: string
             self::OrderBaru, self::InvoiceGagal, self::OrderKaryawan, self::OrderDitutup,
             self::OrderDibatalkan, self::BuktiMasuk, self::Pengiriman => KategoriNotifikasi::Order,
             self::BalasanGagal, self::NomorPutus, self::WorkflowError, self::PengingatJeda,
-            self::LaporanHarian, self::BroadcastSelesai, self::Arsip, self::LoginMencurigakan => KategoriNotifikasi::Sistem,
+            self::LaporanHarian, self::BroadcastSelesai, self::Arsip, self::LoginMencurigakan,
+            self::SinkronAccurate => KategoriNotifikasi::Sistem,
         };
     }
 
@@ -66,6 +69,7 @@ enum JenisNotifikasi: string
             self::LaporanHarian => 'Ringkasan',
             self::BroadcastSelesai => 'Laporan',
             self::LoginMencurigakan => 'Log aktivitas',
+            self::SinkronAccurate => 'Barang toko',
             self::JedaKedaluwarsa, self::PengingatJeda, self::Arsip => null,
         };
     }
@@ -88,6 +92,7 @@ enum JenisNotifikasi: string
             self::LaporanHarian => route('home', absolute: false),
             self::BroadcastSelesai => '/broadcast',
             self::LoginMencurigakan => route('aktivitas', absolute: false),
+            self::SinkronAccurate => route('katalog.toko', absolute: false),
             self::JedaKedaluwarsa, self::PengingatJeda, self::Arsip => null,
         };
     }

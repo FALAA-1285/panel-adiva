@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\BarangToko;
 use App\Models\GambarProduk;
 use App\Models\Karyawan;
 use App\Models\Kebijakan;
@@ -11,9 +12,9 @@ use App\Models\Produk;
 class TabKatalog
 {
     /**
-     * Counts on the five "Katalog & pengetahuan" tabs.
+     * Counts on the six "Katalog & pengetahuan" tabs.
      *
-     * @return array{produk: int, paket: int, gambar: int, kebijakan: int, karyawan: int}
+     * @return array{produk: int, paket: int, gambar: int, kebijakan: int, karyawan: int, toko: int}
      */
     public static function hitungan(): array
     {
@@ -23,6 +24,7 @@ class TabKatalog
             'gambar' => GambarProduk::query()->count(),
             'kebijakan' => Kebijakan::query()->count(),
             'karyawan' => Karyawan::query()->count(),
+            'toko' => BarangToko::query()->count(),
         ];
     }
 }

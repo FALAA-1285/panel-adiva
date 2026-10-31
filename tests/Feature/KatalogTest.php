@@ -74,7 +74,7 @@ test('the tabs count every part of the catalogue', function () {
     $this->actingAs(User::factory()->create())
         ->get('/katalog')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('tab', ['produk' => 1, 'paket' => 1, 'gambar' => 0, 'kebijakan' => 2, 'karyawan' => 1]));
+            ->where('tab', ['produk' => 1, 'paket' => 1, 'gambar' => 0, 'kebijakan' => 2, 'karyawan' => 1, 'toko' => 0]));
 });
 
 test('the latest catalogue test is shown and its product is highlighted', function () {

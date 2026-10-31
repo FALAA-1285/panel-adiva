@@ -12,6 +12,7 @@ use App\Http\Controllers\CatatOrderController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\DetailPesananController;
 use App\Http\Controllers\JedaController;
+use App\Http\Controllers\Katalog\BarangTokoController;
 use App\Http\Controllers\Katalog\GambarController;
 use App\Http\Controllers\Katalog\KaryawanController;
 use App\Http\Controllers\Katalog\KebijakanController;
@@ -92,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/katalog/kebijakan', [KebijakanController::class, 'index'])->name('katalog.kebijakan');
     Route::get('/katalog/karyawan', [KaryawanController::class, 'index'])->name('katalog.karyawan');
     Route::get('/katalog/karyawan/rekap', [KaryawanController::class, 'rekap'])->name('katalog.karyawan.rekap');
+    Route::get('/katalog/toko', [BarangTokoController::class, 'index'])->name('katalog.toko');
 
     Route::middleware('can:katalog')->group(function () {
         Route::post('/katalog/produk', [ProdukController::class, 'store'])->name('katalog.produk.tambah');
@@ -110,6 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/katalog/karyawan', [KaryawanController::class, 'store'])->name('katalog.karyawan.tambah');
         Route::put('/katalog/karyawan/harga', [KaryawanController::class, 'simpanHarga'])->name('katalog.karyawan.harga');
         Route::put('/katalog/karyawan/{karyawan}', [KaryawanController::class, 'update'])->name('katalog.karyawan.simpan');
+        Route::post('/katalog/toko/sinkron', [BarangTokoController::class, 'sinkron'])->middleware('throttle:6,1')->name('katalog.toko.sinkron');
     });
 
     Route::get('/pipeline', [PipelineController::class, 'index'])->name('pipeline');

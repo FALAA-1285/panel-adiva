@@ -46,6 +46,7 @@ class KabarWa
             JenisNotifikasi::JedaChat => 'jeda_chat',
             JenisNotifikasi::JedaKedaluwarsa => 'jeda_kedaluwarsa',
             JenisNotifikasi::WorkflowError => str_contains($teks, 'jeda') ? 'jeda_error' : 'workflow_error',
+            JenisNotifikasi::SinkronAccurate => 'workflow_error',
             JenisNotifikasi::OrderDibatalkan, JenisNotifikasi::OrderDitutup => 'order_otomatis',
             JenisNotifikasi::NomorPutus => 'nomor_putus',
             JenisNotifikasi::PengingatJeda, JenisNotifikasi::LaporanHarian, JenisNotifikasi::Arsip => 'terjadwal',

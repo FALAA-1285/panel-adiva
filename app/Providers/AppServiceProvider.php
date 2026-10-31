@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Accurate\ApiAccurate;
+use App\Accurate\BacaAccurate;
+use App\Accurate\TiruanAccurate;
 use App\Bot\JawabAdiva;
 use App\Bot\KabarKonfig;
 use App\Bot\KirimUlangInvoice;
@@ -89,6 +92,10 @@ class AppServiceProvider extends ServiceProvider
                 default => $tiruan,
             }));
         }
+
+        // Accurate is not part of the bot: outside demo mode it is always the real one, so a
+        // missing token shows as an error instead of sample goods on the shop's shelf
+        $this->app->bind(BacaAccurate::class, fn ($app) => $app->make(Demo::aktif() ? TiruanAccurate::class : ApiAccurate::class));
     }
 
     /**

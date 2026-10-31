@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Accurate\SinkronBarangToko;
+use App\Accurate\TiruanAccurate;
 use App\Enums\JenisNotifikasi;
 use App\Enums\KategoriAktivitas;
 use App\Enums\PengirimPesan;
@@ -73,6 +75,7 @@ class DemoSeeder extends Seeder
         $this->nomorBot();
         $this->staf();
         $this->katalog();
+        $this->barangToko();
         $this->workflow();
         $this->pengaturan();
         $this->prompt();
@@ -176,6 +179,14 @@ class DemoSeeder extends Seeder
             'payload' => base64_encode(serialize([])),
             'last_activity' => $this->jam('2026-09-28 08:42')->getTimestamp(),
         ]);
+    }
+
+    /**
+     * Katalog → Barang toko: the stand-in's shelf, as one hourly run from Accurate would leave it.
+     */
+    protected function barangToko(): void
+    {
+        (new SinkronBarangToko(new TiruanAccurate))->jalankan();
     }
 
     /**

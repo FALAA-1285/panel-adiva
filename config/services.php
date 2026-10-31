@@ -53,6 +53,18 @@ return [
         'api_key' => env('N8N_API_KEY'),
     ],
 
+    /*
+    | Accurate Online, database "Bana Food": Toko Sawojajar's goods, read only
+    | (accurate:sinkron). The API Token and its signature secret come from Accurate.
+    */
+
+    'accurate' => [
+        'token' => env('ACCURATE_API_TOKEN'),
+        'signature_secret' => env('ACCURATE_SIGNATURE_SECRET'),
+        'db_id' => env('ACCURATE_DB_ID', '2743429'),
+        'timeout' => (int) env('ACCURATE_TIMEOUT', 30),
+    ],
+
     'waha' => [
         'url' => env('WAHA_URL'),
         'key' => env('WAHA_API_KEY'),

@@ -7,6 +7,7 @@ export type TabKatalog = {
     gambar: number;
     kebijakan: number;
     karyawan: number;
+    toko: number;
 };
 
 type KatalogHeaderProps = {
@@ -22,9 +23,10 @@ const bagian: { kode: keyof TabKatalog; label: string; href: string }[] = [
     { kode: 'gambar', label: 'Gambar produk', href: '/katalog/gambar' },
     { kode: 'kebijakan', label: 'Kebijakan', href: '/katalog/kebijakan' },
     { kode: 'karyawan', label: 'Program karyawan', href: '/katalog/karyawan' },
+    { kode: 'toko', label: 'Barang toko', href: '/katalog/toko' },
 ];
 
-/** Title, subtitle and the five tabs shared by every "Katalog & pengetahuan" page. */
+/** Title, subtitle and the six tabs shared by every "Katalog & pengetahuan" page. */
 export function KatalogHeader({ aktif, tab, aksi }: KatalogHeaderProps) {
     return (
         <PageHeader

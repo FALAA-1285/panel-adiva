@@ -19,6 +19,9 @@ Schedule::command('n8n:sinkron')->everyMinute()->withoutOverlapping()->skip(fn (
 // the supervisor's short WhatsApp for each notification n8n writes (docs/kontrak-n8n.md §9)
 Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapping()->skip(fn () => Demo::aktif());
 
+// Toko Sawojajar's goods from Accurate, read only (Katalog → Barang toko, Adiva's Cari_Barang_Toko)
+Schedule::command('accurate:sinkron')->hourly()->withoutOverlapping()->skip(fn () => Demo::aktif());
+
 // the daily reminder of who the bot is still paused for (BOT_DRIVER=lokal; n8n did this at 09:00)
 // on the VPS cron container only (CADANGAN_AKTIF=true), where pg_dump is installed
 Schedule::command('cadangan:buat')->dailyAt('02:00')->withoutOverlapping()->when(fn () => (bool) config('cadangan.aktif') && ! Demo::aktif());
