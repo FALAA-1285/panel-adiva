@@ -67,6 +67,7 @@ return [
         'signature_secret' => env('ACCURATE_SIGNATURE_SECRET'),
         'db_id' => env('ACCURATE_DB_ID') ?: '2743429',
         'timeout' => (int) env('ACCURATE_TIMEOUT', 30),
+        'cron_key' => env('ACCURATE_CRON_KEY'),
     ],
 
     'waha' => [
