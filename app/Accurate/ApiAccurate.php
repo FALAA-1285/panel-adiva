@@ -146,6 +146,13 @@ class ApiAccurate implements BacaAccurate
         $pesan = is_array($isi) ? ($isi['d'] ?? $isi['message'] ?? $isi['error_description'] ?? null) : null;
         $pesan = is_array($pesan) ? implode(' ', array_filter($pesan, 'is_string')) : $pesan;
 
-        return 'HTTP '.$jawaban->status().(filled($pesan) ? ' · '.mb_substr((string) $pesan, 0, 200) : '');
+        $teks = 'HTTP '.$jawaban->status().(filled($pesan) ? ' · '.mb_substr((string) $pesan, 0, 200) : '');
+
+        // Accurate repeats the token in "Invalid access token: …"; it must not reach the panel
+        return str_replace(
+            array_filter([(string) config('services.accurate.token'), (string) config('services.accurate.signature_secret')]),
+            '***',
+            $teks,
+        );
     }
 }

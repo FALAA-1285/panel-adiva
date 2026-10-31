@@ -112,6 +112,13 @@ test('the API says what is wrong without a token, or when Accurate refuses', fun
     expect(fn () => (new ApiAccurate)->barang())->toThrow(AccurateGagal::class, 'Accurate menolak permintaan: HTTP 401 · Token tidak valid');
 });
 
+test('the token never shows in the reason Accurate gives', function () {
+    config(['services.accurate.token' => '25bb9998-uji']);
+    Http::fake(['account.accurate.id/*' => Http::response(['s' => false, 'd' => ['Invalid access token: 25bb9998-uji']], 401)]);
+
+    expect(fn () => (new ApiAccurate)->barang())->toThrow(AccurateGagal::class, 'Accurate menolak permintaan: HTTP 401 · Invalid access token: ***');
+});
+
 test('the API refuses a token without the Bana Food database', function () {
     config(['services.accurate.token' => 'aat.token-uji']);
     Http::fake(['account.accurate.id/*' => Http::response(['s' => true, 'd' => ['database' => [['id' => 1, 'host' => 'https://lain.accurate.id']]]])]);
