@@ -45,24 +45,29 @@ export function PageHeader({
         return (
             <header className="shrink-0 px-8 pt-5 max-md:px-4 max-md:pt-4">
                 {judulTersembunyi}
-                {aksi && (
-                    <div className="flex items-center justify-end gap-2 max-md:flex-wrap max-md:justify-start">
-                        {aksi}
-                    </div>
-                )}
-                {tab && (
-                    <nav
-                        aria-label={tabLabel}
-                        // narrow screens: the tabs scroll sideways instead of wrapping
-                        className={cn(
-                            'flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-line max-md:gap-5',
-                            aksi && 'mt-3',
+                {tab ? (
+                    <div className="flex items-end justify-between gap-4 border-b border-line max-md:gap-3">
+                        <nav
+                            aria-label={tabLabel}
+                            // narrow screens: the tabs scroll sideways instead of wrapping
+                            className="-mb-px flex min-w-0 flex-1 [scrollbar-width:none] gap-6 overflow-x-auto border-b border-line max-md:gap-5"
+                        >
+                            {tab.map((t) => (
+                                <TabItem key={t.label} tab={t} />
+                            ))}
+                        </nav>
+                        {aksi && (
+                            <div className="mb-1 flex shrink-0 items-center gap-2 max-md:mb-1.5">
+                                {aksi}
+                            </div>
                         )}
-                    >
-                        {tab.map((t) => (
-                            <TabItem key={t.label} tab={t} />
-                        ))}
-                    </nav>
+                    </div>
+                ) : (
+                    aksi && (
+                        <div className="flex items-center justify-end gap-2 max-md:flex-wrap max-md:justify-start">
+                            {aksi}
+                        </div>
+                    )
                 )}
             </header>
         );
