@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonLink } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import type { KolomTabel } from '@/components/ui/data-table';
 import { Select } from '@/components/ui/form';
@@ -13,7 +13,10 @@ import { Ikon } from '@/components/ui/ikon';
 import { InputCari } from '@/components/ui/input-cari';
 import { Panel } from '@/components/ui/panel';
 import { StatStrip } from '@/components/ui/stat-strip';
+import { Status } from '@/components/ui/status';
 import { Mono, Note, T1, T2 } from '@/components/ui/teks';
+import { useKonfirmasi } from '@/components/ui/konfirmasi';
+import { putuskan, sambungkan } from '@/routes/accurate';
 import { toko } from '@/routes/katalog';
 import { sinkron } from '@/routes/katalog/toko';
 
@@ -42,6 +45,16 @@ type Props = {
         berhasil: string | null;
         gagal: { waktu: string; galat: string | null } | null;
         berjalan: boolean;
+    };
+    /** How the panel reaches Accurate; no token is ever sent here. */
+    akses: {
+        cara: 'oauth' | 'token' | null;
+        oleh: string | null;
+        sejak: string | null;
+        /** The OAuth token's end, renewed by itself before then. */
+        berlaku: string | null;
+        /** ACCURATE_CLIENT_ID and ACCURATE_CLIENT_SECRET are set on the server. */
+        bisaOauth: boolean;
     };
 };
 
@@ -98,8 +111,11 @@ export default function KatalogBarangToko({
     halaman,
     kategori,
     sinkron: info,
+    akses,
 }: Props) {
-    const bolehUbah = usePage().props.panel?.akses.katalog ?? false;
+    const { props } = usePage();
+    const bolehUbah = props.panel?.akses.katalog ?? false;
+    const galatSambungan = props.errors?.accurate;
     const [isian, setIsian] = useState(filter);
     const pertama = useRef(true);
     const [diminta, setDiminta] = useState(false);
@@ -213,6 +229,7 @@ export default function KatalogBarangToko({
                         },
                     ]}
                 />
+                {galatSambungan && <Note nada="red">{galatSambungan}</Note>}
                 {info.gagal && (
                     <Note nada="red">
                         Sinkron {info.gagal.waktu} gagal: {info.gagal.galat}.
@@ -269,7 +286,9 @@ export default function KatalogBarangToko({
                             <div className="px-4.5 py-8 text-center text-body text-muted">
                                 {adaFilter
                                     ? 'Tidak ada barang yang cocok.'
-                                    : 'Belum ada barang. Tekan Sinkron sekarang untuk mengambil dari Accurate.'}
+                                    : akses.cara === null
+                                      ? 'Belum ada barang. Sambungkan Accurate dulu (kotak di samping).'
+                                      : 'Belum ada barang. Tekan Sinkron sekarang untuk mengambil dari Accurate.'}
                             </div>
                         ) : (
                             <DataTable
@@ -290,30 +309,122 @@ export default function KatalogBarangToko({
                             }
                         />
                     </Panel>
-                    <Panel
-                        judul="Cara Adiva memakai data ini"
-                        isiClassName="flex flex-col gap-2.5 px-[18px] pt-1 pb-4 text-body leading-[1.5] text-ink-2"
-                    >
-                        <p>
-                            Ditanya barang di Toko Sawojajar, Adiva mencarinya
-                            di sini dan menyebut harga jual apa adanya.
-                        </p>
-                        <p>
-                            Barang toko <b>hanya dijual langsung di toko</b>:
-                            tidak bisa dipesan atau dikirim lewat WhatsApp.
-                            Adiva mengajak customer datang ke toko.
-                        </p>
-                        <p>
-                            Stok tidak dibaca, jadi Adiva tidak menjanjikan
-                            barangnya tersedia.
-                        </p>
-                        <p className="text-caption text-muted">
-                            Barang dianggap dijual di toko kalau punya barcode
-                            dan tidak nonaktif di Accurate.
-                        </p>
-                    </Panel>
+                    <div className="flex flex-col gap-5 max-xl:grid max-xl:grid-cols-2 max-xl:items-start max-md:grid-cols-1">
+                        <SambunganAccurate akses={akses} />
+                        <Panel
+                            judul="Cara Adiva memakai data ini"
+                            isiClassName="flex flex-col gap-2.5 px-[18px] pt-1 pb-4 text-body leading-[1.5] text-ink-2"
+                        >
+                            <p>
+                                Ditanya barang di Toko Sawojajar, Adiva
+                                mencarinya di sini dan menyebut harga jual apa
+                                adanya.
+                            </p>
+                            <p>
+                                Barang toko <b>hanya dijual langsung di toko</b>
+                                : tidak bisa dipesan atau dikirim lewat
+                                WhatsApp. Adiva mengajak customer datang ke
+                                toko.
+                            </p>
+                            <p>
+                                Stok tidak dibaca, jadi Adiva tidak menjanjikan
+                                barangnya tersedia.
+                            </p>
+                            <p className="text-caption text-muted">
+                                Barang dianggap dijual di toko kalau punya
+                                barcode dan tidak nonaktif di Accurate.
+                            </p>
+                        </Panel>
+                    </div>
                 </div>
             </IsiHalaman>
         </AppLayout>
+    );
+}
+
+/**
+ * How the panel reaches Accurate (OAuth: "Sambungkan Accurate", or an API Token in .env).
+ * Connecting is a supervisor's job; staff only see the state.
+ */
+function SambunganAccurate({ akses }: { akses: Props['akses'] }) {
+    const bolehSambung = usePage().props.panel?.akses.pengaturan ?? false;
+    const [konfirmasi, tanya] = useKonfirmasi();
+    const tombol =
+        akses.cara === 'oauth' ? 'Sambungkan ulang' : 'Sambungkan Accurate';
+
+    const putus = async () => {
+        if (
+            await tanya({
+                judul: 'Putuskan Accurate?',
+                pesan: 'Barang toko tidak diperbarui lagi sampai disambungkan ulang. Data yang sudah ada tetap disimpan.',
+                ya: 'Putuskan',
+                bahaya: true,
+            })
+        ) {
+            router.post(putuskan.url(), {}, { preserveScroll: true });
+        }
+    };
+
+    return (
+        <Panel
+            judul="Sambungan Accurate"
+            sub="Database Bana Food · hanya melihat barang"
+            isiClassName="flex flex-col gap-3 px-4.5 pt-1 pb-4 text-body leading-[1.5] text-ink-2"
+        >
+            {akses.cara === 'oauth' && (
+                <p>
+                    <Status nada="green">Tersambung</Status>{' '}
+                    {akses.oleh && <>oleh {akses.oleh} </>}
+                    {akses.sejak && <>sejak {akses.sejak}</>}.
+                    {akses.berlaku && (
+                        <span className="block text-caption text-muted">
+                            Token berlaku sampai {akses.berlaku} dan diperbarui
+                            sendiri sebelum habis.
+                        </span>
+                    )}
+                </p>
+            )}
+            {akses.cara === 'token' && (
+                <p>
+                    <Status nada="gray">API Token</Status> diisi di server.
+                    Berhasil atau tidaknya terlihat dari sinkron terakhir.
+                </p>
+            )}
+            {akses.cara === null && (
+                <p>
+                    <Status nada="amber">Belum tersambung</Status> Login ke
+                    Accurate sekali dan beri akses, lalu barang toko diambil
+                    tiap menit.
+                </p>
+            )}
+            {!akses.bisaOauth && akses.cara !== 'token' && (
+                <p className="text-caption text-muted">
+                    ACCURATE_CLIENT_ID dan ACCURATE_CLIENT_SECRET belum diisi di
+                    server.
+                </p>
+            )}
+            {bolehSambung && akses.bisaOauth && (
+                <div className="flex flex-wrap gap-2">
+                    <ButtonLink
+                        href={sambungkan.url()}
+                        varian={akses.cara === 'oauth' ? undefined : 'primary'}
+                        ukuran="sm"
+                    >
+                        {tombol}
+                    </ButtonLink>
+                    {akses.cara === 'oauth' && (
+                        <Button ukuran="sm" onClick={putus}>
+                            Putuskan
+                        </Button>
+                    )}
+                </div>
+            )}
+            {!bolehSambung && akses.cara === null && (
+                <p className="text-caption text-muted">
+                    Hanya supervisor yang bisa menyambungkan.
+                </p>
+            )}
+            {konfirmasi}
+        </Panel>
     );
 }
