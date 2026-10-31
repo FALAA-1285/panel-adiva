@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * "Sinkron sekarang" on Katalog → Barang toko: the hourly run, started by hand. One at a time.
+ * "Sinkron sekarang" on Katalog → Barang toko: the scheduled run, started by hand. One at a time.
  */
 class SinkronkanBarangToko implements ShouldBeUnique, ShouldQueue
 {

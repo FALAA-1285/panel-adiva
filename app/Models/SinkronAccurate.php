@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * One run of accurate:sinkron (hourly, or "Sinkron sekarang" on Katalog → Barang toko).
+ * One run of accurate:sinkron (every minute, or "Sinkron sekarang" on Katalog → Barang toko).
  *
  * @property int $id
  * @property Carbon $mulai
@@ -18,10 +18,11 @@ use Illuminate\Support\Carbon;
  * @property string $status BERJALAN, BERHASIL or GAGAL
  * @property int|null $jumlah goods kept after the run
  * @property string|null $galat
- * @property int|null $oleh_id who pressed "Sinkron sekarang"; null for the hourly run
+ * @property int|null $oleh_id who pressed "Sinkron sekarang"; null for the scheduled run
+ * @property Carbon|null $dikabari_at this failed run told the supervisor the goods are stale
  */
 #[Table('sinkron_accurate')]
-#[Fillable(['mulai', 'selesai', 'status', 'jumlah', 'galat', 'oleh_id'])]
+#[Fillable(['mulai', 'selesai', 'status', 'jumlah', 'galat', 'oleh_id', 'dikabari_at'])]
 class SinkronAccurate extends Model
 {
     use ZonaWaktuAplikasi;
@@ -50,6 +51,7 @@ class SinkronAccurate extends Model
         return [
             'mulai' => 'datetime',
             'selesai' => 'datetime',
+            'dikabari_at' => 'datetime',
             'jumlah' => 'integer',
         ];
     }

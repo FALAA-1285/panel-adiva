@@ -19,8 +19,10 @@ Schedule::command('n8n:sinkron')->everyMinute()->withoutOverlapping()->skip(fn (
 // the supervisor's short WhatsApp for each notification n8n writes (docs/kontrak-n8n.md §9)
 Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapping()->skip(fn () => Demo::aktif());
 
-// Toko Sawojajar's goods from Accurate, read only (Katalog → Barang toko, Adiva's Cari_Barang_Toko)
-Schedule::command('accurate:sinkron')->hourly()->withoutOverlapping()->skip(fn () => Demo::aktif());
+// Toko Sawojajar's goods from Accurate, read only (Katalog → Barang toko, Adiva's Cari_Barang_Toko):
+// every minute, so a price changed in Accurate reaches Adiva within a minute or two. Also in demo
+// mode (the frozen clock is always "due" every minute); not without a token.
+Schedule::command('accurate:sinkron')->everyMinute()->withoutOverlapping(5)->skip(fn () => blank(config('services.accurate.token')));
 
 // the daily reminder of who the bot is still paused for (BOT_DRIVER=lokal; n8n did this at 09:00)
 // on the VPS cron container only (CADANGAN_AKTIF=true), where pg_dump is installed

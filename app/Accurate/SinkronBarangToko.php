@@ -4,9 +4,9 @@ namespace App\Accurate;
 
 use App\Enums\JenisNotifikasi;
 use App\Models\BarangToko;
-use App\Models\Notifikasi;
 use App\Models\SinkronAccurate;
 use App\Models\User;
+use App\Support\Demo;
 use App\Support\KabarBot;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,17 +17,22 @@ use Throwable;
  * not suspended is sold at the shop; everything else is left out, and a good that left the
  * shop is removed. Stock is not read. Nothing is changed until the whole list has arrived,
  * and an empty list never wipes a filled shelf.
+ *
+ * Times are real time (Demo::jamNyata), so "diperbarui" stays true in demo mode too.
  */
 class SinkronBarangToko
 {
     /** hours without a good run before the supervisor hears of it */
     public const BASI_JAM = 3;
 
+    /** days of run history kept (a run every minute) */
+    public const RIWAYAT_HARI = 7;
+
     public function __construct(private BacaAccurate $accurate) {}
 
     public function jalankan(?User $oleh = null): SinkronAccurate
     {
-        $catatan = SinkronAccurate::create(['mulai' => now(), 'status' => 'BERJALAN', 'oleh_id' => $oleh?->id]);
+        $catatan = SinkronAccurate::create(['mulai' => Demo::jamNyata(), 'status' => 'BERJALAN', 'oleh_id' => $oleh?->id]);
 
         try {
             $toko = self::dijualDiToko($this->accurate->barang());
@@ -37,14 +42,15 @@ class SinkronBarangToko
             }
 
             $this->simpan($toko);
-            $catatan->update(['status' => 'BERHASIL', 'selesai' => now(), 'jumlah' => $toko->count()]);
+            $catatan->update(['status' => 'BERHASIL', 'selesai' => Demo::jamNyata(), 'jumlah' => $toko->count()]);
+            $this->rapikanRiwayat($catatan);
         } catch (Throwable $e) {
             if (! $e instanceof AccurateGagal) {
                 report($e);
             }
 
-            $catatan->update(['status' => 'GAGAL', 'selesai' => now(), 'galat' => mb_substr($e->getMessage(), 0, 1000)]);
-            $this->kabariKalauBasi($e->getMessage());
+            $catatan->update(['status' => 'GAGAL', 'selesai' => Demo::jamNyata(), 'galat' => mb_substr($e->getMessage(), 0, 1000)]);
+            $this->kabariKalauBasi($catatan);
         }
 
         return $catatan;
@@ -67,7 +73,7 @@ class SinkronBarangToko
     private function simpan(Collection $toko): void
     {
         DB::transaction(function () use ($toko) {
-            $sekarang = now();
+            $sekarang = Demo::jamNyata();
             $kolom = ['kode', 'nama', 'barcode', 'kategori', 'satuan', 'harga', 'disinkron_at'];
 
             foreach ($toko->chunk(500) as $potong) {
@@ -101,26 +107,40 @@ class SinkronBarangToko
      * One notice once the shelf has gone BASI_JAM hours without a good run, and no second
      * one until a run goes through again.
      */
-    private function kabariKalauBasi(string $galat): void
+    private function kabariKalauBasi(SinkronAccurate $gagal): void
     {
         $berhasil = SinkronAccurate::terakhirBerhasil();
         $sejak = $berhasil?->mulai ?? SinkronAccurate::query()->oldest('mulai')->value('mulai');
 
-        if ($sejak === null || now()->diffInHours($sejak, absolute: true) < self::BASI_JAM) {
+        if ($sejak === null || Demo::jamNyata()->diffInHours($sejak, absolute: true) < self::BASI_JAM) {
             return;
         }
 
-        $sudah = Notifikasi::query()
-            ->where('jenis', JenisNotifikasi::SinkronAccurate->value)
-            ->where('waktu', '>=', $berhasil?->mulai ?? $sejak)
+        $sudah = SinkronAccurate::query()
+            ->whereNotNull('dikabari_at')
+            ->when($berhasil, fn ($q) => $q->where('id', '>', $berhasil->id))
             ->exists();
 
-        if (! $sudah) {
-            KabarBot::notifikasi(
-                JenisNotifikasi::SinkronAccurate,
-                'Data barang toko dari Accurate belum terbarui',
-                'Terakhir berhasil: '.($berhasil ? $berhasil->mulai->translatedFormat('j M H:i') : 'belum pernah').' · '.mb_substr($galat, 0, 200),
-            );
+        if ($sudah) {
+            return;
         }
+
+        KabarBot::notifikasi(
+            JenisNotifikasi::SinkronAccurate,
+            'Data barang toko dari Accurate belum terbarui',
+            'Terakhir berhasil: '.($berhasil ? $berhasil->mulai->translatedFormat('j M H:i') : 'belum pernah').' · '.mb_substr((string) $gagal->galat, 0, 200),
+        );
+        $gagal->update(['dikabari_at' => Demo::jamNyata()]);
+    }
+
+    /**
+     * Runs older than RIWAYAT_HARI days go, except the last good one (Katalog shows its time).
+     */
+    private function rapikanRiwayat(SinkronAccurate $berhasil): void
+    {
+        SinkronAccurate::query()
+            ->where('mulai', '<', Demo::jamNyata()->subDays(self::RIWAYAT_HARI))
+            ->whereKeyNot($berhasil->id)
+            ->delete();
     }
 }

@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 /**
- * Toko Sawojajar's goods from Accurate into barang_toko (hourly). With --coba it only shows
+ * Toko Sawojajar's goods from Accurate into barang_toko (every minute). With --coba it only shows
  * what Accurate sent, to check the connection and the field names, and saves nothing.
  */
 #[Signature('accurate:sinkron {--coba : tampilkan hasil dari Accurate tanpa menyimpan}')]

@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
@@ -82,6 +82,9 @@ const kolom: KolomTabel<Barang>[] = [
     },
 ];
 
+/** What changes when Accurate is read again. */
+const DIMUAT_ULANG = ['sinkron', 'barang', 'halaman', 'kategori', 'tab'];
+
 const query = (f: Filter, halaman?: number) => ({
     cari: f.cari || undefined,
     kategori: f.kategori || undefined,
@@ -127,7 +130,13 @@ export default function KatalogBarangToko({
         return () => clearTimeout(tunda);
     }, [isian]);
 
-    // while a run is going, look again every few seconds until it is done
+    // Accurate is read every minute: the list follows by itself
+    usePoll(30000, {
+        only: DIMUAT_ULANG,
+        onSuccess: () => setDiminta(false),
+    });
+
+    // and every few seconds while a run started here is going
     useEffect(() => {
         if (!berjalan) {
             return;
@@ -136,7 +145,7 @@ export default function KatalogBarangToko({
         const ulang = setInterval(
             () =>
                 router.reload({
-                    only: ['sinkron', 'barang', 'halaman', 'kategori', 'tab'],
+                    only: DIMUAT_ULANG,
                     onSuccess: () => setDiminta(false),
                 }),
             4000,
@@ -195,7 +204,7 @@ export default function KatalogBarangToko({
                         {
                             label: 'Diperbarui',
                             nilai: info.berhasil ?? 'Belum pernah',
-                            meta: 'Otomatis tiap jam',
+                            meta: 'Otomatis tiap menit',
                         },
                         {
                             label: 'Tanpa harga',

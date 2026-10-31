@@ -93,9 +93,12 @@ class AppServiceProvider extends ServiceProvider
             }));
         }
 
-        // Accurate is not part of the bot: outside demo mode it is always the real one, so a
-        // missing token shows as an error instead of sample goods on the shop's shelf
-        $this->app->bind(BacaAccurate::class, fn ($app) => $app->make(Demo::aktif() ? TiruanAccurate::class : ApiAccurate::class));
+        // Accurate is not part of the bot: with a token it is always the real one, demo mode or
+        // not; the sample shelf only stands in for a demo without one. Outside demo mode a missing
+        // token shows as an error instead of sample goods.
+        $this->app->bind(BacaAccurate::class, fn ($app) => $app->make(
+            Demo::aktif() && blank(config('services.accurate.token')) ? TiruanAccurate::class : ApiAccurate::class,
+        ));
     }
 
     /**

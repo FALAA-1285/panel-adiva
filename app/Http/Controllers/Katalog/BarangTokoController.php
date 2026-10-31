@@ -8,6 +8,7 @@ use App\Jobs\SinkronkanBarangToko;
 use App\Models\BarangToko;
 use App\Models\SinkronAccurate;
 use App\Support\Aktivitas;
+use App\Support\Demo;
 use App\Support\Rupiah;
 use App\Support\TabKatalog;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,7 @@ use Inertia\Response;
 
 /**
  * Katalog → Barang toko: Toko Sawojajar's goods as Accurate has them. Read only; the shelf
- * changes in Accurate and arrives here every hour (accurate:sinkron).
+ * changes in Accurate and arrives here within a minute (accurate:sinkron).
  */
 class BarangTokoController extends Controller
 {
@@ -59,13 +60,13 @@ class BarangTokoController extends Controller
                     'waktu' => $terakhir->mulai->translatedFormat('j M H:i'),
                     'galat' => $terakhir->galat,
                 ] : null,
-                'berjalan' => $terakhir?->status === 'BERJALAN' && $terakhir->mulai->gt(now()->subMinutes(10)),
+                'berjalan' => $terakhir?->status === 'BERJALAN' && $terakhir->mulai->gt(Demo::jamNyata()->subMinutes(10)),
             ],
         ]);
     }
 
     /**
-     * "Sinkron sekarang": the hourly run, now.
+     * "Sinkron sekarang": the scheduled run, now.
      */
     public function sinkron(Request $request): RedirectResponse
     {

@@ -25,6 +25,17 @@ class Demo
     }
 
     /**
+     * The real time, for data that comes from outside and must say when it really arrived
+     * (Accurate). In demo mode now() is frozen; the tests keep their own clock.
+     */
+    public static function jamNyata(): CarbonImmutable
+    {
+        return self::aktif() && ! app()->runningUnitTests()
+            ? CarbonImmutable::createFromTimestamp(time())->setTimezone(config('app.timezone'))
+            : CarbonImmutable::now();
+    }
+
+    /**
      * Freeze the application clock to the demo moment.
      */
     public static function bekukanJam(): void

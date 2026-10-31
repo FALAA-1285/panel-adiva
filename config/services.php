@@ -61,7 +61,7 @@ return [
     'accurate' => [
         'token' => env('ACCURATE_API_TOKEN'),
         'signature_secret' => env('ACCURATE_SIGNATURE_SECRET'),
-        'db_id' => env('ACCURATE_DB_ID', '2743429'),
+        'db_id' => env('ACCURATE_DB_ID') ?: '2743429',
         'timeout' => (int) env('ACCURATE_TIMEOUT', 30),
     ],
 

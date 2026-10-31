@@ -16,9 +16,10 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
+// no token: demo mode (as in phpunit.xml) reads the stand-in shelf; the API tests set one
 beforeEach(function () {
     config([
-        'services.accurate.token' => 'aat.token-uji',
+        'services.accurate.token' => null,
         'services.accurate.signature_secret' => 'rahasia-uji',
         'services.accurate.db_id' => '2743429',
     ]);
@@ -66,6 +67,7 @@ function barangAccurate(int $id, ?string $barcode = '899', bool $nonaktif = fals
 }
 
 test('the API reads every page of the item list with a signed request and only reads', function () {
+    config(['services.accurate.token' => 'aat.token-uji']);
     Http::fake([
         'account.accurate.id/api/api-token.do' => Http::response(['s' => true, 'd' => ['database' => ['id' => 2743429, 'host' => 'https://zeus.accurate.id/']]]),
         'zeus.accurate.id/accurate/api/item/list.do*' => Http::sequence()
@@ -111,6 +113,7 @@ test('the API says what is wrong without a token, or when Accurate refuses', fun
 });
 
 test('the API refuses a token without the Bana Food database', function () {
+    config(['services.accurate.token' => 'aat.token-uji']);
     Http::fake(['account.accurate.id/*' => Http::response(['s' => true, 'd' => ['database' => [['id' => 1, 'host' => 'https://lain.accurate.id']]]])]);
 
     expect(fn () => (new ApiAccurate)->barang())->toThrow(AccurateGagal::class, 'Database Accurate 2743429 tidak ada di API Token ini.');
@@ -188,13 +191,44 @@ test('--coba shows what Accurate sent and saves nothing', function () {
         ->and(SinkronAccurate::query()->count())->toBe(0);
 });
 
-test('demo mode reads the stand-in, and the run is scheduled hourly outside demo mode', function () {
+test('a token always means the real Accurate, demo mode or not; without one demo mode reads the stand-in', function () {
     expect(app(BacaAccurate::class))->toBeInstanceOf(TiruanAccurate::class);
 
+    config(['services.accurate.token' => 'aat.token-uji']);
+    expect(app(BacaAccurate::class))->toBeInstanceOf(ApiAccurate::class);
+
+    config(['services.accurate.token' => null, 'app.demo' => false]);
+    expect(app(BacaAccurate::class))->toBeInstanceOf(ApiAccurate::class);
+});
+
+test('the run is scheduled every minute, and only once a token is set', function () {
     $jadwal = collect(app(Schedule::class)->events())->first(fn ($e) => str_contains((string) $e->command, 'accurate:sinkron'));
 
     expect($jadwal)->not->toBeNull()
-        ->and($jadwal->expression)->toBe('0 * * * *');
+        ->and($jadwal->expression)->toBe('* * * * *')
+        ->and($jadwal->filtersPass(app()))->toBeFalse();
+
+    config(['services.accurate.token' => 'aat.token-uji']);
+
+    expect($jadwal->filtersPass(app()))->toBeTrue();
+});
+
+test('an empty ACCURATE_DB_ID falls back to Bana Food', function () {
+    $_ENV['ACCURATE_DB_ID'] = '';
+    $config = require config_path('services.php');
+    unset($_ENV['ACCURATE_DB_ID']);
+
+    expect($config['accurate']['db_id'])->toBe('2743429');
+});
+
+test('the run history keeps a week, and always the last good run', function () {
+    $lama = SinkronAccurate::create(['mulai' => now()->subDays(8), 'status' => 'GAGAL']);
+    $baru = SinkronAccurate::create(['mulai' => now()->subDays(2), 'status' => 'GAGAL']);
+
+    $hasil = app(SinkronBarangToko::class)->jalankan();
+
+    expect(SinkronAccurate::query()->orderBy('id')->pluck('id')->all())->toBe([$baru->id, $hasil->id])
+        ->and($lama->fresh())->toBeNull();
 });
 
 test('Katalog → Barang toko lists the shelf, searches, and says when the last run failed', function () {
