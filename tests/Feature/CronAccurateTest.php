@@ -11,18 +11,18 @@ beforeEach(function () {
 });
 
 test('cron endpoint requires valid key when configured', function () {
-    $this->postJson('/api/cron/accurate-sinkron')
+    $this->postJson('/cron/accurate-sinkron')
         ->assertStatus(401)
         ->assertJson(['sukses' => false, 'pesan' => 'Kunci cron tidak valid.']);
 
-    $this->postJson('/api/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-salah'])
+    $this->postJson('/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-salah'])
         ->assertStatus(401);
 });
 
 test('cron endpoint fails if accurate is not connected', function () {
     AksesAccurate::query()->delete();
 
-    $this->postJson('/api/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-rahasia-uji'])
+    $this->postJson('/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-rahasia-uji'])
         ->assertStatus(422)
         ->assertJson(['sukses' => false, 'pesan' => 'Accurate belum tersambung.']);
 });
@@ -52,7 +52,7 @@ test('cron endpoint executes sync successfully when key is valid', function () {
         }
     });
 
-    $this->postJson('/api/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-rahasia-uji'])
+    $this->postJson('/cron/accurate-sinkron', [], ['X-Cron-Key' => 'kunci-rahasia-uji'])
         ->assertSuccessful()
         ->assertJson([
             'sukses' => true,
