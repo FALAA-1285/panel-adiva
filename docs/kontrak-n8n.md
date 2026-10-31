@@ -228,6 +228,25 @@ select pengaturan from workflow where kode = 'chatbot';
 - `pengaturan`: `model_utama`, `model_cadangan`, `temperature` (angka), `ingatan_pesan` (jumlah pesan yang diingat), `tunggu_gabung_detik` (jeda menggabungkan pesan beruntun).
 - "Terbitkan" di panel langsung berlaku untuk chat berikutnya. Prompt di node n8n tidak dipakai lagi.
 
+### Tool `Cari_Barang_Toko` (barang Toko Sawojajar, sejak 31 Okt 2026)
+
+Panel menyalin barang toko dari Accurate (database "Bana Food") ke tabel `barang_toko` tiap jam (`php artisan accurate:sinkron`, hanya membaca Accurate). Yang disimpan hanya barang **ber-barcode dan tidak nonaktif**; stok tidak dibaca. Kolom: `nama`, `kode`, `barcode`, `kategori`, `satuan`, `harga` (harga jual utama, boleh kosong), `disinkron_at`. Riwayat setiap sinkron ada di `sinkron_accurate`.
+
+Node **Cari Barang Toko** (postgresTool, kredensial sama dengan Paket Reseller) tersambung sebagai `ai_tool` ke Agen AI Penjawab, Agen AI Penjawab (Ulang), dan Agen Uji. `queryReplacement`: `{ "k0": $fromAI('kata_kunci', …) }`.
+
+```sql
+SELECT nama, kategori, satuan, harga, to_char(disinkron_at AT TIME ZONE 'Asia/Jakarta', 'DD-MM-YYYY HH24:MI') AS data_per
+FROM barang_toko b
+WHERE b.barcode = trim($1::jsonb ->> 'k0')
+   OR NOT EXISTS (
+       SELECT 1 FROM regexp_split_to_table(trim($1::jsonb ->> 'k0'), '\s+') AS kata
+       WHERE kata <> '' AND b.nama NOT ILIKE '%' || kata || '%'
+   )
+ORDER BY nama LIMIT 30
+```
+
+Setiap kata kunci harus ada di nama (urutan bebas: "bubuk bawang" menemukan "Bawang Putih Bubuk"), atau kata kuncinya sama persis dengan barcode. Memasang: `node storage/app/n8n-cadangan/skrip/n8n-barang-toko.mjs <akar-panel> <id-workflow-panel>` menulis hasil ke `storage/app/n8n-cadangan/panel-barang-toko.json`; tambahkan `--kirim` untuk mengirimnya ke n8n. Aturan pemakaiannya (hanya dijual di toko, tidak bisa dipesan lewat WhatsApp, stok tidak dijanjikan) ada di prompt bagian 3 "BARANG TOKO". Barang toko yang terlanjur masuk order ditandai "⛔ BARANG TOKO" di notifikasi order (`CekHargaOrder`).
+
 ## 2d. Admin lewat WhatsApp (tidak dipakai lagi)
 
 Node "Cek Apakah Admin" tetap mengenali admin (nomor di `users.nomor_wa` yang tidak nonaktif, atau `config_toko.ADMIN_WA`) supaya pesannya tidak dijawab AI. Perintah yang diketik admin (ACC, TOLAK, …, JEDA, LANJUT, DAFTAR JEDA, CATAT, JAWAB, BANTU) **tidak dijalankan**: node **Arahkan ke Panel** membalas "Perintah lewat WhatsApp sudah dipindah ke panel Adiva…". Semua perintah datang dari tombol panel (§2, §2b); jeda dan catat order ditulis panel langsung ke database.

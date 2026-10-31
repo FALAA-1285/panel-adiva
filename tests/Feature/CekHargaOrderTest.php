@@ -1,6 +1,7 @@
 <?php
 
 use App\Bot\CekHargaOrder;
+use App\Models\BarangToko;
 use App\Models\Produk;
 
 /*
@@ -57,4 +58,19 @@ test('an unknown product is mentioned, an employee order is not checked', functi
     expect($tidakDikenal['catatan_notif'])->toContain("ℹ️ Produk berikut tidak ketemu di daftar harga, mohon cek manual:\n• Keripik Tempe — Rp15.000")
         ->and($tidakDikenal['catatan_log'])->toBe('CEK HARGA: 1 item tidak dikenal')
         ->and($gaji)->toBe($putusan);
+});
+
+test('a good from the shop shelf is flagged as not sold over WhatsApp', function () use ($putusan, $baris) {
+    BarangToko::create(['accurate_id' => 1, 'nama' => 'Tepung Tapioka Kiloan', 'barcode' => '2000000510105', 'harga' => 14000, 'disinkron_at' => now()]);
+
+    $hasil = CekHargaOrder::periksa($baris(
+        ['nama' => 'Basreng Koin 1 kg Pedas', 'qty' => 10, 'harga_satuan' => 60000],
+        ['nama' => 'Tepung Tapioka 2 kg', 'qty' => 2, 'harga_satuan' => 14000],
+        ['nama' => 'Kerupuk Udang', 'qty' => 1, 'harga_satuan' => 20000],
+    ), $putusan);
+
+    expect($hasil['catatan_notif'])
+        ->toContain("⛔ *BARANG TOKO* — hanya dijual langsung di Toko Sawojajar, tidak bisa dipesan lewat WhatsApp:\n• Tepung Tapioka 2 kg — Rp14.000")
+        ->toContain("ℹ️ Produk berikut tidak ketemu di daftar harga, mohon cek manual:\n• Kerupuk Udang — Rp20.000")
+        ->and($hasil['catatan_log'])->toBe('CEK HARGA: 1 barang toko (tidak dijual lewat WA) | CEK HARGA: 1 item tidak dikenal');
 });

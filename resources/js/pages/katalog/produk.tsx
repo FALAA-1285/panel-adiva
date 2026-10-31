@@ -98,6 +98,7 @@ const tool = [
     ['Cari_Produk_per_Kategori', 'Mencari produk per kategori'],
     ['Rekomendasi_Produk_Semua', 'Menyarankan produk yang cocok'],
     ['Paket_Reseller', 'Menawarkan paket reseller'],
+    ['Cari_Barang_Toko', 'Barang & harga di toko'],
     ['Cari_Gambar_Produk', 'Mengirim foto produk'],
     ['KB_Kebijakan', 'Menjawab kebijakan toko'],
     ['KB_Harga_Karyawan', 'Harga khusus karyawan'],

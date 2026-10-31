@@ -2,6 +2,7 @@
 
 namespace App\Bot;
 
+use App\Models\BarangToko;
 use App\Models\Produk;
 use App\Support\Rupiah;
 
@@ -73,13 +74,18 @@ final class CekHargaOrder
             }
         }
 
-        $salah = $takDikenal = [];
+        $salah = $takDikenal = $barangToko = [];
         foreach ($baris as $b) {
             if ($b['nama'] === '' || $b['harga'] === 0) {
                 continue;
             }
             if ($b['d'] === null) {
-                $takDikenal[] = '• '.$b['nama'].' — '.Rupiah::teks($b['harga']);
+                // goods from the shop's shelf (Accurate) are sold at the shop only
+                if (self::barangToko($b['nama'])) {
+                    $barangToko[] = '• '.$b['nama'].' — '.Rupiah::teks($b['harga']);
+                } else {
+                    $takDikenal[] = '• '.$b['nama'].' — '.Rupiah::teks($b['harga']);
+                }
 
                 continue;
             }
@@ -108,11 +114,12 @@ final class CekHargaOrder
                 : '• '.$b['nama'].' ('.$qty.' pcs) ditulis '.Rupiah::teks($b['harga']).' — TIDAK ADA di daftar harga '.$nama.' ('.$teks.')';
         }
 
-        if ($salah === [] && $takDikenal === []) {
+        if ($salah === [] && $takDikenal === [] && $barangToko === []) {
             return $putusan;
         }
 
         $bagian = array_filter([
+            $barangToko !== [] ? "⛔ *BARANG TOKO* — hanya dijual langsung di Toko Sawojajar, tidak bisa dipesan lewat WhatsApp:\n".implode("\n", $barangToko) : null,
             $salah !== [] ? "⚠️ *CEK HARGA SEBELUM ACC* — harga di pesanan ini tidak cocok dengan daftar harga:\n".implode("\n", $salah) : null,
             $takDikenal !== [] ? "ℹ️ Produk berikut tidak ketemu di daftar harga, mohon cek manual:\n".implode("\n", $takDikenal) : null,
             'Kalau harganya memang salah: minta customer konfirmasi ulang atau *TOLAK* lalu buat ulang. Kalau memang harga khusus yang disepakati, abaikan pesan ini.',
@@ -123,10 +130,34 @@ final class CekHargaOrder
             'catatan_notif' => implode("\n\n", $bagian)."\n\n".($putusan['catatan_notif'] ?? ''),
             'catatan_log' => collect([
                 $putusan['catatan_log'] ?? '',
+                $barangToko !== [] ? 'CEK HARGA: '.count($barangToko).' barang toko (tidak dijual lewat WA)' : '',
                 $salah !== [] ? 'CEK HARGA: '.count($salah).' item tidak cocok daftar harga' : '',
                 $takDikenal !== [] ? 'CEK HARGA: '.count($takDikenal).' item tidak dikenal' : '',
             ])->filter()->implode(' | '),
         ];
+    }
+
+    /**
+     * Whether an order line names a good on the shop's shelf: every word of the line
+     * (sizes and packs aside) is in the good's name.
+     */
+    private static function barangToko(string $nama): bool
+    {
+        $kata = array_values(array_filter(
+            self::kataNama($nama),
+            fn (string $k) => mb_strlen($k) >= 3 && ! in_array($k, self::KATA_ABAI, true),
+        ));
+
+        if ($kata === []) {
+            return false;
+        }
+
+        $q = BarangToko::query();
+        foreach ($kata as $k) {
+            $q->where('nama', 'ilike', '%'.addcslashes($k, '%_\\').'%');
+        }
+
+        return $q->exists();
     }
 
     /**
