@@ -39,8 +39,8 @@ type Props = {
 const opsi = { preserveScroll: true, preserveState: true };
 
 export default function KatalogGambar({ tab, gambar, varian }: Props) {
-    const [pilih, setPilih] = useState(gambar[0]?.id ?? null);
-    const terpilih = gambar.find((g) => g.id === pilih) ?? gambar[0];
+    const [pilih, setPilih] = useState<number | null>(null);
+    const terpilih = gambar.find((g) => g.id === pilih) ?? null;
     const inputFile = useRef<HTMLInputElement>(null);
     // null = new photo from the header button; a number = replace that photo's file
     const [tujuan, setTujuan] = useState<number | null>(null);
@@ -98,8 +98,20 @@ export default function KatalogGambar({ tab, gambar, varian }: Props) {
                 }
             />
             <IsiHalaman>
-                <div className="grid grid-cols-[minmax(0,1fr)_360px] items-start gap-5 max-xl:grid-cols-[minmax(0,1fr)_300px] max-lg:grid-cols-1">
-                    <div className="grid grid-cols-4 gap-3.5 max-xl:grid-cols-3 max-md:grid-cols-2">
+                <div
+                    className={
+                        terpilih
+                            ? 'grid grid-cols-[minmax(0,1fr)_360px] items-start gap-5 max-xl:grid-cols-[minmax(0,1fr)_300px] max-lg:grid-cols-1'
+                            : 'w-full'
+                    }
+                >
+                    <div
+                        className={
+                            terpilih
+                                ? 'grid grid-cols-4 gap-3.5 max-xl:grid-cols-3 max-md:grid-cols-2'
+                                : 'grid grid-cols-5 gap-3.5 max-xl:grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2'
+                        }
+                    >
                         {gambar.map((g) => (
                             <KartuFoto
                                 key={g.id}
@@ -121,6 +133,7 @@ export default function KatalogGambar({ tab, gambar, varian }: Props) {
                             gambar={terpilih}
                             varian={varian}
                             onGanti={() => pilihFile(terpilih.id)}
+                            onTutup={() => setPilih(null)}
                         />
                     )}
                 </div>
@@ -191,10 +204,12 @@ function DetailFoto({
     gambar,
     varian,
     onGanti,
+    onTutup,
 }: {
     gambar: Gambar;
     varian: Varian[];
     onGanti: () => void;
+    onTutup?: () => void;
 }) {
     const [tags, setTags] = useState(gambar.tags ?? '');
     const [caption, setCaption] = useState(gambar.caption ?? '');
@@ -216,7 +231,16 @@ function DetailFoto({
     ].filter(Boolean);
 
     return (
-        <Panel judul="Detail foto">
+        <Panel
+            judul="Detail foto"
+            aksi={
+                onTutup && (
+                    <Button ukuran="sm" onClick={onTutup}>
+                        Tutup
+                    </Button>
+                )
+            }
+        >
             <div className="flex flex-col gap-3.5">
                 {gambar.url ? (
                     <img

@@ -5,7 +5,6 @@ import { PanelProduk, useImporCsv } from '@/components/katalog/panel-produk';
 import { pulihkan } from '@/routes/katalog/produk';
 import type { IsianProduk } from '@/components/katalog/panel-produk';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
-import { UjiAdiva } from '@/components/katalog/uji-adiva';
 import type { Uji } from '@/components/katalog/uji-adiva';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button, IconButton } from '@/components/ui/button';
@@ -44,19 +43,6 @@ type Props = {
     }[];
     uji: (Uji & { produkId: number | null }) | null;
 };
-
-// What Adiva reads this data for; the n8n tool name is the tooltip.
-const tool = [
-    ['Cari_Produk_per_Kategori', 'Mencari produk per kategori'],
-    ['Rekomendasi_Produk_Semua', 'Menyarankan produk yang cocok'],
-    ['Paket_Reseller', 'Menawarkan paket reseller'],
-    ['Cari_Barang_Toko', 'Barang & harga di toko'],
-    ['Cari_Gambar_Produk', 'Mengirim foto produk'],
-    ['KB_Kebijakan', 'Menjawab kebijakan toko'],
-    ['KB_Harga_Karyawan', 'Harga khusus karyawan'],
-    ['Cek_Order_Saya', 'Mengecek status pesanan'],
-    ['Cek_Ongkir', 'Info pengiriman (ongkir COD)'],
-];
 
 export default function KatalogProduk({
     tab,
@@ -213,7 +199,7 @@ export default function KatalogProduk({
                         onTutup={() => setDibuka(null)}
                     />
                 )}
-                <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-5 max-xl:grid-cols-1">
+                <div className="flex flex-col gap-5">
                     <Panel
                         judul={`${produk.length} produk`}
                         sub="Katalog produk yang otomatis digunakan oleh Adiva untuk menjawab pertanyaan customer"
@@ -241,8 +227,7 @@ export default function KatalogProduk({
                             onPilih={(p) => bolehUbah && setDibuka(p)}
                         />
                     </Panel>
-                    <div className="flex flex-col gap-5 max-xl:grid max-xl:grid-cols-2 max-xl:items-start max-md:grid-cols-1">
-                        {arsip.length > 0 && (
+                    {arsip.length > 0 && (
                             <Panel
                                 judul={`Arsip · ${arsip.length} produk`}
                                 sub="Tidak lagi dijual dan tidak ditawarkan Adiva"
@@ -302,26 +287,6 @@ export default function KatalogProduk({
                                 ))}
                             </Panel>
                         )}
-                        <UjiAdiva uji={uji} bagian="KATALOG" />
-                        <Panel
-                            judul="Dipakai Adiva untuk menjawab"
-                            isiClassName="px-[18px] pt-1 pb-2"
-                        >
-                            {tool.map(([nama, bagian]) => (
-                                <div
-                                    key={nama}
-                                    className="flex items-center gap-2 border-b border-line-soft py-[7px]"
-                                >
-                                    <span
-                                        className="grow text-body text-ink"
-                                        title={nama}
-                                    >
-                                        {bagian}
-                                    </span>
-                                </div>
-                            ))}
-                        </Panel>
-                    </div>
                 </div>
             </IsiHalaman>
         </AppLayout>

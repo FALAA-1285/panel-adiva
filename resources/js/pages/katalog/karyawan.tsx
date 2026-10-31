@@ -12,7 +12,7 @@ import { Panel } from '@/components/ui/panel';
 import { StatStrip } from '@/components/ui/stat-strip';
 import { Status } from '@/components/ui/status';
 import type { Nada } from '@/components/ui/status';
-import { KeyValue, Mono, Note, T1 } from '@/components/ui/teks';
+import { Mono, T1 } from '@/components/ui/teks';
 import {
     harga as simpanHarga,
     rekap,
@@ -305,10 +305,9 @@ export default function KatalogKaryawan({
                         },
                     ]}
                 />
-                <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-5 max-xl:grid-cols-1">
-                    <div className="flex min-w-0 flex-col gap-5">
-                        <Panel
-                            judul="Order karyawan terbaru"
+                <div className="flex flex-col gap-5">
+                    <Panel
+                        judul="Order karyawan terbaru"
                             sub="Info pengambilan diumumkan di grup “Anak Bang Bana”"
                             aksi={
                                 <ButtonLink href="/pesanan" ukuran="sm">
@@ -403,32 +402,6 @@ export default function KatalogKaryawan({
                                 />
                             )}
                         </Panel>
-                    </div>
-                    <div className="flex flex-col gap-5 max-xl:grid max-xl:grid-cols-2 max-xl:items-start max-md:grid-cols-1">
-                        <Panel judul="Aturan program">
-                            <div className="flex flex-col gap-3">
-                                <KeyValue label="Penanggung jawab">
-                                    {pj.nama} · {pj.peran}
-                                </KeyValue>
-                                <KeyValue label="Nomor WhatsApp PJ" mono>
-                                    {pj.nomor ?? '—'}
-                                </KeyValue>
-                                <KeyValue label="Pembayaran">
-                                    Potong gaji (metode POTONG GAJI)
-                                </KeyValue>
-                                <KeyValue label="Pengambilan">
-                                    Sesuai info di grup “Anak Bang Bana”
-                                </KeyValue>
-                                <Note>
-                                    Adiva memakai harga karyawan hanya jika
-                                    nomor pengirim ada di tabel KARYAWAN. Order
-                                    karyawan tidak lewat ACC: langsung dicatat
-                                    dengan status Karyawan dan diteruskan ke{' '}
-                                    {pj.nama}.
-                                </Note>
-                            </div>
-                        </Panel>
-                    </div>
                 </div>
             </IsiHalaman>
         </AppLayout>

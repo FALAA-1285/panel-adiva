@@ -47,9 +47,7 @@ export default function KatalogPaket({
     namaProduk,
 }: Props) {
     // 'baru': "Tambah paket" opened an empty editor
-    const [pilih, setPilih] = useState<number | 'baru' | null>(
-        baru ?? paket[0]?.id ?? null,
-    );
+    const [pilih, setPilih] = useState<number | 'baru' | null>(baru ?? null);
     // after "Simpan" on a new one the server sends ?pilih=; the page is reused, so follow it here
     const [pilihServer, setPilihServer] = useState(baru);
 
@@ -154,7 +152,15 @@ export default function KatalogPaket({
                 }
             />
             <IsiHalaman>
-                <div className="grid grid-cols-[minmax(0,1fr)_420px] items-start gap-5 max-xl:grid-cols-1">
+                {pilih !== null && (
+                    <PenyuntingPaket
+                        key={pilih === 'baru' ? 'baru' : (terpilih?.id ?? 'baru')}
+                        paket={pilih === 'baru' ? null : (terpilih ?? null)}
+                        namaProduk={namaProduk}
+                        onBatal={() => setPilih(null)}
+                    />
+                )}
+                <div className="flex flex-col gap-5">
                     <Panel
                         judul={`${paket.length} paket`}
                         sub="Ditawarkan Adiva ke calon reseller yang belum tahu mau mulai dari mana"
@@ -169,22 +175,6 @@ export default function KatalogPaket({
                             onPilih={(p) => setPilih(p.id)}
                         />
                     </Panel>
-                    {pilih === 'baru' ? (
-                        <PenyuntingPaket
-                            key="baru"
-                            paket={null}
-                            namaProduk={namaProduk}
-                            onBatal={() => setPilih(paket[0]?.id ?? null)}
-                        />
-                    ) : (
-                        terpilih && (
-                            <PenyuntingPaket
-                                key={terpilih.id}
-                                paket={terpilih}
-                                namaProduk={namaProduk}
-                            />
-                        )
-                    )}
                 </div>
             </IsiHalaman>
         </AppLayout>

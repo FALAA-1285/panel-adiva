@@ -2,7 +2,6 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
-import { ID_PERTANYAAN_UJI, UjiAdiva } from '@/components/katalog/uji-adiva';
 import type { Uji } from '@/components/katalog/uji-adiva';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,7 @@ export default function KatalogKebijakan({
                 }
             />
             <IsiHalaman>
-                <div className="grid grid-cols-[300px_minmax(0,1fr)_320px] items-start gap-5 max-xl:grid-cols-[260px_minmax(0,1fr)] max-lg:grid-cols-1">
+                <div className="grid grid-cols-[320px_minmax(0,1fr)] items-start gap-5 max-lg:grid-cols-1">
                     <Panel
                         judul={`${kebijakan.length} kebijakan`}
                         isiClassName="p-0"
@@ -130,12 +129,6 @@ export default function KatalogKebijakan({
                             />
                         )
                     )}
-                    <UjiAdiva
-                        uji={uji}
-                        bagian="KEBIJAKAN"
-                        kebijakanId={terpilih?.id ?? null}
-                        className="max-xl:col-span-2 max-lg:col-span-1"
-                    />
                 </div>
             </IsiHalaman>
         </AppLayout>
@@ -177,16 +170,6 @@ function PenyuntingKebijakan({
                             Batal
                         </Button>
                     )}
-                    {/* the question goes in the Uji tanya Adiva panel, asked about this policy */}
-                    <Button
-                        ukuran="sm"
-                        onClick={() =>
-                            document.getElementById(ID_PERTANYAAN_UJI)?.focus()
-                        }
-                    >
-                        <Ikon nama="putar" ukuran={15} tebal={2} />
-                        Uji jawaban
-                    </Button>
                     <Button
                         ukuran="sm"
                         varian="primary"
