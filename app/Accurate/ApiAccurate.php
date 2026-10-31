@@ -99,12 +99,15 @@ class ApiAccurate implements BacaAccurate
             throw new AccurateGagal('ACCURATE_API_TOKEN dan ACCURATE_SIGNATURE_SECRET belum diisi.');
         }
 
-        $waktu = now('Asia/Jakarta')->format('d/m/Y H:i:s');
+        // as Accurate's own API Token example (aol-integration/php-03): Unix seconds, signed
+        // with HMAC-SHA256 in hex; real time, not the demo clock
+        $waktu = (string) time();
 
         return Http::withToken($token)
             ->withHeaders([
                 'X-Api-Timestamp' => $waktu,
-                'X-Api-Signature' => base64_encode(hash_hmac('sha256', $waktu, $rahasia, true)),
+                'X-Api-Signature' => hash_hmac('sha256', $waktu, $rahasia),
+                'X-Language-Profile' => 'US',
             ])
             ->acceptJson()
             ->timeout((int) config('services.accurate.timeout', 30))

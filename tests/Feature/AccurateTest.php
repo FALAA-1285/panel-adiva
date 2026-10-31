@@ -93,7 +93,8 @@ test('the API reads every page of the item list with a signed request and only r
         $waktu = $r->header('X-Api-Timestamp')[0] ?? '';
 
         return $r->hasHeader('Authorization', 'Bearer aat.token-uji')
-            && $r->header('X-Api-Signature')[0] === base64_encode(hash_hmac('sha256', $waktu, 'rahasia-uji', true));
+            && ctype_digit($waktu)
+            && $r->header('X-Api-Signature')[0] === hash_hmac('sha256', $waktu, 'rahasia-uji');
     });
     Http::assertSent(fn (Request $r) => str_starts_with($r->url(), 'https://zeus.accurate.id/accurate/api/item/list.do') && $r['sp.page'] === 2);
 });
