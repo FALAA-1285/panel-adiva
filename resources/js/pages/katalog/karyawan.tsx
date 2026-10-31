@@ -1,9 +1,9 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button, ButtonLink } from '@/components/ui/button';
+import { Button, ButtonLink, IconButton } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Field, Input, Toggle } from '@/components/ui/form';
 import type { KolomTabel } from '@/components/ui/data-table';
@@ -109,81 +109,22 @@ const kolomOrder: KolomTabel<OrderKaryawan>[] = [
             </Status>
         ),
     },
-];
-
-const kolomKaryawan: KolomTabel<Karyawan>[] = [
     {
-        id: 'nama',
-        header: 'Nama',
-        cell: ({ row }) => (
-            <T1 className="font-semibold">{row.original.nama}</T1>
-        ),
-    },
-    {
-        id: 'nomor',
-        header: 'Nomor WhatsApp',
-        cell: ({ row }) => (
-            <Mono className="text-caption text-ink-2">
-                {row.original.nomor}
-            </Mono>
-        ),
-    },
-    {
-        id: 'bagian',
-        header: 'Bagian',
-        cell: ({ row }) => <T1>{row.original.bagian}</T1>,
-    },
-    {
-        id: 'order',
-        header: 'Order',
+        id: 'aksi',
+        header: 'Aksi',
         meta: { kanan: true },
-        cell: ({ row }) => <T1>{row.original.order}</T1>,
-    },
-    {
-        id: 'potong',
-        header: 'Potong gaji',
-        meta: { kanan: true },
-        cell: ({ row }) => <T1>{row.original.potongGaji ?? '—'}</T1>,
-    },
-    {
-        id: 'status',
-        header: 'Status',
-        cell: ({ row }) =>
-            row.original.aktif ? (
-                <Status nada="green">Aktif</Status>
-            ) : (
-                <Status nada="gray">Nonaktif</Status>
-            ),
-    },
-];
-
-const kolomHarga: KolomTabel<HargaKaryawan>[] = [
-    {
-        id: 'varian',
-        header: 'Varian',
-        cell: ({ row }) => <T1>{row.original.varian}</T1>,
-    },
-    {
-        id: 'kode',
-        header: 'Kode',
-        cell: ({ row }) => (
-            <Mono className="text-caption text-ink-2">{row.original.kode}</Mono>
+        cell: () => (
+            <div className="flex items-center justify-end gap-1.5">
+                <ButtonLink
+                    href="/pesanan"
+                    ukuran="sm"
+                    className="h-7 px-2 text-xs"
+                    title="Lihat di Pesanan"
+                >
+                    Lihat
+                </ButtonLink>
+            </div>
         ),
-    },
-    {
-        id: 'harga',
-        header: 'Harga',
-        cell: ({ row }) =>
-            row.original.harga ? (
-                <T1>{row.original.harga}</T1>
-            ) : (
-                <T1 className="font-normal text-muted">Belum diisi</T1>
-            ),
-    },
-    {
-        id: 'batas',
-        header: 'Batas',
-        cell: ({ row }) => <T1>{row.original.batas}</T1>,
     },
 ];
 
@@ -199,6 +140,132 @@ export default function KatalogKaryawan({
     // 'baru': "Tambah karyawan"; a row: editing that employee
     const [dibuka, setDibuka] = useState<Karyawan | 'baru' | null>(null);
     const [ubahHarga, setUbahHarga] = useState(false);
+
+    const kolomKaryawan: KolomTabel<Karyawan>[] = useMemo(
+        () => [
+            {
+                id: 'nama',
+                header: 'Nama',
+                cell: ({ row }) => (
+                    <T1 className="font-semibold">{row.original.nama}</T1>
+                ),
+            },
+            {
+                id: 'nomor',
+                header: 'Nomor WhatsApp',
+                cell: ({ row }) => (
+                    <Mono className="text-caption text-ink-2">
+                        {row.original.nomor}
+                    </Mono>
+                ),
+            },
+            {
+                id: 'bagian',
+                header: 'Bagian',
+                cell: ({ row }) => <T1>{row.original.bagian}</T1>,
+            },
+            {
+                id: 'order',
+                header: 'Order',
+                meta: { kanan: true },
+                cell: ({ row }) => <T1>{row.original.order}</T1>,
+            },
+            {
+                id: 'potong',
+                header: 'Potong gaji',
+                meta: { kanan: true },
+                cell: ({ row }) => <T1>{row.original.potongGaji ?? '—'}</T1>,
+            },
+            {
+                id: 'status',
+                header: 'Status',
+                cell: ({ row }) =>
+                    row.original.aktif ? (
+                        <Status nada="green">Aktif</Status>
+                    ) : (
+                        <Status nada="gray">Nonaktif</Status>
+                    ),
+            },
+            {
+                id: 'aksi',
+                header: 'Aksi',
+                meta: { kanan: true },
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-1.5">
+                        <IconButton
+                            aria-label={`Ubah ${row.original.nama}`}
+                            title={bolehUbah ? 'Ubah karyawan' : 'Hanya supervisor'}
+                            disabled={!bolehUbah}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (bolehUbah) {
+                                    setDibuka(row.original);
+                                }
+                            }}
+                        >
+                            <Ikon nama="ubah" />
+                        </IconButton>
+                    </div>
+                ),
+            },
+        ],
+        [bolehUbah],
+    );
+
+    const kolomHarga: KolomTabel<HargaKaryawan>[] = useMemo(
+        () => [
+            {
+                id: 'varian',
+                header: 'Varian',
+                cell: ({ row }) => <T1>{row.original.varian}</T1>,
+            },
+            {
+                id: 'kode',
+                header: 'Kode',
+                cell: ({ row }) => (
+                    <Mono className="text-caption text-ink-2">{row.original.kode}</Mono>
+                ),
+            },
+            {
+                id: 'harga',
+                header: 'Harga',
+                cell: ({ row }) =>
+                    row.original.harga ? (
+                        <T1>{row.original.harga}</T1>
+                    ) : (
+                        <T1 className="font-normal text-muted">Belum diisi</T1>
+                    ),
+            },
+            {
+                id: 'batas',
+                header: 'Batas',
+                cell: ({ row }) => <T1>{row.original.batas}</T1>,
+            },
+            {
+                id: 'aksi',
+                header: 'Aksi',
+                meta: { kanan: true },
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-1.5">
+                        <IconButton
+                            aria-label={`Ubah harga ${row.original.varian}`}
+                            title={bolehUbah ? 'Ubah harga' : 'Hanya supervisor'}
+                            disabled={!bolehUbah}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (bolehUbah) {
+                                    setUbahHarga(true);
+                                }
+                            }}
+                        >
+                            <Ikon nama="ubah" />
+                        </IconButton>
+                    </div>
+                ),
+            },
+        ],
+        [bolehUbah],
+    );
 
     return (
         <AppLayout active="katalog">
@@ -253,7 +320,7 @@ export default function KatalogKaryawan({
                             <DataTable
                                 kolom={kolomOrder}
                                 data={order}
-                                template="140px 90px minmax(0, 1fr) 90px 140px"
+                                template="130px 90px minmax(0, 1fr) 90px 130px 60px"
                                 idBaris={(o) => String(o.id)}
                             />
                         </Panel>
@@ -289,7 +356,7 @@ export default function KatalogKaryawan({
                             <DataTable
                                 kolom={kolomKaryawan}
                                 data={karyawan}
-                                template="minmax(0, 0.8fr) 140px minmax(0, 1fr) 50px 100px 90px"
+                                template="minmax(0, 0.8fr) 130px minmax(0, 1fr) 50px 90px 80px 50px"
                                 idBaris={(k) => String(k.id)}
                                 terpilih={(k) =>
                                     dibuka !== null &&
@@ -331,7 +398,7 @@ export default function KatalogKaryawan({
                                 <DataTable
                                     kolom={kolomHarga}
                                     data={harga}
-                                    template="minmax(0, 1fr) 90px 160px 160px"
+                                    template="minmax(0, 1fr) 90px 140px 140px 50px"
                                     idBaris={(h) => String(h.id)}
                                 />
                             )}

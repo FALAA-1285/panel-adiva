@@ -1,9 +1,9 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import type { KolomTabel } from '@/components/ui/data-table';
 import { Field, Input, Textarea, Toggle } from '@/components/ui/form';
@@ -40,56 +40,6 @@ type Props = {
     namaProduk: string[];
 };
 
-const kolom: KolomTabel<Paket>[] = [
-    {
-        id: 'kode',
-        header: 'Kode',
-        cell: ({ row }) => (
-            <Mono className="text-ink">{row.original.kode}</Mono>
-        ),
-    },
-    {
-        id: 'paket',
-        header: 'Paket',
-        cell: ({ row }) => (
-            <>
-                <T1 className="font-semibold">{row.original.nama}</T1>
-                <T2>{row.original.isi}</T2>
-            </>
-        ),
-    },
-    {
-        id: 'harga',
-        header: 'Harga',
-        cell: ({ row }) =>
-            row.original.hargaTeks ? (
-                <T1>{row.original.hargaTeks}</T1>
-            ) : (
-                <T1 className="font-normal text-muted">Belum diisi</T1>
-            ),
-    },
-    {
-        id: 'cocok',
-        header: 'Cocok untuk',
-        cell: ({ row }) => <T1>{row.original.cocok}</T1>,
-    },
-    {
-        id: 'berat',
-        header: 'Berat',
-        cell: ({ row }) => <T1>{row.original.berat}</T1>,
-    },
-    {
-        id: 'status',
-        header: 'Status',
-        cell: ({ row }) =>
-            row.original.aktif ? (
-                <Status nada="green">Aktif</Status>
-            ) : (
-                <Status nada="gray">Nonaktif</Status>
-            ),
-    },
-];
-
 export default function KatalogPaket({
     tab,
     paket,
@@ -112,6 +62,78 @@ export default function KatalogPaket({
     }
     const terpilih = paket.find((p) => p.id === pilih);
     const bolehUbah = usePage().props.panel?.akses.katalog ?? false;
+
+    const kolom: KolomTabel<Paket>[] = useMemo(
+        () => [
+            {
+                id: 'kode',
+                header: 'Kode',
+                cell: ({ row }) => (
+                    <Mono className="text-ink">{row.original.kode}</Mono>
+                ),
+            },
+            {
+                id: 'paket',
+                header: 'Paket',
+                cell: ({ row }) => (
+                    <>
+                        <T1 className="font-semibold">{row.original.nama}</T1>
+                        <T2>{row.original.isi}</T2>
+                    </>
+                ),
+            },
+            {
+                id: 'harga',
+                header: 'Harga',
+                cell: ({ row }) =>
+                    row.original.hargaTeks ? (
+                        <T1>{row.original.hargaTeks}</T1>
+                    ) : (
+                        <T1 className="font-normal text-muted">Belum diisi</T1>
+                    ),
+            },
+            {
+                id: 'cocok',
+                header: 'Cocok untuk',
+                cell: ({ row }) => <T1>{row.original.cocok}</T1>,
+            },
+            {
+                id: 'berat',
+                header: 'Berat',
+                cell: ({ row }) => <T1>{row.original.berat}</T1>,
+            },
+            {
+                id: 'status',
+                header: 'Status',
+                cell: ({ row }) =>
+                    row.original.aktif ? (
+                        <Status nada="green">Aktif</Status>
+                    ) : (
+                        <Status nada="gray">Nonaktif</Status>
+                    ),
+            },
+            {
+                id: 'aksi',
+                header: 'Aksi',
+                meta: { kanan: true },
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-1.5">
+                        <IconButton
+                            aria-label={`Ubah ${row.original.nama}`}
+                            title="Ubah paket"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setPilih(row.original.id);
+                            }}
+                        >
+                            <Ikon nama="ubah" />
+                        </IconButton>
+                    </div>
+                ),
+            },
+        ],
+        [],
+    );
 
     return (
         <AppLayout active="katalog">
@@ -141,7 +163,7 @@ export default function KatalogPaket({
                         <DataTable
                             kolom={kolom}
                             data={paket}
-                            template="70px minmax(0, 1.4fr) 110px minmax(0, 1.1fr) minmax(0, 0.9fr) 80px"
+                            template="70px minmax(0, 1.4fr) 110px minmax(0, 1.1fr) minmax(0, 0.9fr) 80px 50px"
                             idBaris={(p) => String(p.id)}
                             terpilih={(p) => p.id === pilih}
                             onPilih={(p) => setPilih(p.id)}

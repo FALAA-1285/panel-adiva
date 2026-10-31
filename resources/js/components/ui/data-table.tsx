@@ -134,20 +134,29 @@ export function DataTable<TData extends RowData>({
                     ));
 
                     return onPilih ? (
-                        <button
+                        <div
                             key={row.id}
-                            type="button"
                             role="row"
+                            tabIndex={0}
                             aria-selected={aktif}
                             onClick={() => onPilih(row.original)}
+                            onKeyDown={(e) => {
+                                if (
+                                    e.target === e.currentTarget &&
+                                    (e.key === 'Enter' || e.key === ' ')
+                                ) {
+                                    e.preventDefault();
+                                    onPilih(row.original);
+                                }
+                            }}
                             className={cn(
                                 kelas,
-                                'cursor-pointer border-x-0 border-t-0',
+                                'cursor-pointer border-x-0 border-t-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary',
                             )}
                             style={{ gridTemplateColumns: template }}
                         >
                             {sel_}
-                        </button>
+                        </div>
                     ) : (
                         <div
                             key={row.id}

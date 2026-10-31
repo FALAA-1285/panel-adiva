@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { KatalogHeader } from '@/components/katalog/katalog-header';
 import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button, ButtonLink } from '@/components/ui/button';
+import { Button, ButtonLink, IconButton } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import type { KolomTabel } from '@/components/ui/data-table';
 import { Select } from '@/components/ui/form';
@@ -58,6 +58,37 @@ type Props = {
     };
 };
 
+function AksiBarang({ barcode }: { barcode: string }) {
+    const [disalin, setDisalin] = useState(false);
+
+    const salinBarcode = () => {
+        if (!barcode) {
+            return;
+        }
+        navigator.clipboard.writeText(barcode);
+        setDisalin(true);
+        setTimeout(() => setDisalin(false), 2000);
+    };
+
+    return (
+        <div className="flex items-center justify-end gap-1.5">
+            <IconButton
+                aria-label={
+                    disalin ? 'Barcode disalin!' : `Salin barcode ${barcode}`
+                }
+                title={
+                    disalin
+                        ? 'Barcode berhasil disalin!'
+                        : `Salin barcode: ${barcode}`
+                }
+                onClick={salinBarcode}
+            >
+                <Ikon nama={disalin ? 'centang' : 'salin'} />
+            </IconButton>
+        </div>
+    );
+}
+
 const kolom: KolomTabel<Barang>[] = [
     {
         id: 'nama',
@@ -92,6 +123,12 @@ const kolom: KolomTabel<Barang>[] = [
         id: 'barcode',
         header: 'Barcode',
         cell: ({ row }) => <Mono>{row.original.barcode}</Mono>,
+    },
+    {
+        id: 'aksi',
+        header: 'Aksi',
+        meta: { kanan: true },
+        cell: ({ row }) => <AksiBarang barcode={row.original.barcode} />,
     },
 ];
 
@@ -294,7 +331,7 @@ export default function KatalogBarangToko({
                             <DataTable
                                 kolom={kolom}
                                 data={barang}
-                                template="minmax(0, 1.6fr) 110px minmax(0, 0.8fr) 140px"
+                                template="minmax(0, 1.6fr) 110px minmax(0, 0.8fr) 130px 50px"
                                 idBaris={(b) => String(b.id)}
                             />
                         )}

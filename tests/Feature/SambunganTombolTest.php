@@ -20,6 +20,7 @@ beforeEach(function () {
 });
 
 test('Buka n8n opens the editor from N8N_EDITOR_URL, or stays inert without it', function () {
+    config(['services.n8n.editor_url' => null]);
     $falah = User::factory()->falah()->create();
 
     $this->actingAs($falah)->get('/otomasi')->assertInertia(fn (Assert $page) => $page->where('n8nUrl', null));

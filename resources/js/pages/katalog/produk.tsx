@@ -8,7 +8,7 @@ import type { TabKatalog } from '@/components/katalog/katalog-header';
 import { UjiAdiva } from '@/components/katalog/uji-adiva';
 import type { Uji } from '@/components/katalog/uji-adiva';
 import { AppLayout, IsiHalaman } from '@/components/ui/app-layout';
-import { Button } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import type { KolomTabel } from '@/components/ui/data-table';
 import { Ikon } from '@/components/ui/ikon';
@@ -45,54 +45,6 @@ type Props = {
     uji: (Uji & { produkId: number | null }) | null;
 };
 
-const kolom: KolomTabel<Produk>[] = [
-    {
-        id: 'produk',
-        header: 'Produk',
-        cell: ({ row }) => (
-            <>
-                <T1 className="font-semibold">{row.original.nama}</T1>
-                <T2>{row.original.kategori}</T2>
-            </>
-        ),
-    },
-    {
-        id: 'kemasan',
-        header: 'Kemasan',
-        cell: ({ row }) => <T1>{row.original.kemasan}</T1>,
-    },
-    {
-        id: 'rasa',
-        header: 'Rasa',
-        cell: ({ row }) => <T1>{row.original.rasa}</T1>,
-    },
-    {
-        id: 'harga',
-        header: 'Harga bertingkat',
-        cell: ({ row }) => (
-            <>
-                <T1>{row.original.tier}</T1>
-                <T2>{row.original.harga}</T2>
-            </>
-        ),
-    },
-    {
-        id: 'target',
-        header: 'Target pasar',
-        cell: ({ row }) => <T1>{row.original.target}</T1>,
-    },
-    {
-        id: 'foto',
-        header: 'Foto',
-        cell: ({ row }) =>
-            row.original.adaFoto ? (
-                <Status nada="green">Ada</Status>
-            ) : (
-                <Status nada="amber">Belum ada</Status>
-            ),
-    },
-];
-
 // What Adiva reads this data for; the n8n tool name is the tooltip.
 const tool = [
     ['Cari_Produk_per_Kategori', 'Mencari produk per kategori'],
@@ -116,6 +68,79 @@ export default function KatalogProduk({
     const bolehUbah = usePage().props.panel?.akses.katalog ?? false;
     // 'baru': "Tambah produk"; a row: editing that product
     const [dibuka, setDibuka] = useState<Produk | 'baru' | null>(null);
+
+    const kolom: KolomTabel<Produk>[] = useMemo(
+        () => [
+            {
+                id: 'produk',
+                header: 'Produk',
+                cell: ({ row }) => (
+                    <>
+                        <T1 className="font-semibold">{row.original.nama}</T1>
+                        <T2>{row.original.kategori}</T2>
+                    </>
+                ),
+            },
+            {
+                id: 'kemasan',
+                header: 'Kemasan',
+                cell: ({ row }) => <T1>{row.original.kemasan}</T1>,
+            },
+            {
+                id: 'rasa',
+                header: 'Rasa',
+                cell: ({ row }) => <T1>{row.original.rasa}</T1>,
+            },
+            {
+                id: 'harga',
+                header: 'Harga bertingkat',
+                cell: ({ row }) => (
+                    <>
+                        <T1>{row.original.tier}</T1>
+                        <T2>{row.original.harga}</T2>
+                    </>
+                ),
+            },
+            {
+                id: 'target',
+                header: 'Target pasar',
+                cell: ({ row }) => <T1>{row.original.target}</T1>,
+            },
+            {
+                id: 'foto',
+                header: 'Foto',
+                cell: ({ row }) =>
+                    row.original.adaFoto ? (
+                        <Status nada="green">Ada</Status>
+                    ) : (
+                        <Status nada="amber">Belum ada</Status>
+                    ),
+            },
+            {
+                id: 'aksi',
+                header: 'Aksi',
+                meta: { kanan: true },
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-end gap-1.5">
+                        <IconButton
+                            aria-label={`Ubah ${row.original.nama}`}
+                            title={bolehUbah ? 'Ubah produk' : 'Hanya supervisor'}
+                            disabled={!bolehUbah}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (bolehUbah) {
+                                    setDibuka(row.original);
+                                }
+                            }}
+                        >
+                            <Ikon nama="ubah" />
+                        </IconButton>
+                    </div>
+                ),
+            },
+        ],
+        [bolehUbah],
+    );
     const imporCsv = useImporCsv(() =>
         router.reload({ only: ['produk', 'tab'] }),
     );
@@ -206,7 +231,7 @@ export default function KatalogProduk({
                         <DataTable
                             kolom={kolom}
                             data={tampil}
-                            template="minmax(0, 1.3fr) 90px minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.1fr) 90px"
+                            template="minmax(0, 1.3fr) 90px minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr) 80px 50px"
                             idBaris={(p) => String(p.id)}
                             terpilih={(p) =>
                                 dibuka !== null && dibuka !== 'baru'
