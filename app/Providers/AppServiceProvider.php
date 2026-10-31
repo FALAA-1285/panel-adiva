@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Accurate\ApiAccurate;
 use App\Accurate\BacaAccurate;
+use App\Accurate\OauthAccurate;
 use App\Accurate\TiruanAccurate;
 use App\Bot\JawabAdiva;
 use App\Bot\KabarKonfig;
@@ -93,11 +94,11 @@ class AppServiceProvider extends ServiceProvider
             }));
         }
 
-        // Accurate is not part of the bot: with a token it is always the real one, demo mode or
-        // not; the sample shelf only stands in for a demo without one. Outside demo mode a missing
-        // token shows as an error instead of sample goods.
+        // Accurate is not part of the bot: with an OAuth app or an API Token it is always the real
+        // one, demo mode or not; the sample shelf only stands in for a demo with neither. Outside
+        // demo mode a missing connection shows as an error instead of sample goods.
         $this->app->bind(BacaAccurate::class, fn ($app) => $app->make(
-            Demo::aktif() && blank(config('services.accurate.token')) ? TiruanAccurate::class : ApiAccurate::class,
+            Demo::aktif() && blank(config('services.accurate.token')) && ! OauthAccurate::siap() ? TiruanAccurate::class : ApiAccurate::class,
         ));
     }
 

@@ -55,10 +55,14 @@ return [
 
     /*
     | Accurate Online, database "Bana Food": Toko Sawojajar's goods, read only
-    | (accurate:sinkron). The API Token and its signature secret come from Accurate.
+    | (accurate:sinkron). Either OAuth ("Sambungkan Accurate" with the app's Client ID and
+    | Secret; the redirect must equal the app's OAuth Callback URL) or an API Token.
     */
 
     'accurate' => [
+        'client_id' => env('ACCURATE_CLIENT_ID'),
+        'client_secret' => env('ACCURATE_CLIENT_SECRET'),
+        'redirect' => env('ACCURATE_REDIRECT_URI') ?: rtrim((string) env('APP_URL'), '/').'/accurate/kembali',
         'token' => env('ACCURATE_API_TOKEN'),
         'signature_secret' => env('ACCURATE_SIGNATURE_SECRET'),
         'db_id' => env('ACCURATE_DB_ID') ?: '2743429',

@@ -2,15 +2,18 @@
 
 namespace App\Accurate;
 
+use App\Models\AksesAccurate;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Accurate Online through an API Token (ACCURATE_API_TOKEN + ACCURATE_SIGNATURE_SECRET):
- * the token tells which database host to ask, then the item list is read page by page.
- * Only reading endpoints are called.
+ * Accurate Online's item list, read page by page; only reading endpoints are called. The way in:
+ * - OAuth, once "Sambungkan Accurate" has stored an AksesAccurate: Bearer + X-Session-ID on the
+ *   host open-db.do gave (OauthAccurate renews the token and opens the database);
+ * - else an API Token (ACCURATE_API_TOKEN + ACCURATE_SIGNATURE_SECRET): the token tells which
+ *   database host to ask, every request signed.
  *
  * The endpoint and field names follow Accurate's API docs; `php artisan accurate:sinkron --coba`
  * shows what came back without saving, to check them against the real database.
@@ -24,18 +27,43 @@ class ApiAccurate implements BacaAccurate
     /** a guard against a paging answer that never ends */
     private const HALAMAN_MAKS = 500;
 
+    public function __construct(private OauthAccurate $oauth) {}
+
     public function barang(): array
     {
-        $host = $this->host();
+        $akses = AksesAccurate::sekarang();
+
+        if ($akses !== null) {
+            $this->oauth->siapkan($akses);
+        }
+
+        // the API Token's host is asked once; an OAuth host may change when the database reopens
+        $hostToken = $akses === null ? $this->host() : null;
         $barang = [];
         $halaman = 1;
+        $jumlahHalaman = 1;
+        $dibukaUlang = false;
 
         do {
-            $jawaban = $this->baca($host.'/accurate/api/item/list.do', [
+            $kueri = [
                 'fields' => 'id,no,name,upcNo,unitPrice,unit1,itemCategory,suspended',
                 'sp.page' => $halaman,
                 'sp.pageSize' => self::PER_HALAMAN,
-            ]);
+            ];
+
+            try {
+                $jawaban = $this->baca(($akses->host ?? $hostToken).'/accurate/api/item/list.do', $kueri, $akses);
+            } catch (AccurateGagal $e) {
+                // an OAuth session Accurate closed: open the database again, once
+                if ($akses === null || $dibukaUlang || ! in_array($e->status, [401, 403], true)) {
+                    throw $e;
+                }
+
+                $dibukaUlang = true;
+                $this->oauth->bukaDatabase($akses);
+
+                continue;
+            }
 
             foreach ((array) ($jawaban['d'] ?? []) as $b) {
                 if (is_array($b) && isset($b['id']) && filled($b['name'] ?? null)) {
@@ -73,10 +101,10 @@ class ApiAccurate implements BacaAccurate
      * @param  array<string, mixed>  $kueri
      * @return array<string, mixed>
      */
-    private function baca(string $url, array $kueri = []): array
+    private function baca(string $url, array $kueri = [], ?AksesAccurate $akses = null): array
     {
         try {
-            $jawaban = $this->minta()->get($url, $kueri);
+            $jawaban = ($akses ? $this->mintaOauth($akses) : $this->minta())->get($url, $kueri);
         } catch (ConnectionException $e) {
             throw new AccurateGagal('Accurate tidak bisa dihubungi ('.$e->getMessage().').');
         }
@@ -84,10 +112,19 @@ class ApiAccurate implements BacaAccurate
         $isi = $jawaban->json();
 
         if (! $jawaban->successful() || ! is_array($isi) || ($isi['s'] ?? false) !== true) {
-            throw new AccurateGagal('Accurate menolak permintaan: '.self::alasan($jawaban, $isi));
+            throw new AccurateGagal('Accurate menolak permintaan: '.self::alasan($jawaban, $isi, $akses), $jawaban->status());
         }
 
         return $isi;
+    }
+
+    private function mintaOauth(AksesAccurate $akses): PendingRequest
+    {
+        return Http::withToken($akses->access_token)
+            ->withHeaders(['X-Session-ID' => (string) $akses->session, 'X-Language-Profile' => 'US'])
+            ->acceptJson()
+            ->timeout((int) config('services.accurate.timeout', 30))
+            ->retry(2, 1500, fn ($e) => $e instanceof ConnectionException || $e->response?->status() === 429, throw: false);
     }
 
     private function minta(): PendingRequest
@@ -96,7 +133,7 @@ class ApiAccurate implements BacaAccurate
         $rahasia = (string) config('services.accurate.signature_secret');
 
         if ($token === '' || $rahasia === '') {
-            throw new AccurateGagal('ACCURATE_API_TOKEN dan ACCURATE_SIGNATURE_SECRET belum diisi.');
+            throw new AccurateGagal('Accurate belum tersambung: tekan Sambungkan Accurate di Katalog → Barang toko (atau isi ACCURATE_API_TOKEN dan ACCURATE_SIGNATURE_SECRET).');
         }
 
         // as Accurate's own API Token example (aol-integration/php-03): Unix seconds, signed
@@ -141,18 +178,12 @@ class ApiAccurate implements BacaAccurate
     /**
      * @param  mixed  $isi  the decoded body
      */
-    private static function alasan(Response $jawaban, mixed $isi): string
+    private static function alasan(Response $jawaban, mixed $isi, ?AksesAccurate $akses = null): string
     {
         $pesan = is_array($isi) ? ($isi['d'] ?? $isi['message'] ?? $isi['error_description'] ?? null) : null;
         $pesan = is_array($pesan) ? implode(' ', array_filter($pesan, 'is_string')) : $pesan;
 
-        $teks = 'HTTP '.$jawaban->status().(filled($pesan) ? ' · '.mb_substr((string) $pesan, 0, 200) : '');
-
         // Accurate repeats the token in "Invalid access token: …"; it must not reach the panel
-        return str_replace(
-            array_filter([(string) config('services.accurate.token'), (string) config('services.accurate.signature_secret')]),
-            '***',
-            $teks,
-        );
+        return OauthAccurate::samarkan('HTTP '.$jawaban->status().(filled($pesan) ? ' · '.mb_substr((string) $pesan, 0, 200) : ''), $akses);
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Katalog;
 
+use App\Accurate\OauthAccurate;
 use App\Enums\KategoriAktivitas;
 use App\Http\Controllers\Controller;
 use App\Jobs\SinkronkanBarangToko;
+use App\Models\AksesAccurate;
 use App\Models\BarangToko;
 use App\Models\SinkronAccurate;
 use App\Support\Aktivitas;
@@ -62,7 +64,30 @@ class BarangTokoController extends Controller
                 ] : null,
                 'berjalan' => $terakhir?->status === 'BERJALAN' && $terakhir->mulai->gt(Demo::jamNyata()->subMinutes(10)),
             ],
+            'akses' => $this->akses(),
         ]);
+    }
+
+    /**
+     * The "Sambungan Accurate" box: how the panel reaches Accurate. No token leaves the server.
+     *
+     * @return array{cara: 'oauth'|'token'|null, oleh: string|null, sejak: string|null, berlaku: string|null, bisaOauth: bool}
+     */
+    private function akses(): array
+    {
+        $akses = AksesAccurate::query()->with('disambungkanOleh:id,name')->latest('id')->first();
+
+        return [
+            'cara' => match (true) {
+                $akses !== null => 'oauth',
+                filled(config('services.accurate.token')) => 'token',
+                default => null,
+            },
+            'oleh' => $akses?->disambungkanOleh?->name,
+            'sejak' => $akses?->disambungkan_at->translatedFormat('j M Y H:i'),
+            'berlaku' => $akses?->kedaluwarsa_at?->translatedFormat('j M Y'),
+            'bisaOauth' => OauthAccurate::siap(),
+        ];
     }
 
     /**

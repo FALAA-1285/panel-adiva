@@ -12,6 +12,7 @@ use App\Http\Controllers\CatatOrderController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\DetailPesananController;
 use App\Http\Controllers\JedaController;
+use App\Http\Controllers\Katalog\AccurateController;
 use App\Http\Controllers\Katalog\BarangTokoController;
 use App\Http\Controllers\Katalog\GambarController;
 use App\Http\Controllers\Katalog\KaryawanController;
@@ -138,6 +139,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:pengaturan')->group(function () {
         Route::put('/sosmed/sambungan', [SosmedController::class, 'simpanSambungan'])->name('sosmed.sambungan');
         Route::post('/sosmed/sambungan/uji', [SosmedController::class, 'ujiSambungan'])->name('sosmed.sambungan.uji');
+        // Accurate OAuth (Katalog → Barang toko); /accurate/kembali is the app's OAuth Callback URL
+        Route::get('/accurate/sambungkan', [AccurateController::class, 'sambungkan'])->middleware('throttle:10,1')->name('accurate.sambungkan');
+        Route::get('/accurate/kembali', [AccurateController::class, 'kembali'])->middleware('throttle:10,1')->name('accurate.kembali');
+        Route::post('/accurate/putuskan', [AccurateController::class, 'putuskan'])->name('accurate.putuskan');
     });
     Route::get('/pelanggan', [PelangganController::class, 'index'])->name('pelanggan');
     Route::get('/pelanggan/ekspor', [PelangganController::class, 'ekspor'])->middleware('can:balas')->name('pelanggan.ekspor');

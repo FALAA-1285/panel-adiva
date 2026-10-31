@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AksesAccurate;
 use App\Support\Demo;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -21,8 +22,9 @@ Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapp
 
 // Toko Sawojajar's goods from Accurate, read only (Katalog → Barang toko, Adiva's Cari_Barang_Toko):
 // every minute, so a price changed in Accurate reaches Adiva within a minute or two. Also in demo
-// mode (the frozen clock is always "due" every minute); not without a token.
-Schedule::command('accurate:sinkron')->everyMinute()->withoutOverlapping(5)->skip(fn () => blank(config('services.accurate.token')));
+// mode (the frozen clock is always "due" every minute); not before Accurate is connected.
+Schedule::command('accurate:sinkron')->everyMinute()->withoutOverlapping(5)
+    ->skip(fn () => blank(config('services.accurate.token')) && ! AksesAccurate::query()->exists());
 
 // the daily reminder of who the bot is still paused for (BOT_DRIVER=lokal; n8n did this at 09:00)
 // on the VPS cron container only (CADANGAN_AKTIF=true), where pg_dump is installed

@@ -230,7 +230,7 @@ select pengaturan from workflow where kode = 'chatbot';
 
 ### Tool `Cari_Barang_Toko` (barang Toko Sawojajar, sejak 31 Okt 2026)
 
-Panel menyalin barang toko dari Accurate (database "Bana Food") ke tabel `barang_toko` tiap menit (`php artisan accurate:sinkron` di scheduler, hanya membaca Accurate; berjalan selama `ACCURATE_API_TOKEN` terisi, juga dalam mode demo). Yang disimpan hanya barang **ber-barcode dan tidak nonaktif**; stok tidak dibaca. Kolom: `nama`, `kode`, `barcode`, `kategori`, `satuan`, `harga` (harga jual utama, boleh kosong), `disinkron_at`. Riwayat setiap sinkron ada di `sinkron_accurate`.
+Panel menyalin barang toko dari Accurate (database "Bana Food") ke tabel `barang_toko` tiap menit (`php artisan accurate:sinkron` di scheduler, hanya membaca Accurate; berjalan selama `ACCURATE_API_TOKEN` terisi, juga dalam mode demo). Yang disimpan hanya barang **ber-barcode dan tidak nonaktif**; stok tidak dibaca. Kolom: `nama`, `kode`, `barcode`, `kategori`, `satuan`, `harga` (harga jual utama, boleh kosong), `disinkron_at`. Riwayat setiap sinkron ada di `sinkron_accurate`. Panel masuk ke Accurate lewat OAuth ("Sambungkan Accurate" di Katalog → Barang toko; token terenkripsi di `akses_accurate`, diperbarui sendiri) atau lewat API Token di `.env`.
 
 Node **Cari Barang Toko** (postgresTool, kredensial sama dengan Paket Reseller) tersambung sebagai `ai_tool` ke Agen AI Penjawab, Agen AI Penjawab (Ulang), dan Agen Uji. `queryReplacement`: `{ "k0": $fromAI('kata_kunci', …) }`.
 
