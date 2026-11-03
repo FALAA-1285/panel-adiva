@@ -65,9 +65,9 @@ test('the chatbot\'s chats and customers are copied in, each line once', functio
         // a chat with no CRM row yet still gets its customer
         ->and(CrmCustomer::query()->where('chat_id', '222@lid')->firstOrFail()->pesan()->count())->toBe(1);
 
-    // the next run adds only what is new
+    // the next run adds only what is new; an unchanged customer is not saved again
     $riwayat[] = ['id' => 4, 'chat_id' => '222@lid', 'peran' => 'adiva', 'teks' => 'Halo kak', 'waktu_ms' => 1791852370000];
-    $this->artisan('n8n:sinkron-chat')->assertSuccessful();
+    $this->artisan('n8n:sinkron-chat')->expectsOutputToContain('0 customer diperbarui, 1 pesan baru')->assertSuccessful();
 
     expect(Pesan::query()->count())->toBe(4);
 });

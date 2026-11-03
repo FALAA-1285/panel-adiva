@@ -30,7 +30,10 @@ class SinkronChatN8n
      */
     public const BATAS_PESAN = 1000;
 
-    private const KUNCI_CRM = 'sinkron-chat:crm-sampai';
+    /**
+     * CRM_CUSTOMER row id => the updatedAt last saved.
+     */
+    private const KUNCI_CRM = 'sinkron-chat:crm-versi';
 
     /**
      * @return array{customer: int, pesan: int}
@@ -61,35 +64,32 @@ class SinkronChatN8n
     }
 
     /**
-     * CRM_CUSTOMER rows changed since the last run (all of them on the first).
+     * CRM_CUSTOMER rows changed since the last run (all of them on the first). The API's
+     * updatedAt filter does not match reliably, so every row is read (a few dozen) and only
+     * those whose updatedAt moved are saved.
      */
     private function customer(PendingRequest $api): int
     {
-        $mulai = now();
-        $sejak = Cache::get(self::KUNCI_CRM);
-        $filter = is_string($sejak)
-            ? ['type' => 'and', 'filters' => [['columnName' => 'updatedAt', 'condition' => 'gte', 'value' => $sejak]]]
-            : null;
+        /** @var array<string, string> $versi */
+        $versi = (array) Cache::get(self::KUNCI_CRM, []);
+        $berubah = 0;
 
-        try {
-            $baris = $this->semua($api, self::TABEL_CRM, $filter);
-        } catch (RequestException) {
-            // the filter was refused: there are only a few dozen customers
-            $baris = $this->semua($api, self::TABEL_CRM, null);
-        }
+        foreach ($this->semua($api, self::TABEL_CRM, null) as $b) {
+            $id = (string) ($b['id'] ?? '');
+            $diubah = (string) ($b['updatedAt'] ?? '');
 
-        foreach ($baris as $b) {
-            $chat = trim((string) ($b['chat_id'] ?? ''));
-
-            if ($chat !== '') {
-                LapisanData::simpanCrm(array_diff_key($b, array_flip(['id', 'createdAt', 'updatedAt'])));
+            if (trim((string) ($b['chat_id'] ?? '')) === '' || ($diubah !== '' && ($versi[$id] ?? null) === $diubah)) {
+                continue;
             }
+
+            LapisanData::simpanCrm(array_diff_key($b, array_flip(['id', 'createdAt', 'updatedAt'])));
+            $versi[$id] = $diubah;
+            $berubah++;
         }
 
-        // a minute back, so a row saved while this one ran is read again next time
-        Cache::forever(self::KUNCI_CRM, $mulai->copy()->subMinute()->utc()->toIso8601String());
+        Cache::forever(self::KUNCI_CRM, $versi);
 
-        return count($baris);
+        return $berubah;
     }
 
     /**
