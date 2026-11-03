@@ -795,6 +795,13 @@ function Gelembung({ pesan: m }: { pesan: Pesan }) {
         return (
             <div className="flex max-w-[460px] flex-col gap-1 self-start max-md:max-w-[85%]">
                 <div className="rounded-[12px_12px_12px_4px] border border-line bg-surface px-3 py-2.5 text-body leading-[1.5] whitespace-pre-line">
+                    {/* a photo or voice note copied from WhatsApp without its file: say what it was */}
+                    {m.foto && !m.lampiran && (
+                        <span className="flex items-center gap-1.5 text-caption font-medium text-ink-3">
+                            <Ikon nama="gambar" ukuran={15} />
+                            {m.foto} · buka di WhatsApp
+                        </span>
+                    )}
                     {m.teks}
                     {m.lampiran && (
                         <a

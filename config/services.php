@@ -81,6 +81,10 @@ return [
         'webhook_secret' => env('WAHA_WEBHOOK_SECRET'),
         // sign-in and reset codes go out through WAHA even while BOT_DRIVER stays tiruan
         'kode_staf' => (bool) env('WAHA_KODE_STAF', false),
+        // where WAHA is not reachable (Vercel): the n8n workflow "Bang Bana — Gerbang WAHA
+        // (panel adiva)" sends staff codes and reads the real chats, signed with this secret
+        'gerbang_url' => env('WAHA_GERBANG_URL'),
+        'gerbang_secret' => env('WAHA_GERBANG_SECRET'),
     ],
 
     'slack' => [

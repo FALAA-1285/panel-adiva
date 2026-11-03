@@ -362,13 +362,17 @@ Chatbot yang berjalan ("chatbot bangbana (main)") tidak menulis `pesan` dan `crm
 
 - **Cara salin.** Selama `N8N_SINKRON_CHAT=true` (dan bukan mode demo), panel menyalin keduanya lewat API n8n: `GET /api/v1/data-tables/{id}/rows`, **hanya baca**. Workflow bot tidak disentuh.
 - **Customer** lewat `n8n_simpan_crm` (§8), hanya baris yang `updatedAt`-nya berubah sejak sinkron terakhir.
-- **Pesan** ditambahkan sekali per baris RIWAYAT_CHAT, dikenali dari `pesan.meta.riwayat_id`. Paling banyak 1000 per putaran.
+- **Pesan** diambil dari WhatsApp sendiri (WAHA) lewat workflow **"Bang Bana — Gerbang WAHA (panel adiva)"** (`POST /webhook/panel-waha`, perintah `BACA_PESAN`, ditandatangani seperti §2 dengan `WAHA_GERBANG_SECRET`), sekali per `wa_message_id`.
+  - Yang dibaca tiap putaran: chat yang customernya berubah, chat yang aktif (interaksi 1 hari / pesan 3 hari terakhir), dan chat yang belum pernah dibaca. Maksimal 40 chat, 20 per panggilan.
+  - `fromMe` dengan `source = app` (diketik di HP) menjadi baris ADMIN; `fromMe` lainnya ADIVA. Foto/suara/berkas ditandai di `lampiran_keterangan` tanpa berkasnya.
+  - Saat satu chat pertama kali terbaca dari WAHA, barisnya yang berasal dari RIWAYAT_CHAT dihapus.
+  - Selama gerbang belum diatur, pesan disalin dari RIWAYAT_CHAT (memori bot: satu putaran digabung jadi satu baris, hanya yang dibalas bot), dikenali dari `pesan.meta.riwayat_id`.
 - **Pemicu:**
   - Perintah `php artisan n8n:sinkron-chat`, dijadwalkan tiap menit di server yang menjalankan scheduler.
   - Di Vercel, workflow **"Bang Bana — Sinkron Chat (panel adiva)"** memanggil `POST /cron/chat-sinkron` tiap menit, dengan header `X-Cron-Key` = `ACCURATE_CRON_KEY` bila diisi.
   - Endpoint itu berjalan paling sering sekali per 30 detik.
 - **Percakapan hanya lihat.** Balas, Template, Jeda/Lanjutkan, Mulai ulang bot, Jawab lewat Adiva, dan Kirim ulang disembunyikan dan ditolak server, karena chatbot utama membaca jeda dan memorinya sendiri (Data Table JEDA_BOT), bukan milik panel.
-- **Kode login.** `WAHA_KODE_STAF=true` mengirim kode masuk/daftar/reset staf lewat WAHA (`SESI_UTAMA`) walau `BOT_DRIVER=tiruan`. Bot mengabaikan pesan `fromMe`, jadi tidak membalasnya.
+- **Kode login.** `WAHA_KODE_STAF=true` mengirim kode masuk/daftar/reset staf lewat WAHA (`SESI_UTAMA`) walau `BOT_DRIVER=tiruan`; bila `WAHA_GERBANG_URL` dan `WAHA_GERBANG_SECRET` diisi, lewat gerbang n8n (perintah `KIRIM_TEKS`), karena Vercel tidak bisa menjangkau WAHA di VPS. Bot mengabaikan pesan `fromMe`, jadi tidak membalasnya.
 
 ## 8. Lapisan database untuk n8n (sejak 8 Okt 2026)
 

@@ -35,6 +35,7 @@
         "SESSION_SECURE_COOKIE": "true",
         "N8N_SINKRON_CHAT": "true",
         "WAHA_KODE_STAF": "true",
+        "WAHA_GERBANG_URL": "https://n8n.tktbanafood.com/webhook/panel-waha",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
