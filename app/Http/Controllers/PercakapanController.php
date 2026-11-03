@@ -79,6 +79,7 @@ class PercakapanController extends Controller
         $daftar = fn () => $this->daftar($request, $tab, $tipe, $jeda, $menunggu);
 
         return Inertia::render('percakapan', [
+            'hanyaLihat' => self::hanyaLihat(),
             'filter' => ['cari' => (string) $request->query('cari'), 'tab' => $tab, 'tipe' => $tipe?->value],
             'jumlah' => fn () => $this->jumlah($tab, $tipe, $jeda, $menunggu),
             'muat' => function () use ($request, $tab, $tipe, $jeda, $menunggu) {
@@ -103,12 +104,29 @@ class PercakapanController extends Controller
     }
 
     /**
+     * The chats come from the chatbot that runs on its own in n8n (N8N_SINKRON_CHAT): it reads
+     * neither the panel's pauses nor its memory, so the page only shows them.
+     */
+    public static function hanyaLihat(): bool
+    {
+        return (bool) config('services.n8n.sinkron_chat');
+    }
+
+    private static function tolakBilaHanyaLihat(): void
+    {
+        if (self::hanyaLihat()) {
+            throw ValidationException::withMessages(['teks' => 'Chat ini dijawab chatbot utama di n8n. Panel hanya menampilkan.']);
+        }
+    }
+
+    /**
      * Kirim: an admin's reply, sent through WAHA from the customer's bot number by a
      * queued job. A chat Adiva still answers is paused for 2 hours so the bot does not
      * cut in.
      */
     public function balas(Request $request, CrmCustomer $customer): RedirectResponse
     {
+        self::tolakBilaHanyaLihat();
         $user = $request->user() ?? abort(403);
         $data = $request->validate([
             'teks' => ['required_without:gambar', 'nullable', 'string', 'max:4096'],
@@ -197,6 +215,7 @@ class PercakapanController extends Controller
      */
     public function kirimUlang(Request $request, Pesan $pesan): RedirectResponse
     {
+        self::tolakBilaHanyaLihat();
         $user = $request->user() ?? abort(403);
 
         if ($pesan->status_kirim !== 'GAGAL') {
@@ -217,6 +236,7 @@ class PercakapanController extends Controller
      */
     public function resetMemori(Request $request, CrmCustomer $customer): RedirectResponse
     {
+        self::tolakBilaHanyaLihat();
         $user = $request->user() ?? abort(403);
         $customer->increment('mem_gen');
 
@@ -504,6 +524,7 @@ class PercakapanController extends Controller
      */
     public function jawab(Request $request, CrmCustomer $customer, JawabAdiva $adiva): RedirectResponse
     {
+        self::tolakBilaHanyaLihat();
         $user = $request->user() ?? abort(403);
         $jawaban = trim((string) $request->validate(['jawaban' => ['required', 'string', 'max:1000']], ['jawaban.required' => 'Tulis jawabannya dulu.'])['jawaban']);
 

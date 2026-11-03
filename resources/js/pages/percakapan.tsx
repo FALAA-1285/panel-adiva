@@ -83,6 +83,8 @@ type Percakapan = {
 };
 
 type Props = {
+    /** the chats come from the chatbot that runs on its own in n8n: shown, not answered */
+    hanyaLihat: boolean;
     filter: Filter;
     jumlah: { status: Record<string, number>; tipe: Record<string, number> };
     muat: { batas: number; tampil: number; total: number };
@@ -131,6 +133,7 @@ const query = (f: Filter, pilih?: number) => ({
 });
 
 export default function HalamanPercakapan({
+    hanyaLihat,
     filter,
     jumlah,
     muat,
@@ -332,6 +335,7 @@ export default function HalamanPercakapan({
                     <Utas
                         key={percakapan.id}
                         percakapan={percakapan}
+                        hanyaLihat={hanyaLihat}
                         template={template}
                         gambar={gambar}
                         tampil={lihatUtas}
@@ -342,6 +346,7 @@ export default function HalamanPercakapan({
                 {percakapan && (
                     <Penilaian
                         percakapan={percakapan}
+                        hanyaLihat={hanyaLihat}
                         buka={info}
                         onTutup={() => setInfo(false)}
                     />
@@ -453,6 +458,7 @@ function BarisChat({
 
 function Utas({
     percakapan: p,
+    hanyaLihat,
     template,
     gambar,
     tampil,
@@ -460,6 +466,7 @@ function Utas({
     onInfo,
 }: {
     percakapan: Percakapan;
+    hanyaLihat: boolean;
     template: TemplateBalasan[];
     gambar: FotoProduk[];
     /** small screens: the chat is open (else the list shows) */
@@ -557,7 +564,7 @@ function Utas({
                         </span>
                     </div>
                 </div>
-                {p.jeda !== null ? (
+                {hanyaLihat ? null : p.jeda !== null ? (
                     <Button
                         varian="primary"
                         className="max-md:px-2.5"
@@ -584,15 +591,17 @@ function Utas({
                     </ButtonLink>
                 )}
                 {/* labelled: it cannot be undone, so it must not hide behind a bare icon */}
-                <button
-                    type="button"
-                    title="Adiva melupakan percakapan sebelumnya dengan customer ini"
-                    onClick={() => setKonfirmasiReset(true)}
-                    className="flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink hover:border-note-amber-line hover:bg-note-amber-bg hover:text-amber-text motion-safe:transition-colors max-xl:w-[38px] max-xl:justify-center max-xl:px-0"
-                >
-                    <Ikon nama="segarkan" ukuran={15} tebal={2} />
-                    <span className="max-xl:sr-only">Mulai ulang bot</span>
-                </button>
+                {!hanyaLihat && (
+                    <button
+                        type="button"
+                        title="Adiva melupakan percakapan sebelumnya dengan customer ini"
+                        onClick={() => setKonfirmasiReset(true)}
+                        className="flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-body font-semibold whitespace-nowrap text-ink hover:border-note-amber-line hover:bg-note-amber-bg hover:text-amber-text motion-safe:transition-colors max-xl:w-[38px] max-xl:justify-center max-xl:px-0"
+                    >
+                        <Ikon nama="segarkan" ukuran={15} tebal={2} />
+                        <span className="max-xl:sr-only">Mulai ulang bot</span>
+                    </button>
+                )}
                 {konfirmasiReset && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 motion-safe:animate-[pudar_120ms_ease-out]"
@@ -698,64 +707,77 @@ function Utas({
                 </button>
             )}
 
-            <div className="flex shrink-0 flex-col gap-2 border-t border-line bg-surface px-5 pt-3 pb-4 max-md:px-3 max-md:pb-3">
-                <div className="flex items-center gap-2 text-caption text-ink-3">
+            {hanyaLihat ? (
+                <div className="flex shrink-0 items-center gap-2 border-t border-line bg-surface px-5 py-3 text-caption text-ink-3 max-md:px-3">
                     <Ikon nama="info" ukuran={14} tebal={2} />
-                    <span className="grow">{galat ?? p.petunjuk}</span>
+                    Chat ini dijawab chatbot utama di n8n. Panel hanya
+                    menampilkan.
                 </div>
-                {foto && (
-                    <span className="flex items-center gap-1.5 self-start rounded-control border border-line bg-subtle py-1 pr-1 pl-2.5 text-caption text-ink-2">
-                        <Ikon nama="gambar" ukuran={14} />
-                        Foto produk · {foto.judul}
-                        <button
-                            type="button"
-                            aria-label="Batalkan foto"
-                            onClick={() => setFoto(null)}
-                            className="flex size-6 cursor-pointer items-center justify-center border-none bg-transparent text-muted"
-                        >
-                            <Ikon nama="tutup" ukuran={13} />
-                        </button>
-                    </span>
-                )}
-                <div className="flex items-end gap-2 max-md:flex-wrap">
-                    <MenuGambar gambar={gambar} onPilih={setFoto} />
-                    <MenuTemplate
-                        template={template}
-                        panggilan={p.panggilan}
-                        teks={teks}
-                        onPakai={(isi) =>
-                            setTeks(
-                                teks.trim() === '' ? isi : `${teks}\n${isi}`,
-                            )
-                        }
-                    />
-                    <Textarea
-                        id="balasan-admin"
-                        aria-label="Tulis balasan admin"
-                        aria-keyshortcuts="R"
-                        rows={2}
-                        placeholder="Tulis balasan sebagai admin…"
-                        className="grow resize-none rounded-card px-3 py-2.5 leading-[1.4] max-md:order-first max-md:basis-full"
-                        value={teks}
-                        onChange={(e) => setTeks(e.target.value)}
-                        onKeyDown={(e) => {
-                            // Ctrl/⌘ + Enter sends
-                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                                e.preventDefault();
-                                kirim();
+            ) : (
+                <div className="flex shrink-0 flex-col gap-2 border-t border-line bg-surface px-5 pt-3 pb-4 max-md:px-3 max-md:pb-3">
+                    <div className="flex items-center gap-2 text-caption text-ink-3">
+                        <Ikon nama="info" ukuran={14} tebal={2} />
+                        <span className="grow">{galat ?? p.petunjuk}</span>
+                    </div>
+                    {foto && (
+                        <span className="flex items-center gap-1.5 self-start rounded-control border border-line bg-subtle py-1 pr-1 pl-2.5 text-caption text-ink-2">
+                            <Ikon nama="gambar" ukuran={14} />
+                            Foto produk · {foto.judul}
+                            <button
+                                type="button"
+                                aria-label="Batalkan foto"
+                                onClick={() => setFoto(null)}
+                                className="flex size-6 cursor-pointer items-center justify-center border-none bg-transparent text-muted"
+                            >
+                                <Ikon nama="tutup" ukuran={13} />
+                            </button>
+                        </span>
+                    )}
+                    <div className="flex items-end gap-2 max-md:flex-wrap">
+                        <MenuGambar gambar={gambar} onPilih={setFoto} />
+                        <MenuTemplate
+                            template={template}
+                            panggilan={p.panggilan}
+                            teks={teks}
+                            onPakai={(isi) =>
+                                setTeks(
+                                    teks.trim() === ''
+                                        ? isi
+                                        : `${teks}\n${isi}`,
+                                )
                             }
-                        }}
-                    />
-                    <Button
-                        varian="primary"
-                        className="h-[42px] px-4 max-md:ml-auto"
-                        onClick={kirim}
-                    >
-                        <Ikon nama="kirim" tebal={2} />
-                        Kirim
-                    </Button>
+                        />
+                        <Textarea
+                            id="balasan-admin"
+                            aria-label="Tulis balasan admin"
+                            aria-keyshortcuts="R"
+                            rows={2}
+                            placeholder="Tulis balasan sebagai admin…"
+                            className="grow resize-none rounded-card px-3 py-2.5 leading-[1.4] max-md:order-first max-md:basis-full"
+                            value={teks}
+                            onChange={(e) => setTeks(e.target.value)}
+                            onKeyDown={(e) => {
+                                // Ctrl/⌘ + Enter sends
+                                if (
+                                    e.key === 'Enter' &&
+                                    (e.ctrlKey || e.metaKey)
+                                ) {
+                                    e.preventDefault();
+                                    kirim();
+                                }
+                            }}
+                        />
+                        <Button
+                            varian="primary"
+                            className="h-[42px] px-4 max-md:ml-auto"
+                            onClick={kirim}
+                        >
+                            <Ikon nama="kirim" tebal={2} />
+                            Kirim
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            )}
         </section>
     );
 }
@@ -922,10 +944,12 @@ function JawabLewatAdiva({
 
 function Penilaian({
     percakapan: p,
+    hanyaLihat,
     buka,
     onTutup,
 }: {
     percakapan: Percakapan;
+    hanyaLihat: boolean;
     /** below 1280px: shown over the chat from the right */
     buka: boolean;
     onTutup: () => void;
@@ -986,7 +1010,7 @@ function Penilaian({
                         </div>
                     </div>
                 )}
-                {p.eskalasi !== null && (
+                {p.eskalasi !== null && !hanyaLihat && (
                     <JawabLewatAdiva
                         key={p.id}
                         id={p.id}

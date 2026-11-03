@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
-        $middleware->validateCsrfTokens(except: ['cron/accurate-sinkron', 'webhook/waha', 'api/*']);
+        $middleware->validateCsrfTokens(except: ['cron/accurate-sinkron', 'cron/chat-sinkron', 'webhook/waha', 'api/*']);
         // every response, error pages included
         $middleware->append(HeaderKeamanan::class);
         $middleware->web(prepend: [

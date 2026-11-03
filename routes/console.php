@@ -17,6 +17,11 @@ Schedule::command('broadcast:lanjutkan')->everyFiveMinutes()->withoutOverlapping
 // Not in demo mode: the frozen clock would file today's runs on 28 Sep.
 Schedule::command('n8n:sinkron')->everyMinute()->withoutOverlapping()->skip(fn () => Demo::aktif());
 
+// Percakapan follows the running chatbot's chats (its n8n Data Tables, read only). On Vercel the
+// workflow "Bang Bana — Sinkron Chat (panel adiva)" calls /cron/chat-sinkron instead.
+Schedule::command('n8n:sinkron-chat')->everyMinute()->withoutOverlapping()
+    ->skip(fn () => Demo::aktif() || ! config('services.n8n.sinkron_chat'));
+
 // the supervisor's short WhatsApp for each notification n8n writes (docs/kontrak-n8n.md §9)
 Schedule::command('notifikasi:kirim-wa')->everyFifteenSeconds()->withoutOverlapping()->skip(fn () => Demo::aktif());
 

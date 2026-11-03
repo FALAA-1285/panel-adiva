@@ -51,6 +51,9 @@ return [
         // n8n:sinkron reads workflows and runs from the n8n public API
         'api_url' => env('N8N_API_URL'),
         'api_key' => env('N8N_API_KEY'),
+        // Percakapan shows the running chatbot's chats, copied from its Data Tables
+        // (RIWAYAT_CHAT, CRM_CUSTOMER) by n8n:sinkron-chat; the page is then view only
+        'sinkron_chat' => (bool) env('N8N_SINKRON_CHAT', false) && ! env('APP_DEMO', false),
     ],
 
     /*
@@ -76,6 +79,8 @@ return [
         'timeout' => (int) env('WAHA_TIMEOUT', 15),
         // WAHA signs each webhook it sends (HMAC, header X-Webhook-Hmac) with this key
         'webhook_secret' => env('WAHA_WEBHOOK_SECRET'),
+        // sign-in and reset codes go out through WAHA even while BOT_DRIVER stays tiruan
+        'kode_staf' => (bool) env('WAHA_KODE_STAF', false),
     ],
 
     'slack' => [

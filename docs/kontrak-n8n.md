@@ -356,6 +356,20 @@ Setiap pesan masuk dan keluar:
   - `butuh_admin` + `alasan_butuh_admin`;
   - `mem_gen`: dibaca sebagai sesi ingatan; panel menaikkannya lewat "Reset memori".
 
+### Chat chatbot utama dari Data Table (`N8N_SINKRON_CHAT=true`, sejak 3 Nov 2026)
+
+Chatbot yang berjalan ("chatbot bangbana (main)") tidak menulis `pesan` dan `crm_customer`. Ia mencatat chat di Data Table n8n **RIWAYAT_CHAT** (`chat_id`, `peran` customer/adiva, `teks`, `waktu_ms`) dan profil di **CRM_CUSTOMER** (kolom sama dengan `crm_customer`).
+
+- **Cara salin.** Selama `N8N_SINKRON_CHAT=true` (dan bukan mode demo), panel menyalin keduanya lewat API n8n: `GET /api/v1/data-tables/{id}/rows`, **hanya baca**. Workflow bot tidak disentuh.
+- **Customer** lewat `n8n_simpan_crm` (§8), hanya baris yang `updatedAt`-nya berubah sejak sinkron terakhir.
+- **Pesan** ditambahkan sekali per baris RIWAYAT_CHAT, dikenali dari `pesan.meta.riwayat_id`. Paling banyak 1000 per putaran.
+- **Pemicu:**
+  - Perintah `php artisan n8n:sinkron-chat`, dijadwalkan tiap menit di server yang menjalankan scheduler.
+  - Di Vercel, workflow **"Bang Bana — Sinkron Chat (panel adiva)"** memanggil `POST /cron/chat-sinkron` tiap menit, dengan header `X-Cron-Key` = `ACCURATE_CRON_KEY` bila diisi.
+  - Endpoint itu berjalan paling sering sekali per 30 detik.
+- **Percakapan hanya lihat.** Balas, Template, Jeda/Lanjutkan, Mulai ulang bot, Jawab lewat Adiva, dan Kirim ulang disembunyikan dan ditolak server, karena chatbot utama membaca jeda dan memorinya sendiri (Data Table JEDA_BOT), bukan milik panel.
+- **Kode login.** `WAHA_KODE_STAF=true` mengirim kode masuk/daftar/reset staf lewat WAHA (`SESI_UTAMA`) walau `BOT_DRIVER=tiruan`. Bot mengabaikan pesan `fromMe`, jadi tidak membalasnya.
+
 ## 8. Lapisan database untuk n8n (sejak 8 Okt 2026)
 
 Workflow n8n semula ditulis untuk **n8n Data Table** (waktu sebagai teks `2026-09-28 13:42` WIB, `YA`/`TIDAK`, isi order sebagai teks + JSON). Semua node Data Table sekarang menjadi node **Postgres** ke database panel lewat lapisan di migrasi `2026_10_08_100001_create_n8n_adaptor`. Logika node Code tidak berubah.

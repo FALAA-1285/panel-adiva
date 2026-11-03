@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AktivitasController;
+use App\Http\Controllers\Api\CronAccurateController;
+use App\Http\Controllers\Api\CronChatController;
 use App\Http\Controllers\Auth\DaftarController;
 use App\Http\Controllers\Auth\GantiSandiController;
 use App\Http\Controllers\Auth\LupaSandiController;
@@ -32,13 +34,14 @@ use App\Http\Controllers\RingkasanController;
 use App\Http\Controllers\SosmedController;
 use App\Http\Controllers\TimController;
 use App\Http\Controllers\UjiAdivaController;
-use App\Http\Controllers\Api\CronAccurateController;
 use App\Http\Controllers\WahaSesiController;
 use App\Http\Middleware\EnsureDemoMode;
 use Illuminate\Support\Facades\Route;
 
 // Schedulers (n8n / Vercel Cron) trigger Accurate synchronization here.
 Route::match(['GET', 'POST'], '/cron/accurate-sinkron', [CronAccurateController::class, 'sinkron'])->name('cron.accurate');
+// n8n ("Bang Bana — Sinkron Chat (panel adiva)") copies the running chatbot's chats in here.
+Route::match(['GET', 'POST'], '/cron/chat-sinkron', [CronChatController::class, 'sinkron'])->name('cron.chat');
 
 // GET /masuk dan POST /masuk, /keluar didaftarkan oleh Fortify (config/fortify.php).
 Route::middleware('guest')->group(function () {

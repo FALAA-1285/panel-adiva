@@ -8,6 +8,7 @@ use App\Accurate\OauthAccurate;
 use App\Accurate\TiruanAccurate;
 use App\Bot\JawabAdiva;
 use App\Bot\KabarKonfig;
+use App\Bot\KirimKeStaf;
 use App\Bot\KirimUlangInvoice;
 use App\Bot\LokalJawabAdiva;
 use App\Bot\LokalKirimUlangInvoice;
@@ -93,6 +94,12 @@ class AppServiceProvider extends ServiceProvider
                 default => $tiruan,
             }));
         }
+
+        // Staff codes (sign-in on a new device, sign-up, reset) must arrive even while the panel's bot
+        // stays a stand-in, e.g. next to a chatbot that runs on its own in n8n (WAHA_KODE_STAF).
+        $this->app->bind(KirimKeStaf::class, fn ($app) => new KirimKeStaf($app->make(
+            ! Demo::aktif() && config('services.waha.kode_staf') ? WahaPengirim::class : PengirimWa::class,
+        )));
 
         // Accurate is not part of the bot: with an OAuth app or an API Token it is always the real
         // one, demo mode or not; the sample shelf only stands in for a demo with neither. Outside
