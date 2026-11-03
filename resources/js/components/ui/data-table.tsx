@@ -151,7 +151,7 @@ export function DataTable<TData extends RowData>({
                             }}
                             className={cn(
                                 kelas,
-                                'cursor-pointer border-x-0 border-t-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                                'cursor-pointer border-x-0 border-t-0 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none',
                             )}
                             style={{ gridTemplateColumns: template }}
                         >

@@ -110,7 +110,9 @@ export default function KatalogProduk({
                     <div className="flex items-center justify-end gap-1.5">
                         <IconButton
                             aria-label={`Ubah ${row.original.nama}`}
-                            title={bolehUbah ? 'Ubah produk' : 'Hanya supervisor'}
+                            title={
+                                bolehUbah ? 'Ubah produk' : 'Hanya supervisor'
+                            }
                             disabled={!bolehUbah}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -228,65 +230,61 @@ export default function KatalogProduk({
                         />
                     </Panel>
                     {arsip.length > 0 && (
-                            <Panel
-                                judul={`Arsip · ${arsip.length} produk`}
-                                sub="Tidak lagi dijual dan tidak ditawarkan Adiva"
-                                aksi={
-                                    <Button
-                                        ukuran="sm"
-                                        aria-expanded={lihatArsip}
-                                        onClick={() =>
-                                            setLihatArsip(!lihatArsip)
-                                        }
-                                    >
-                                        {lihatArsip ? 'Sembunyikan' : 'Lihat'}
-                                    </Button>
-                                }
-                                isiClassName={
-                                    lihatArsip
-                                        ? 'px-[18px] pt-1 pb-2'
-                                        : 'hidden'
-                                }
-                            >
-                                {arsip.map((a) => (
-                                    <div
-                                        key={a.id}
-                                        className="flex items-center gap-2 border-b border-line-soft py-2"
-                                    >
-                                        <span className="flex min-w-0 grow flex-col">
-                                            <span className="text-body font-medium text-ink">
-                                                {a.nama}
-                                            </span>
-                                            <span className="text-caption text-muted">
-                                                {[
-                                                    a.kategori,
-                                                    a.diarsip &&
-                                                        `diarsip ${a.diarsip}`,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' · ')}
-                                            </span>
+                        <Panel
+                            judul={`Arsip · ${arsip.length} produk`}
+                            sub="Tidak lagi dijual dan tidak ditawarkan Adiva"
+                            aksi={
+                                <Button
+                                    ukuran="sm"
+                                    aria-expanded={lihatArsip}
+                                    onClick={() => setLihatArsip(!lihatArsip)}
+                                >
+                                    {lihatArsip ? 'Sembunyikan' : 'Lihat'}
+                                </Button>
+                            }
+                            isiClassName={
+                                lihatArsip ? 'px-[18px] pt-1 pb-2' : 'hidden'
+                            }
+                        >
+                            {arsip.map((a) => (
+                                <div
+                                    key={a.id}
+                                    className="flex items-center gap-2 border-b border-line-soft py-2"
+                                >
+                                    <span className="flex min-w-0 grow flex-col">
+                                        <span className="text-body font-medium text-ink">
+                                            {a.nama}
                                         </span>
-                                        {bolehUbah && (
-                                            <Button
-                                                ukuran="sm"
-                                                onClick={() =>
-                                                    router.post(
-                                                        pulihkan.url(a.id),
-                                                        {},
-                                                        {
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
-                                                }
-                                            >
-                                                Pulihkan
-                                            </Button>
-                                        )}
-                                    </div>
-                                ))}
-                            </Panel>
-                        )}
+                                        <span className="text-caption text-muted">
+                                            {[
+                                                a.kategori,
+                                                a.diarsip &&
+                                                    `diarsip ${a.diarsip}`,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' · ')}
+                                        </span>
+                                    </span>
+                                    {bolehUbah && (
+                                        <Button
+                                            ukuran="sm"
+                                            onClick={() =>
+                                                router.post(
+                                                    pulihkan.url(a.id),
+                                                    {},
+                                                    {
+                                                        preserveScroll: true,
+                                                    },
+                                                )
+                                            }
+                                        >
+                                            Pulihkan
+                                        </Button>
+                                    )}
+                                </div>
+                            ))}
+                        </Panel>
+                    )}
                 </div>
             </IsiHalaman>
         </AppLayout>

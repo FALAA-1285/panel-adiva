@@ -154,7 +154,9 @@ export default function KatalogPaket({
             <IsiHalaman>
                 {pilih !== null && (
                     <PenyuntingPaket
-                        key={pilih === 'baru' ? 'baru' : (terpilih?.id ?? 'baru')}
+                        key={
+                            pilih === 'baru' ? 'baru' : (terpilih?.id ?? 'baru')
+                        }
                         paket={pilih === 'baru' ? null : (terpilih ?? null)}
                         namaProduk={namaProduk}
                         onBatal={() => setPilih(null)}

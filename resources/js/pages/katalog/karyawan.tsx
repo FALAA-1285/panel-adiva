@@ -118,7 +118,7 @@ const kolomOrder: KolomTabel<OrderKaryawan>[] = [
                 <ButtonLink
                     href="/pesanan"
                     ukuran="sm"
-                    className="h-7 px-2 text-xs"
+                    className="text-xs h-7 px-2"
                     title="Lihat di Pesanan"
                 >
                     Lihat
@@ -194,7 +194,9 @@ export default function KatalogKaryawan({
                     <div className="flex items-center justify-end gap-1.5">
                         <IconButton
                             aria-label={`Ubah ${row.original.nama}`}
-                            title={bolehUbah ? 'Ubah karyawan' : 'Hanya supervisor'}
+                            title={
+                                bolehUbah ? 'Ubah karyawan' : 'Hanya supervisor'
+                            }
                             disabled={!bolehUbah}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -223,7 +225,9 @@ export default function KatalogKaryawan({
                 id: 'kode',
                 header: 'Kode',
                 cell: ({ row }) => (
-                    <Mono className="text-caption text-ink-2">{row.original.kode}</Mono>
+                    <Mono className="text-caption text-ink-2">
+                        {row.original.kode}
+                    </Mono>
                 ),
             },
             {
@@ -249,7 +253,9 @@ export default function KatalogKaryawan({
                     <div className="flex items-center justify-end gap-1.5">
                         <IconButton
                             aria-label={`Ubah harga ${row.original.varian}`}
-                            title={bolehUbah ? 'Ubah harga' : 'Hanya supervisor'}
+                            title={
+                                bolehUbah ? 'Ubah harga' : 'Hanya supervisor'
+                            }
                             disabled={!bolehUbah}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -308,25 +314,64 @@ export default function KatalogKaryawan({
                 <div className="flex flex-col gap-5">
                     <Panel
                         judul="Order karyawan terbaru"
-                            sub="Info pengambilan diumumkan di grup “Anak Bang Bana”"
-                            aksi={
-                                <ButtonLink href="/pesanan" ukuran="sm">
-                                    Lihat di Pesanan
-                                </ButtonLink>
-                            }
-                            isiClassName="p-0"
-                        >
-                            <DataTable
-                                kolom={kolomOrder}
-                                data={order}
-                                template="130px 90px minmax(0, 1fr) 90px 130px 60px"
-                                idBaris={(o) => String(o.id)}
+                        sub="Info pengambilan diumumkan di grup “Anak Bang Bana”"
+                        aksi={
+                            <ButtonLink href="/pesanan" ukuran="sm">
+                                Lihat di Pesanan
+                            </ButtonLink>
+                        }
+                        isiClassName="p-0"
+                    >
+                        <DataTable
+                            kolom={kolomOrder}
+                            data={order}
+                            template="130px 90px minmax(0, 1fr) 90px 130px 60px"
+                            idBaris={(o) => String(o.id)}
+                        />
+                    </Panel>
+                    <Panel
+                        judul="Karyawan terverifikasi"
+                        sub={`${ringkasan.karyawan} orang · menampilkan ${karyawan.length}`}
+                        aksi={
+                            <Button
+                                ukuran="sm"
+                                aria-disabled={!bolehUbah}
+                                title={
+                                    bolehUbah ? undefined : 'Hanya supervisor'
+                                }
+                                onClick={() => bolehUbah && setDibuka('baru')}
+                            >
+                                <Ikon nama="tambah" ukuran={15} tebal={2} />
+                                Tambah karyawan
+                            </Button>
+                        }
+                        isiClassName="p-0"
+                    >
+                        {dibuka !== null && (
+                            <PanelKaryawan
+                                key={dibuka === 'baru' ? 'baru' : dibuka.id}
+                                karyawan={dibuka === 'baru' ? null : dibuka}
+                                onTutup={() => setDibuka(null)}
                             />
-                        </Panel>
-                        <Panel
-                            judul="Karyawan terverifikasi"
-                            sub={`${ringkasan.karyawan} orang · menampilkan ${karyawan.length}`}
-                            aksi={
+                        )}
+                        <DataTable
+                            kolom={kolomKaryawan}
+                            data={karyawan}
+                            template="minmax(0, 0.8fr) 130px minmax(0, 1fr) 50px 90px 80px 50px"
+                            idBaris={(k) => String(k.id)}
+                            terpilih={(k) =>
+                                dibuka !== null &&
+                                dibuka !== 'baru' &&
+                                k.id === dibuka.id
+                            }
+                            onPilih={(k) => bolehUbah && setDibuka(k)}
+                        />
+                    </Panel>
+                    <Panel
+                        judul="Harga karyawan"
+                        sub="Dipakai Adiva hanya untuk nomor yang ada di daftar karyawan"
+                        aksi={
+                            !ubahHarga && (
                                 <Button
                                     ukuran="sm"
                                     aria-disabled={!bolehUbah}
@@ -336,72 +381,29 @@ export default function KatalogKaryawan({
                                             : 'Hanya supervisor'
                                     }
                                     onClick={() =>
-                                        bolehUbah && setDibuka('baru')
+                                        bolehUbah && setUbahHarga(true)
                                     }
                                 >
-                                    <Ikon nama="tambah" ukuran={15} tebal={2} />
-                                    Tambah karyawan
+                                    Ubah
                                 </Button>
-                            }
-                            isiClassName="p-0"
-                        >
-                            {dibuka !== null && (
-                                <PanelKaryawan
-                                    key={dibuka === 'baru' ? 'baru' : dibuka.id}
-                                    karyawan={dibuka === 'baru' ? null : dibuka}
-                                    onTutup={() => setDibuka(null)}
-                                />
-                            )}
-                            <DataTable
-                                kolom={kolomKaryawan}
-                                data={karyawan}
-                                template="minmax(0, 0.8fr) 130px minmax(0, 1fr) 50px 90px 80px 50px"
-                                idBaris={(k) => String(k.id)}
-                                terpilih={(k) =>
-                                    dibuka !== null &&
-                                    dibuka !== 'baru' &&
-                                    k.id === dibuka.id
-                                }
-                                onPilih={(k) => bolehUbah && setDibuka(k)}
+                            )
+                        }
+                        isiClassName="p-0"
+                    >
+                        {ubahHarga ? (
+                            <UbahHarga
+                                harga={harga}
+                                onTutup={() => setUbahHarga(false)}
                             />
-                        </Panel>
-                        <Panel
-                            judul="Harga karyawan"
-                            sub="Dipakai Adiva hanya untuk nomor yang ada di daftar karyawan"
-                            aksi={
-                                !ubahHarga && (
-                                    <Button
-                                        ukuran="sm"
-                                        aria-disabled={!bolehUbah}
-                                        title={
-                                            bolehUbah
-                                                ? undefined
-                                                : 'Hanya supervisor'
-                                        }
-                                        onClick={() =>
-                                            bolehUbah && setUbahHarga(true)
-                                        }
-                                    >
-                                        Ubah
-                                    </Button>
-                                )
-                            }
-                            isiClassName="p-0"
-                        >
-                            {ubahHarga ? (
-                                <UbahHarga
-                                    harga={harga}
-                                    onTutup={() => setUbahHarga(false)}
-                                />
-                            ) : (
-                                <DataTable
-                                    kolom={kolomHarga}
-                                    data={harga}
-                                    template="minmax(0, 1fr) 90px 140px 140px 50px"
-                                    idBaris={(h) => String(h.id)}
-                                />
-                            )}
-                        </Panel>
+                        ) : (
+                            <DataTable
+                                kolom={kolomHarga}
+                                data={harga}
+                                template="minmax(0, 1fr) 90px 140px 140px 50px"
+                                idBaris={(h) => String(h.id)}
+                            />
+                        )}
+                    </Panel>
                 </div>
             </IsiHalaman>
         </AppLayout>
